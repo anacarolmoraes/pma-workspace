@@ -1,0 +1,12 @@
+{
+  "name": "pma-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Motor do workspace juridico da Paulo Moraes Advocacia",
+  "scripts": {
+    "setup": "node scripts/setup.js"
+  },
+  "dependencies": {
+    "docx": "^9.6.1"
+  }
+}

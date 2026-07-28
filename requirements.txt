@@ -1,0 +1,24 @@
+# Pacotes Python do workspace — instalados pelo scripts/setup.js
+# no ambiente adv_env. Não instale nada "no Python do computador".
+#
+# Requer Python 3.10 ou superior (testado em 3.11).
+
+# --- leitura e escrita de documentos ---
+pdfplumber==0.11.10        # ler PDF (extrato bancário, peça, decisão)
+PyMuPDF==1.27.2.3          # motor de PDF usado pelo pdfmd
+python-docx==1.2.0         # ler/escrever .docx
+openpyxl==3.1.5            # planilhas .xlsx
+pillow>=10.0.0             # imagens (necessário para OCR)
+defusedxml==0.7.1          # leitura segura de XML
+
+# --- transcrição de áudio ---
+faster-whisper==1.2.1
+
+# --- pesquisa e automação ---
+notebooklm-py==0.3.4
+playwright==1.59.0
+
+# --- OCR (reconhecimento de texto em PDF digitalizado) ---
+# O pacote Python abaixo depende do programa Tesseract, instalado
+# fora do Python. O setup.js avisa se estiver faltando.
+pytesseract>=0.3.10

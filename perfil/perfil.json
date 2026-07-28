@@ -3,7 +3,7 @@
   "_comentario": "Identidade do escritório. Camada P do PRD: o motor (skills, builder, lints) lê daqui e nunca de caminho fixo. Trocar este arquivo + marca/ troca a identidade das peças sem editar skill.",
 
   "escritorio": {
-    "nome": "Pinheiro Moraes Advocacia",
+    "nome": "Paulo Moraes Advocacia",
     "sigla": "PMA",
     "comarcas": ["Porto Nacional/TO", "Palmas/TO"],
     "uf": "TO",
@@ -21,14 +21,21 @@
   ],
 
   "caminhos": {
-    "_comentario": "Relativos à raiz do workspace. O motor resolve a partir daqui — não repetir caminho absoluto em skill (PRD F7).",
+    "_comentario": "Relativos à raiz do workspace. O motor resolve a partir daqui — não repetir caminho absoluto em skill (PRD F7). Caminho que muda de máquina (Python, acervo) NÃO mora aqui: mora em perfil/ambiente.json, gerado pelo scripts/setup.js e fora do versionamento.",
     "marca": "material_padrao_escritorio",
     "templates": "material_padrao_escritorio",
     "clientes": "clientes",
-    "relatorios": "relatorios",
-    "bundles": "D:/GITHUB/bundles",
-    "python": "adv_env/Scripts/python.exe",
-    "python_pdfmd": "pdfmd/pdfmd_env/Scripts/python.exe"
+    "relatorios": "relatorios"
+  },
+
+  "ambiente": {
+    "_comentario": "Onde o motor lê o que é específico da máquina. Se ambiente.json não existir, rode: node scripts/setup.js",
+    "arquivo": "perfil/ambiente.json",
+    "chaves": {
+      "python": "interpretador do adv_env (já inclui o conversor pdfmd)",
+      "bundles": "raiz do acervo jurídico (arsenal-juridico)",
+      "raiz": "raiz do workspace nesta máquina"
+    }
   },
 
   "arquivos_marca": {

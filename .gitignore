@@ -83,6 +83,9 @@ resp-stj-pipeline/CASE_CONFIG.md
 # ------------------------------------------------------------
 perfil/usuario.md
 
+# Caminhos desta máquina (Python, acervo), gerados pelo setup.js
+perfil/ambiente.json
+
 
 # ------------------------------------------------------------
 # 5. AMBIENTES TÉCNICOS — cada computador monta o seu
@@ -91,8 +94,10 @@ perfil/usuario.md
 # nasceram: copiados para outro computador, não funcionam.
 # Quem monta é o instalador (scripts/setup.js).
 # ------------------------------------------------------------
-adv_env/
-pdfmd/
+# (a barra inicial prende a regra à raiz do projeto: sem ela,
+#  "pdfmd/" apagaria também a skill skills/pdfmd/)
+/adv_env/
+/pdfmd/
 node_modules/
 __pycache__/
 *.pyc
