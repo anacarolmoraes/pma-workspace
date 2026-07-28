@@ -1,0 +1,23 @@
+{
+  "skill_name": "radar-jurisprudencia",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "preciso de jurisprudencia favoravel pra sustentar a inicial de rescisão de lote que vamos protocolar no TJTO — a tese é a do art. 32-A, retenção máxima de 25% do que o comprador pagou. me traz 5 decisões",
+      "expected_output": "Dossiê .md na pasta do caso com 5 decisões (mínimo 2 do STJ), cada uma com processo, órgão, data, trecho-chave e status NÃO VERIFICADO; triagem feita por subagente Haiku; nenhuma leitura integral fora dos finalistas.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "busca no djen decisões que ajudem na réplica do caso da pasta clientes/Irineu, de 01/03/2025 pra cá",
+      "expected_output": "Skill lê os documentos do caso, extrai a(s) tese(s) defensiva(s) e o lado do cliente, enuncia as teses ao usuário, respeita o período pedido (2025-03-01 em diante) e produz o dossiê de 5 por tese. 'Favorável' avaliado pelo conteúdo (improcedência pode ser favorável à defesa).",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "o que os tribunais têm decidido sobre desmonetização de canal sem prova de infração concreta? quero precedentes pro caso novo",
+      "expected_output": "Termos construídos em variantes (palavra distintiva + frase exata que ocorre em decisões); se a primeira rodada vier seca, reformula termos e roda de novo antes de reportar; STF fora; se não houver 2 do STJ, o dossiê diz isso explicitamente em vez de preencher com material fraco.",
+      "files": []
+    }
+  ]
+}

@@ -41,6 +41,7 @@ Acionar assim que o gatilho aparecer, sem perguntar:
 | revisão por banca antes de tribunal superior | `banca-revisora` |
 | extrato bancário | `validador-extrato-pdf-excel` |
 | prazo, intimação, DJEN | `pesquisa-djen` |
+| jurisprudência favorável p/ sustentar peça, "o que os tribunais decidem sobre X" | `radar-jurisprudencia` |
 | PDF sem `.md` irmão | `pdfmd` |
 | transcrição de áudio | `whisper-transcriber` |
 | relatório ou parecer | `relatorio` |
