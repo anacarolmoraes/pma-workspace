@@ -51,14 +51,15 @@ parênteses para a pessoa apenas confirmar.
 7. **Quer receber a vigilância de prazos do DJEN nesta OAB?** — é o que define *quem* o monitor
    procura. Grava em `monitorar_djen`; o monitor não tem OAB no código, por decisão de
    arquitetura.
-8. **Em quais tribunais atua?** (sugerir o do escritório) — cada sigla precisa do arquivo
-   `skills/pesquisa-djen/feriados/<sigla>.json` com a portaria anual. Sem ele, a data fatal sai
-   marcada como não confiável. Gravar em `perfil/monitor-djen.json` → `tribunais_de_atuacao` e
-   avisar quais siglas ainda não têm arquivo de feriados.
-9. **Como prefere que eu escreva** — direto e sem rodeio, ou mais explicativo. Se a pessoa
+8. **Como prefere que eu escreva** — direto e sem rodeio, ou mais explicativo. Se a pessoa
    é nova em tecnologia, registrar isso: muda o tom de tudo que o agente responde.
 
-Não perguntar sobre prazos, janela de busca ou limiares de alerta: os padrões de
+**Não perguntar em quais tribunais a pessoa atua.** A busca do DJEN é nacional por OAB e não
+se restringe a tribunal nenhum — perguntar induziria a criar um filtro, e intimação de
+tribunal fora do filtro sumiria sem aviso. Feriado local é assunto separado: o monitor relata
+sozinho, a cada execução, de quais tribunais chegou intimação sem calendário.
+
+Também não perguntar sobre prazos, janela de busca ou limiares de alerta: os padrões de
 [`perfil/monitor-djen.json`](../../perfil/monitor-djen.json) servem, e o arquivo é comentado
 para quem quiser mexer depois. Entrevista longa é entrevista abandonada.
 
@@ -105,14 +106,11 @@ Acrescentar ao array `advogados`, sem mexer em quem já está lá:
 
 `titular: true` é só de quem responde pelo escritório — nunca marcar por conta própria.
 
-`monitorar_djen` é o que faz o vigia de prazos passar a procurar por esta OAB. Depois de
-gravar, vale rodar `node skills/pesquisa-djen/scripts/monitor.js` uma vez e relatar o que
-apareceu — assim a pessoa vê o sistema funcionando no primeiro dia.
-
-### 2.1 `perfil/monitor-djen.json` — só se os tribunais mudarem
-
-Acrescentar a sigla em `tribunais_de_atuacao` quando a pessoa atuar em tribunal ainda não
-listado, e avisar se faltar o arquivo de feriados correspondente.
+`monitorar_djen` é o que faz o vigia de prazos passar a procurar por esta OAB — em **todos** os
+tribunais do país, sem filtro. Depois de gravar, rodar
+`node skills/pesquisa-djen/scripts/monitor.js` uma vez e relatar o que apareceu: a pessoa vê o
+sistema funcionando no primeiro dia, e o comando já informa de quais tribunais falta calendário
+de feriado local.
 
 ### 3. Identidade do git
 

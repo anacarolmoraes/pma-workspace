@@ -77,6 +77,16 @@ Contagem regressiva onde não cabe recurso é ruído, e ruído ensina a ignorar 
 
 ⚠️ **No Juizado Especial o recurso inominado é de 10 dias** (Lei 9.099/95, art. 42), não 15: a coluna `fatal` é referência de recurso cível comum e precisa ser conferida contra o ato concreto.
 
+### A busca é NACIONAL — regra dura
+
+O escritório atua no Brasil inteiro. A consulta ao DJEN usa **apenas a OAB** (`numeroOab` + `ufOab`) e recebe o que vier de qualquer tribunal — a fila já traz TJTO, TJGO, TJMG e TJSP. `ufOab` é a seccional da inscrição, **não** filtro de tribunal.
+
+**Nunca acrescentar `siglaTribunal` à query, nem uma lista de tribunais à configuração.** Intimação de tribunal fora do filtro não apareceria, e prazo perdido em silêncio é o pior modo de falha deste sistema. Não existe chave de filtro em `monitor-djen.json` por decisão de projeto.
+
+Feriado local é assunto separado e não filtra nada: o cálculo procura `feriados/<sigla>.json` para o tribunal de cada intimação. Faltando o arquivo, a linha sai com `⚠ SEM FERIADO LOCAL`. **O erro é conservador** — sem os feriados locais a data fatal calculada é igual ou anterior à real, nunca posterior —, mas conferir no tribunal continua obrigatório.
+
+A cada execução o monitor grava `monitor/cobertura.json` com os tribunais que apareceram e quais estão sem calendário, e o hook `SessionStart` mostra a lista na abertura. Para cobrir um tribunal novo, criar `feriados/<sigla>.json` a partir da portaria anual dele.
+
 ### Configuração
 
 Tudo o que é ajustável mora em [`perfil/monitor-djen.json`](../../perfil/monitor-djen.json) — janela de busca, os dois prazos de referência, limiar de "prazo curto" e horas até o alarme de monitor parado. A linha de comando (`--dias`, `--prazo-ref`, `--prazo-edcl`) existe para teste pontual e vence o arquivo.
@@ -97,6 +107,7 @@ Arquivos de estado em `monitor/`:
 | `PENDENTES.md` | **a fila** — intimações não tratadas, com prazo calculado |
 | `seen.json` | IDs já vistos (deduplicação; permite janela larga sem ruído) |
 | `last_ok.json` | **dead man's switch** — última execução bem-sucedida; o hook `SessionStart` avisa se passar de 36 h |
+| `cobertura.json` | tribunais que apareceram e quais estão sem calendário de feriado local — **diagnóstico, nunca filtro** |
 | `novas_intimacoes.log` | histórico bruto, append-only |
 | `erros.log` | falhas da API |
 

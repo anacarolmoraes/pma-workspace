@@ -16,8 +16,9 @@
     "horas_sem_rodar": 36
   },
 
-  "tribunais_de_atuacao": ["TJTO"],
-  "_tribunais_de_atuacao": "Para cada sigla aqui deve existir skills/pesquisa-djen/feriados/<sigla>.json com a portaria anual. Sem o arquivo, a data fatal sai marcada como não confiável.",
+  "_busca": "A BUSCA É NACIONAL E NÃO SE FILTRA POR TRIBUNAL. O escritório atua no Brasil inteiro: o monitor consulta o DJEN apenas pela OAB, e recebe o que vier de qualquer tribunal. Nunca acrescentar aqui, nem na query, uma lista de tribunais para restringir a busca — intimação de tribunal fora da lista simplesmente não apareceria, e o prazo se perderia em silêncio. Não existe chave de filtro neste arquivo por decisão de projeto.",
+
+  "_feriados": "Feriado local é outra coisa, e não filtra nada: para cada tribunal que aparecer, o cálculo procura skills/pesquisa-djen/feriados/<sigla>.json. Sem o arquivo, a linha sai marcada 'SEM FERIADO LOCAL'. O erro nesse caso é conservador — sem os feriados locais a data fatal calculada é IGUAL OU ANTERIOR à real, nunca posterior —, mas conferir no tribunal continua obrigatório. O monitor relata a cada execução quais tribunais apareceram sem calendário.",
 
   "_nao_configuravel": "Contagem em dias úteis (CPC 219), publicação no 1º dia útil após a disponibilização (Lei 11.419/2006 art. 4º §3º), termo inicial no 1º dia útil após a publicação (CPC 224 §§2º-3º) e suspensão no recesso de 20/12 a 20/01 (CPC 220) são lei, não preferência — não se configuram."
 }

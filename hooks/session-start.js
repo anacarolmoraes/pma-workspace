@@ -18,6 +18,7 @@ const path = require('path');
 const RAIZ = path.resolve(__dirname, '..');
 const PENDENTES = path.join(RAIZ, 'skills', 'pesquisa-djen', 'monitor', 'PENDENTES.md');
 const LAST_OK = path.join(RAIZ, 'skills', 'pesquisa-djen', 'monitor', 'last_ok.json');
+const COBERTURA = path.join(RAIZ, 'skills', 'pesquisa-djen', 'monitor', 'cobertura.json');
 const USUARIO = path.join(RAIZ, 'perfil', 'usuario.md');
 const AMBIENTE = path.join(RAIZ, 'perfil', 'ambiente.json');
 
@@ -130,6 +131,17 @@ function lerFila() {
   return itens;
 }
 
+// Tribunais que apareceram na última varredura e não têm calendário local.
+function coberturaIncompleta() {
+  const txt = ler(COBERTURA);
+  if (!txt) return [];
+  try {
+    return JSON.parse(txt).sem_calendario_local || [];
+  } catch {
+    return [];
+  }
+}
+
 function alertaHeartbeat() {
   const txt = ler(LAST_OK);
   if (!txt) return 'O monitor do DJEN nunca registrou execução bem-sucedida — a vigilância de intimações NÃO está ativa.';
@@ -220,6 +232,17 @@ function montar() {
       for (const i of curtos.slice(0, 5)) {
         linhas.push(`   - ${i.processo} (${i.tribunal}) — fatal ${i.prazoTexto}`);
       }
+    }
+
+    // Atuação nacional: a busca cobre todos os tribunais, mas o calendário de
+    // feriado local não. A data desses sai conservadora (igual ou anterior à
+    // real), e a conferência no tribunal é obrigatória.
+    const sem = coberturaIncompleta();
+    if (sem.length) {
+      linhas.push(
+        `📅 **Sem calendário de feriado local: ${sem.join(', ')}** — prazo desses tribunais é ` +
+          `estimativa conservadora; conferir no tribunal antes de contar com a data.`,
+      );
     }
   }
 

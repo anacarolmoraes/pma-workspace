@@ -17,7 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { calcularPrazo } = require('../lib/prazo-core.js');
+const { calcularPrazo, feriadosLocais } = require('../lib/prazo-core.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
@@ -27,6 +27,7 @@ const SEEN = path.join(DIR, 'seen.json');
 const LOG = path.join(DIR, 'novas_intimacoes.log');
 const PENDENTES = path.join(DIR, 'PENDENTES.md');
 const LAST_OK = path.join(DIR, 'last_ok.json');
+const COBERTURA = path.join(DIR, 'cobertura.json');
 const ERROS = path.join(DIR, 'erros.log');
 
 fs.mkdirSync(DIR, { recursive: true });
@@ -96,6 +97,11 @@ function carregarCatalogo() {
 // ── DJEN ───────────────────────────────────────────────────────────────────
 const d2s = (d) => d.toISOString().slice(0, 10);
 
+// ⚠️ REGRA DURA: a consulta é NACIONAL. Filtra-se por OAB, nunca por tribunal.
+// O escritório atua no Brasil inteiro — a fila já recebe TJTO, TJGO, TJMG e TJSP.
+// Acrescentar `siglaTribunal` aqui faria a intimação de qualquer tribunal fora da
+// lista sumir sem aviso, e prazo perdido em silêncio é o pior modo de falha deste
+// sistema. `ufOab` NÃO é filtro de tribunal: identifica a seccional da inscrição.
 async function consultar(oab, inicio, fim) {
   const q = new URLSearchParams({
     numeroOab: oab.numero,
@@ -206,8 +212,13 @@ function atualizarFila(novas, catalogo) {
   const vistos = new Set(fs.existsSync(SEEN) ? JSON.parse(fs.readFileSync(SEEN, 'utf8')) : []);
   const novas = [];
 
+  // Atuação nacional: acompanhar de quais tribunais chega intimação, para saber
+  // para quais falta calendário de feriado local.
+  const tribunaisVistos = new Set();
+
   for (const oab of oabs) {
     for (const item of await consultar(oab, d2s(inicio), d2s(hoje))) {
+      if (item.siglaTribunal) tribunaisVistos.add(item.siglaTribunal);
       if (vistos.has(item.id)) continue;
       vistos.add(item.id);
       novas.push({
@@ -224,6 +235,35 @@ function atualizarFila(novas, catalogo) {
   }
 
   fs.writeFileSync(SEEN, JSON.stringify([...vistos]), 'utf8');
+
+  // Cobertura de feriados: sem o calendário do tribunal, a data fatal calculada
+  // é IGUAL OU ANTERIOR à real (erro conservador — nunca posterior), mas ainda
+  // assim precisa de conferência. Registrar para o hook avisar.
+  const semCalendario = [...tribunaisVistos]
+    .filter((t) => feriadosLocais(t).datas.length === 0)
+    .sort();
+  fs.writeFileSync(
+    COBERTURA,
+    JSON.stringify(
+      {
+        _comentario:
+          'Tribunais que apareceram na última execução e o subconjunto sem arquivo de feriados. ' +
+          'A busca é nacional: esta lista é diagnóstico, NUNCA filtro.',
+        atualizado_em: new Date().toISOString(),
+        tribunais_vistos: [...tribunaisVistos].sort(),
+        sem_calendario_local: semCalendario,
+      },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+  if (semCalendario.length) {
+    console.log(
+      `Aviso: sem calendário de feriado local para ${semCalendario.join(', ')} — ` +
+        `data fatal desses tribunais sai conservadora e precisa de conferência.`,
+    );
+  }
 
   // Dead man's switch: registrar SEMPRE que a consulta completou (PRD F5.5).
   fs.writeFileSync(

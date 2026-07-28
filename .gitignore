@@ -68,9 +68,9 @@ resp-stj-pipeline/outputs/
 # skill guarda a ferramenta, nunca o caso.
 # ------------------------------------------------------------
 skills/**/FICHA_CASO_*.md
-skills/pesquisa-djen/monitor/PENDENTES.md
-skills/pesquisa-djen/monitor/last_ok.json
-skills/pesquisa-djen/monitor/*.log
+# Todo o estado do vigia de prazos é de cada máquina: a fila traz número de
+# processo, e os demais são controle de execução que conflitariam entre pessoas.
+skills/pesquisa-djen/monitor/
 resp-stj-pipeline/CASE_STATUS.md
 resp-stj-pipeline/CASE_CONFIG.md
 
