@@ -1,0 +1,22 @@
+{
+  "cliente": "MARIVALDO PEREIRA DOS SANTOS",
+  "data_contrato": "2020-01-29",
+  "valor_original": 51427.00,
+  "valor_atualizado": 73117.48,
+  "total_pago": 25107.16,
+  "lote_edificado": false,
+  "data_referencia": "2026-07-24",
+  "out": "FICHA_CASO_MARIVALDO.md",
+  "clausulas": {
+    "eleicao_foro": "16.1",
+    "atividade_re": "9.1",
+    "reconhece_cdc": "2.1",
+    "retencao": "11.2",
+    "fruicao": "11.1",
+    "corretagem_exclui": "7.7",
+    "corretagem_naorestitui": "7.8",
+    "encargos_moratorios": "11.3",
+    "parcelamento": "11.1.2",
+    "negativacao": "12.2 e 12.5"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "tese": { "type": "string" },
+      "aderencia_fatica": { "type": "string" },
+      "lastro_processual_minimo": { "type": "string" },
+      "risco_probatorio": { "type": "string" },
+      "aderencia_jurisprudencial": { "type": "string" },
+      "classificacao": { "type": "string" },
+      "justificativa": { "type": "string" }
+    }
+  }
+}

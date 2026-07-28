@@ -1,0 +1,53 @@
+{
+  "_comentario": "Valores canônicos do padrão visual PMA, em forma legível por máquina. Esta é a FONTE: perfil/definicoes.md §7 aponta para cá, e o lint-docx valida o .docx contra estes números. Trocar aqui muda o padrão de todas as peças.",
+  "_autoridade": "Titular, decidido em 2026-05-15. Unidades: twips (1 cm = 567 twips; 1 pt = 20 twips).",
+
+  "fontes": {
+    "corpo": "Montserrat",
+    "leve": "Montserrat Light",
+    "permitidas": ["Montserrat", "Montserrat Light"],
+    "embutir_no_docx": true,
+    "_nota_embutir": "O modelo skills/tipografia-pma/assets/PETICAO_MODELO.docx traz 8 fontes embutidas. Sem elas, o .docx renderiza em fonte substituta em máquina sem Montserrat instalada (a do juízo, a do cartório)."
+  },
+
+  "tamanhos_pt": {
+    "corpo": 12,
+    "titulos": 12,
+    "citacao_bloco": 11,
+    "rodape_notas": 10
+  },
+
+  "pagina": {
+    "margem_cm": 3,
+    "margem_twips": 1701,
+    "header_twips": 708,
+    "footer_twips": 708
+  },
+
+  "paragrafo": {
+    "entrelinha_dxa": 312,
+    "entrelinha_equivalente": "1,3",
+    "espaco_depois_twips": 240,
+    "alinhamento": "justificado",
+    "hifenizacao_automatica": true
+  },
+
+  "citacao_bloco": {
+    "recuo_esquerda_cm": 3,
+    "italico": false,
+    "aspas": false
+  },
+
+  "titulos": {
+    "caixa": "MAIÚSCULA",
+    "negrito": true,
+    "_nota": "Hierarquia por caixa e numeração, nunca por tamanho de fonte."
+  },
+
+  "assets": {
+    "modelo_formatacao": "material_padrao_escritorio/PETICAO_MODELO_FORMATACAO.docx",
+    "modelo_corpo": "skills/tipografia-pma/assets/PETICAO_MODELO.docx",
+    "header_exige_imagem": true,
+    "footer_exige_texto": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "dispositivo": { "type": "string" },
+      "foi_suscitado": { "type": "boolean" },
+      "local_da_suscitacao": { "type": "string" },
+      "foi_enfrentado_expressamente": { "type": "boolean" },
+      "foi_enfrentado_implicitamente": { "type": "boolean" },
+      "houve_embargos_declaracao": { "type": "boolean" },
+      "seguranca_recursal": { "type": "string" },
+      "observacao": { "type": "string" }
+    }
+  }
+}

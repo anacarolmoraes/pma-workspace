@@ -1,0 +1,157 @@
+# ============================================================
+# .gitignore — o que NUNCA sobe para o repositório da equipe
+#
+# Tudo que estiver listado aqui continua normalmente no SEU
+# computador — apenas não é enviado para a nuvem nem baixado
+# pelos colegas. É a barreira técnica do sigilo profissional
+# (art. 34, VII, EOAB) e da LGPD.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# 1. CREDENCIAIS — nunca, em hipótese alguma
+# ------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+mcp_config.json
+credentials*.json
+*token*.json
+.agent/
+.agents/
+
+
+# ------------------------------------------------------------
+# 2. DADOS DE CLIENTE — sigilo profissional / LGPD
+#
+# Documento de cliente não entra no git. Motivo: o git guarda
+# TODAS as versões para sempre; apagar o arquivo depois não
+# apaga do histórico. Se um cliente pedir exclusão dos dados
+# (direito LGPD), não haveria como cumprir.
+# Estes arquivos ficam no seu computador e, no futuro, no
+# Google Drive do escritório — onde o acesso é revogável.
+# ------------------------------------------------------------
+clientes/
+relatorios/
+resp-stj-pipeline/outputs/
+
+
+# ------------------------------------------------------------
+# 3. PASTAS DE TEMA — não entram no motor
+#
+# Auditoria de 28/07/2026: estas pastas misturam jurisprudência
+# pública (que pode circular) com documentos brutos baixados de
+# processos — petições e réplicas com nome completo e CPF de
+# pessoas físicas, inclusive de terceiros que não são clientes
+# do escritório. Boa parte está em PDF/DOCX, cujo conteúdo não
+# se inspeciona automaticamente: não há como separar com
+# segurança arquivo por arquivo.
+#
+# O destino correto delas é o repositório arsenal-juridico, onde
+# cada item passa pelo schema do acervo e por triagem humana —
+# jurisprudência pública de um lado, documento de caso de outro.
+# Até lá, ficam só na máquina.
+# ------------------------------------------------------------
+/direito_bancario/
+/direito_digital/
+/rescisao_contrato_imovel/
+/cobranca_honorarios/
+/recursos_gerais/
+
+
+# ------------------------------------------------------------
+# 3.1 DADO DE CASO ESCONDIDO DENTRO DE PASTA TÉCNICA
+#
+# A mesma auditoria encontrou ficha de cliente guardada dentro
+# de skill e estado operacional com número de processo. Regra:
+# skill guarda a ferramenta, nunca o caso.
+# ------------------------------------------------------------
+skills/**/FICHA_CASO_*.md
+skills/pesquisa-djen/monitor/PENDENTES.md
+skills/pesquisa-djen/monitor/last_ok.json
+skills/pesquisa-djen/monitor/*.log
+resp-stj-pipeline/CASE_STATUS.md
+resp-stj-pipeline/CASE_CONFIG.md
+
+
+# ------------------------------------------------------------
+# 4. IDENTIDADE DE QUEM USA ESTA MÁQUINA
+#
+# Gerado pela entrevista de primeiro uso. É de cada pessoa,
+# não do repositório.
+# ------------------------------------------------------------
+perfil/usuario.md
+
+
+# ------------------------------------------------------------
+# 5. AMBIENTES TÉCNICOS — cada computador monta o seu
+#
+# São programas instalados, com caminhos fixos da máquina onde
+# nasceram: copiados para outro computador, não funcionam.
+# Quem monta é o instalador (scripts/setup.js).
+# ------------------------------------------------------------
+adv_env/
+pdfmd/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+
+# ------------------------------------------------------------
+# 6. MARKETING — vai para repositório próprio (pma-marketing)
+# ------------------------------------------------------------
+artigos/
+skills/pptx-generator/
+skills/brand-voice-generator/
+skills/remotion/
+skills/academic-writer-br/
+skills/artigo-jornalistico-persuasivo/
+skills/linkedin-profile-optimizer/
+skills/yt-search/
+
+
+# ------------------------------------------------------------
+# 7. SKILLS QUE NÃO FAZEM PARTE DO MOTOR
+#
+# Continuam na sua máquina; apenas não são distribuídas para a
+# equipe, para o projeto chegar enxuto a quem está começando.
+# ------------------------------------------------------------
+skills/humanizer/
+skills/vulnerability-scanner/
+skills/documentation-templates/
+skills/brainstorming/
+skills/skill-mcp-creator/
+skills/audio-converter/
+skills/pdf/
+skills/xlsx/
+skills/Scrapling-Skill/
+skills/smart-browser-orchestrator/
+
+
+# ------------------------------------------------------------
+# 8. RASCUNHOS, CACHES E MÍDIA PESADA
+# ------------------------------------------------------------
+scratch/
+backups/
+_arquivo/
+.notebooklm/
+audio/
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.heic
+
+
+# ------------------------------------------------------------
+# 9. ARQUIVOS DE SISTEMA E TRAVAS DE EDITOR
+# ------------------------------------------------------------
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+.~lock.*#
+.claude/settings.local.json

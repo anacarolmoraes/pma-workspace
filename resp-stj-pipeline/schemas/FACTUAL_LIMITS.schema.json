@@ -1,0 +1,14 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "tema": { "type": "string" },
+      "fato_fixado": { "type": "string" },
+      "requalificacao_juridica_possivel": { "type": "boolean" },
+      "exige_reexame_de_prova": { "type": "boolean" },
+      "risco_sumula_7": { "type": "string" },
+      "observacao": { "type": "string" }
+    }
+  }
+}

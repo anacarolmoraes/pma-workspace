@@ -1,0 +1,28 @@
+{
+  "_comentario": "Fonte única dos advogados do escritório. Consumido pelo bloco de assinatura das peças (peca-pma-builder) e pelo monitor do DJEN (pesquisa-djen), que antes tinha as OABs hardcoded em monitor.js.",
+
+  "advogados": [
+    {
+      "id": "ana",
+      "nome_completo": "Ana Carolina Ribeiro de Moraes Paulo",
+      "nome_assinatura": "ANA MORAES",
+      "oab_numero": "6573",
+      "oab_uf": "TO",
+      "titular": true,
+      "assina_por_padrao": true,
+      "monitorar_djen": true
+    },
+    {
+      "id": "flavia",
+      "nome_completo": "Flávia Paulo Oliveira",
+      "nome_assinatura": "FLÁVIA PAULO OLIVEIRA",
+      "oab_numero": "6951",
+      "oab_uf": "TO",
+      "titular": false,
+      "assina_por_padrao": false,
+      "monitorar_djen": true
+    }
+  ],
+
+  "regra_assinatura": "Assina apenas quem efetivamente atua no processo. Por padrão, uma linha só: `ANA MORAES | OAB/TO 6573`. Flávia entra somente quando pedido expressamente. Ver perfil/definicoes.md §4."
+}

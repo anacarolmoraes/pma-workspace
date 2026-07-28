@@ -1,0 +1,14 @@
+{
+  "_instrucoes": "Feriados/suspensões de expediente do TJTO além dos nacionais já embutidos no prazo.js. Alimentar a cada ano com a portaria anual de feriados do TJTO (ex.: Portaria 3741/2025 declarou 16-17/02/2026 — já cobertos como forenses nacionais). CONFERIR a portaria vigente antes de confiar nesta lista para data fatal.",
+  "_fonte": "PENDENTE: transcrever da portaria anual do TJTO (wwwa.tjto.jus.br) — lista abaixo contém apenas os feriados estaduais notórios do Tocantins",
+  "datas": [
+    "2026-06-29",
+    "2026-09-08",
+    "2026-10-05"
+  ],
+  "_legenda": {
+    "2026-06-29": "Ponto facultativo TJTO (segunda-feira) — Diário da Justiça, matéria 922007 (https://diario.tjto.jus.br/materia/922007); portaria arquivada em clientes/leonardo/ponto_facultativo_TJTO.pdf",
+    "2026-09-08": "Nossa Senhora da Natividade, padroeira do Estado do Tocantins — CONFIRMAR na portaria TJTO",
+    "2026-10-05": "Criação do Estado do Tocantins (feriado estadual) — CONFIRMAR na portaria TJTO"
+  }
+}

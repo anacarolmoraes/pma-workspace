@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": ["partes_defendidas", "NB1", "NB2", "NB3", "NB4", "tema_juridico", "tribunal_origem"],
+  "properties": {
+    "partes_defendidas": { "type": "array", "items": { "type": "string" } },
+    "NB1": { "type": "string" },
+    "NB2": { "type": "string" },
+    "NB3": { "type": "string" },
+    "NB4": { "type": "string" },
+    "tema_juridico": { "type": "string" },
+    "tribunal_origem": { "type": "string" },
+    "preocupacoes_estrategicas_iniciais": { "type": "array", "items": { "type": "string" } }
+  }
+}

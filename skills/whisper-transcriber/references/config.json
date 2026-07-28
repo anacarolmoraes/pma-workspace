@@ -1,0 +1,14 @@
+{
+  "name": "whisper-transcriber",
+  "type": "SIMPLE_WRAPPER",
+  "model": "base",
+  "language": "pt",
+  "supported_formats": [".mp3", ".mp4", ".ogg", ".wav", ".m4a"],
+  "dependencies": ["openai-whisper", "ffmpeg"],
+  "install": {
+    "python": "pip install openai-whisper",
+    "windows": "choco install ffmpeg",
+    "mac": "brew install ffmpeg",
+    "linux": "sudo apt install ffmpeg"
+  }
+}

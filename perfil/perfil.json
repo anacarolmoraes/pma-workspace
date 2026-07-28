@@ -1,0 +1,41 @@
+{
+  "$schema": "./perfil.schema.md",
+  "_comentario": "Identidade do escritório. Camada P do PRD: o motor (skills, builder, lints) lê daqui e nunca de caminho fixo. Trocar este arquivo + marca/ troca a identidade das peças sem editar skill.",
+
+  "escritorio": {
+    "nome": "Pinheiro Moraes Advocacia",
+    "sigla": "PMA",
+    "comarcas": ["Porto Nacional/TO", "Palmas/TO"],
+    "uf": "TO",
+    "tribunal_padrao": "TJTO",
+    "local_assinatura": "Palmas - TO",
+    "data_assinatura": "data certificada pelo sistema"
+  },
+
+  "areas": [
+    "imobiliario",
+    "consumidor",
+    "bancario",
+    "digital-lgpd",
+    "civel-estrategico"
+  ],
+
+  "caminhos": {
+    "_comentario": "Relativos à raiz do workspace. O motor resolve a partir daqui — não repetir caminho absoluto em skill (PRD F7).",
+    "marca": "material_padrao_escritorio",
+    "templates": "material_padrao_escritorio",
+    "clientes": "clientes",
+    "relatorios": "relatorios",
+    "bundles": "D:/GITHUB/bundles",
+    "python": "adv_env/Scripts/python.exe",
+    "python_pdfmd": "pdfmd/pdfmd_env/Scripts/python.exe"
+  },
+
+  "arquivos_marca": {
+    "modelo_formatacao": "PETICAO_MODELO_FORMATACAO.docx",
+    "modelo_corpo": "skills/tipografia-pma/assets/PETICAO_MODELO.docx"
+  },
+
+  "definicoes": "perfil/definicoes.md",
+  "advogados": "perfil/advogados.json"
+}
