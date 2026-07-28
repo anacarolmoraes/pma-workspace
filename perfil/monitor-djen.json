@@ -1,0 +1,23 @@
+{
+  "_comentario": "Configuração do vigia de intimações do DJEN. É política do escritório, então vai para o repositório. QUEM é monitorado não fica aqui: sai de perfil/advogados.json (campo monitorar_djen), preenchido pela entrevista de primeiro uso.",
+
+  "janela_dias": 10,
+  "_janela_dias": "Quantos dias para trás o monitor consulta a cada execução. Janela larga é barata: monitor/seen.json deduplica. Aumentar se a máquina ficar dias desligada.",
+
+  "prazos_referencia": {
+    "_comentario": "Dias ÚTEIS. Referência para a fila — NÃO substitui a conferência do prazo do ato concreto. Matéria penal corre em dias corridos e não é coberta.",
+    "embargos_declaracao": 5,
+    "recurso_principal": 15
+  },
+
+  "alerta": {
+    "_comentario": "dias_prazo_curto precisa ser MAIOR que embargos_declaracao: um alerta que dispara com 5 dias restantes chega quando o prazo de embargos já venceu.",
+    "dias_prazo_curto": 7,
+    "horas_sem_rodar": 36
+  },
+
+  "tribunais_de_atuacao": ["TJTO"],
+  "_tribunais_de_atuacao": "Para cada sigla aqui deve existir skills/pesquisa-djen/feriados/<sigla>.json com a portaria anual. Sem o arquivo, a data fatal sai marcada como não confiável.",
+
+  "_nao_configuravel": "Contagem em dias úteis (CPC 219), publicação no 1º dia útil após a disponibilização (Lei 11.419/2006 art. 4º §3º), termo inicial no 1º dia útil após a publicação (CPC 224 §§2º-3º) e suspensão no recesso de 20/12 a 20/01 (CPC 220) são lei, não preferência — não se configuram."
+}

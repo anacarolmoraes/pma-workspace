@@ -54,7 +54,41 @@ node scripts/prazo.js --processo <n> --tribunal TJTO --dias 15 --feriados feriad
 node scripts/monitor.js --dias 10    # exit 10 = há novas
 ```
 
-**A fila `monitor/PENDENTES.md` é a fonte da verdade** — não o popup, que só aparece com sessão interativa aberta e some ao ser fechado. O monitor **só acrescenta** linhas; quem troca `ABERTA` por `TRATADA` é a titular. Cada linha traz termo inicial e data fatal de referência (15 d.ú.), calculados por `lib/prazo-core.js`.
+**A fila `monitor/PENDENTES.md` é a fonte da verdade** — não o popup, que só aparece com sessão interativa aberta e some ao ser fechado. O monitor **só acrescenta** linhas; quem troca `ABERTA` por `TRATADA` é a titular.
+
+### Os dois prazos de cada linha
+
+Cada linha traz o termo inicial e **dois** prazos de referência, ambos em dias úteis contados do mesmo termo inicial (`lib/prazo-core.js`):
+
+| Coluna | Prazo | Base |
+|---|---|---|
+| `embargos` | 5 d.ú. | CPC, art. 1.023 |
+| `fatal` | 15 d.ú. | recurso cível comum |
+
+A coluna de embargos depende do **tipo do documento** (`lib/tipo-documento.js`), porque embargos cabem de decisão (CPC, art. 1.022) e de despacho não cabe recurso algum (art. 1.001):
+
+| Valor na coluna | Significa |
+|---|---|
+| `**2026-08-03**` | decisão, sentença ou acórdão — prazo de embargos correndo |
+| `2026-08-03 ?` | rótulo ambíguo ("Outros") — prazo calculado, **cabimento a conferir** |
+| `n/a` | ato ordinatório, despacho, intimação — não cabem embargos |
+
+Contagem regressiva onde não cabe recurso é ruído, e ruído ensina a ignorar o alerta — daí a classificação.
+
+⚠️ **No Juizado Especial o recurso inominado é de 10 dias** (Lei 9.099/95, art. 42), não 15: a coluna `fatal` é referência de recurso cível comum e precisa ser conferida contra o ato concreto.
+
+### Configuração
+
+Tudo o que é ajustável mora em [`perfil/monitor-djen.json`](../../perfil/monitor-djen.json) — janela de busca, os dois prazos de referência, limiar de "prazo curto" e horas até o alarme de monitor parado. A linha de comando (`--dias`, `--prazo-ref`, `--prazo-edcl`) existe para teste pontual e vence o arquivo.
+
+O que **não** se configura, por ser lei: contagem em dias úteis (CPC 219), publicação no 1º dia útil seguinte (Lei 11.419/2006, art. 4º, §3º), termo inicial no 1º dia útil após a publicação (CPC 224) e suspensão no recesso (CPC 220).
+
+Fila criada antes de 28/07/2026 não tem a coluna de embargos. Para acrescentá-la (ou recalculá-la):
+
+```powershell
+node scripts\migrar-fila-embargos.js --dry-run   # mostra o que faria
+node scripts\migrar-fila-embargos.js
+```
 
 Arquivos de estado em `monitor/`:
 
@@ -66,7 +100,7 @@ Arquivos de estado em `monitor/`:
 | `novas_intimacoes.log` | histórico bruto, append-only |
 | `erros.log` | falhas da API |
 
-**OABs vêm de `perfil/advogados.json`** (campo `monitorar_djen`) — não há OAB hardcoded no script, por decisão de arquitetura.
+**OABs vêm de `perfil/advogados.json`** (campo `monitorar_djen`) — não há OAB hardcoded no script, por decisão de arquitetura. Quem entra nessa lista é definido na entrevista de primeiro uso (skill `onboarding-usuario`); para incluir ou remover alguém depois, peça "atualize meu perfil".
 
 ### Instalação da tarefa agendada
 

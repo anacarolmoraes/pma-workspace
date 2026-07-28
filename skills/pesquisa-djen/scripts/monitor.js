@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { calcularPrazo } = require('../lib/prazo-core.js');
+const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
 const RAIZ = path.resolve(SKILL, '..', '..');
@@ -31,12 +32,34 @@ const ERROS = path.join(DIR, 'erros.log');
 fs.mkdirSync(DIR, { recursive: true });
 
 // ── Parâmetros ─────────────────────────────────────────────────────────────
+// Ordem de precedência: linha de comando > perfil/monitor-djen.json > padrão.
+// A configuração é do escritório e mora no perfil; a linha de comando existe
+// para teste pontual, não para virar o jeito normal de rodar.
 const arg = (nome, padrao) => {
   const i = process.argv.indexOf(`--${nome}`);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : padrao;
 };
-const DIAS_JANELA = parseInt(arg('dias', '10'), 10); // janela larga: seen.json deduplica
-const PRAZO_REF = parseInt(arg('prazo-ref', '15'), 10); // prazo recursal cível mais comum
+
+function carregarConfig() {
+  const padrao = {
+    janela_dias: 10,
+    prazos_referencia: { embargos_declaracao: 5, recurso_principal: 15 },
+  };
+  try {
+    const c = JSON.parse(fs.readFileSync(path.join(RAIZ, 'perfil', 'monitor-djen.json'), 'utf8'));
+    return {
+      janela_dias: c.janela_dias ?? padrao.janela_dias,
+      prazos_referencia: { ...padrao.prazos_referencia, ...(c.prazos_referencia || {}) },
+    };
+  } catch {
+    return padrao;
+  }
+}
+
+const CFG = carregarConfig();
+const DIAS_JANELA = parseInt(arg('dias', String(CFG.janela_dias)), 10); // janela larga: seen.json deduplica
+const PRAZO_REF = parseInt(arg('prazo-ref', String(CFG.prazos_referencia.recurso_principal)), 10);
+const PRAZO_EDCL = parseInt(arg('prazo-edcl', String(CFG.prazos_referencia.embargos_declaracao)), 10);
 
 // ── Advogados: fonte única em perfil/advogados.json (PRD F1.2) ─────────────
 function carregarOABs() {
@@ -93,14 +116,17 @@ async function consultar(oab, inicio, fim) {
 const CABECALHO = `# Fila de intimações — DJEN
 
 > ⚠️ **Esta fila não substitui a conferência no eproc/DJEN oficial antes de protocolar.**
-> O prazo é **referência** de ${PRAZO_REF} dias úteis (recurso cível comum): confira o prazo
-> aplicável ao ato concreto. Matéria **penal** corre em dias corridos — não vale este cálculo.
+> São dois prazos de **referência**, ambos em dias úteis e contados do mesmo termo inicial:
+> **embargos de declaração, ${PRAZO_EDCL} dias** (CPC, art. 1.023) e **recurso principal,
+> ${PRAZO_REF} dias**. Confira o prazo do ato concreto — no Juizado Especial o recurso
+> inominado é de 10 dias (Lei 9.099/95, art. 42), não ${PRAZO_REF}. Matéria **penal** corre em
+> dias corridos e não é coberta por este cálculo.
 >
 > O monitor **só acrescenta** linhas. Troque \`ABERTA\` por \`TRATADA\` quando resolver;
 > nada é removido automaticamente.
 
-| status | processo | tribunal / órgão | disponibilização | documento | fatal (${PRAZO_REF} d.ú.) | termo inicial | caso |
-|---|---|---|---|---|---|---|---|
+| status | processo | tribunal / órgão | disponibilização | documento | embargos (${PRAZO_EDCL} d.ú.) | fatal (${PRAZO_REF} d.ú.) | termo inicial | caso |
+|---|---|---|---|---|---|---|---|---|
 `;
 
 function idsNaFila(texto) {
@@ -111,18 +137,28 @@ function idsNaFila(texto) {
 
 function montarLinha(n, catalogo) {
   let fatal = '—';
+  let edcl = '—';
   let termo = '—';
   let flag = '';
 
   try {
-    const r = calcularPrazo({
-      disponibilizacao: n.disponibilizacao,
-      dias: PRAZO_REF,
-      tribunal: n.tribunal,
-    });
+    const base = { disponibilizacao: n.disponibilizacao, tribunal: n.tribunal };
+    const r = calcularPrazo({ ...base, dias: PRAZO_REF });
     fatal = r.data_fatal;
     termo = r.termo_inicial;
     if (!r.confiavel) flag = ' ⚠ SEM FERIADO LOCAL';
+
+    // Embargos correm do MESMO termo inicial, com contagem menor — mas só fazem
+    // sentido contra decisão. Em ato ordinatório a coluna fica `n/a`: contagem
+    // regressiva onde não cabe recurso é ruído que ensina a ignorar o alerta.
+    const classe = classificar(n.documento || n.tipo);
+    if (classe === 'nao_embargavel') {
+      edcl = 'n/a';
+    } else {
+      const e = calcularPrazo({ ...base, dias: PRAZO_EDCL });
+      // `?` marca rótulo ambíguo ("Outros"): prazo calculado, mas a conferir.
+      edcl = classe === 'duvida' ? `${e.data_fatal} ?` : `**${e.data_fatal}**`;
+    }
   } catch (e) {
     flag = ` ⚠ ${e.message}`;
   }
@@ -137,7 +173,7 @@ function montarLinha(n, catalogo) {
 
   return (
     `| ABERTA | ${n.processo} | ${n.tribunal} / ${n.orgao} | ${n.disponibilizacao} | ` +
-    `${n.documento || n.tipo} | **${fatal}**${flag} | ${termo} | ${caso} | <!-- id:${n.id} -->`
+    `${n.documento || n.tipo} | ${edcl} | **${fatal}**${flag} | ${termo} | ${caso} | <!-- id:${n.id} -->`
   );
 }
 

@@ -22,8 +22,40 @@ const USUARIO = path.join(RAIZ, 'perfil', 'usuario.md');
 const AMBIENTE = path.join(RAIZ, 'perfil', 'ambiente.json');
 
 const MAX_LINHAS = 20;
-const HORAS_ALERTA = 36;
-const DIAS_PRAZO_CURTO = 5;
+
+// Limiares são política do escritório: perfil/monitor-djen.json. O hook nunca
+// derruba a sessão, então cada leitura tem padrão de segurança.
+function config() {
+  const padrao = {
+    horas_sem_rodar: 36,
+    dias_prazo_curto: 7,
+    prazo_edcl: 5,
+  };
+  try {
+    const c = JSON.parse(fs.readFileSync(path.join(RAIZ, 'perfil', 'monitor-djen.json'), 'utf8'));
+    return {
+      horas_sem_rodar: c.alerta?.horas_sem_rodar ?? padrao.horas_sem_rodar,
+      dias_prazo_curto: c.alerta?.dias_prazo_curto ?? padrao.dias_prazo_curto,
+      prazo_edcl: c.prazos_referencia?.embargos_declaracao ?? padrao.prazo_edcl,
+    };
+  } catch {
+    return padrao;
+  }
+}
+
+const CFG = config();
+const HORAS_ALERTA = CFG.horas_sem_rodar;
+const DIAS_PRAZO_CURTO = CFG.dias_prazo_curto;
+
+// Contagem em dias ÚTEIS vem do mesmo núcleo que o monitor usa — duas contas
+// diferentes para o mesmo prazo divergiriam. Se o módulo não carregar, cai para
+// dias corridos e AVISA, em vez de mentir um número.
+let diasUteisRestantes = null;
+try {
+  ({ diasUteisRestantes } = require(path.join(RAIZ, 'skills', 'pesquisa-djen', 'lib', 'prazo-core.js')));
+} catch {
+  /* segue em dias corridos */
+}
 
 const ler = (p) => {
   try {
@@ -40,23 +72,59 @@ const diasAte = (iso) => {
   return Math.round((d - hoje()) / 86400000);
 };
 
-// Linha da fila: | STATUS | processo | tribunal/órgão | disponibilização | tipo | prazo | caso |
+// Dias ÚTEIS até a data, pelo núcleo do monitor (feriado local + recesso). Sem
+// o núcleo, devolve null: melhor não mostrar contagem do que mostrar errada.
+const uteisAte = (iso, tribunal) => {
+  if (!diasUteisRestantes) return null;
+  try {
+    return diasUteisRestantes(iso, undefined, { tribunal });
+  } catch {
+    return null;
+  }
+};
+
+// A fila é uma tabela markdown cujas colunas mudam com o tempo (a de embargos
+// entrou depois). Ler por POSIÇÃO fixa quebra em silêncio quando isso acontece
+// — e um alerta de prazo que falha calado é pior que alerta nenhum. Por isso as
+// colunas são localizadas pelo nome no cabeçalho.
 function lerFila() {
   const txt = ler(PENDENTES);
   if (!txt) return [];
+
+  const linhas = txt.split('\n').filter((l) => l.trim().startsWith('|'));
+  if (!linhas.length) return [];
+
+  const cabecalho = linhas[0].split('|').map((c) => c.trim().toLowerCase());
+  const acharCol = (...termos) => cabecalho.findIndex((c) => termos.some((t) => c.includes(t)));
+
+  const iStatus = acharCol('status');
+  const iProcesso = acharCol('processo');
+  const iOrgao = acharCol('tribunal', 'órgão', 'orgao');
+  const iEdcl = acharCol('embargos');
+  const iFatal = acharCol('fatal');
+  if (iStatus < 0 || iFatal < 0) return [];
+
+  const dataDe = (c) => {
+    const m = /(\d{4}-\d{2}-\d{2})/.exec(c || '');
+    return m ? m[1] : null;
+  };
+
   const itens = [];
-  for (const linha of txt.split('\n')) {
-    if (!linha.trim().startsWith('|')) continue;
+  for (const linha of linhas.slice(1)) {
     const cols = linha.split('|').map((c) => c.trim());
-    if (cols.length < 8) continue;
-    const [, status, processo, orgao, , , prazo] = cols;
-    if (!/^ABERTA$/i.test(status)) continue;
-    const mPrazo = /(\d{4}-\d{2}-\d{2})/.exec(prazo || '');
+    if (!/^ABERTA$/i.test(cols[iStatus] || '')) continue;
+    const orgao = iOrgao > -1 ? cols[iOrgao] || '' : '';
+    const celulaEdcl = iEdcl > -1 ? cols[iEdcl] || '' : '';
     itens.push({
-      processo,
+      processo: iProcesso > -1 ? cols[iProcesso] : '(sem número)',
       orgao,
-      prazoIso: mPrazo ? mPrazo[1] : null,
-      prazoTexto: prazo || '(sem prazo calculado)',
+      tribunal: orgao.split('/')[0].trim(),
+      edclIso: dataDe(celulaEdcl),
+      // `?` = rótulo de documento ambíguo; o prazo existe, o cabimento é que
+      // não está confirmado. Vale contar separado para não afogar as decisões.
+      edclDuvida: celulaEdcl.includes('?'),
+      prazoIso: dataDe(cols[iFatal]),
+      prazoTexto: cols[iFatal] || '(sem prazo calculado)',
     });
   }
   return itens;
@@ -114,17 +182,43 @@ function montar() {
 
   const fila = lerFila();
   if (fila.length) {
-    const curtos = fila.filter((i) => {
-      const d = i.prazoIso ? diasAte(i.prazoIso) : null;
-      return d !== null && d <= DIAS_PRAZO_CURTO;
-    });
-
     linhas.push(`📥 **Intimações não tratadas: ${fila.length}** (fila em \`skills/pesquisa-djen/monitor/PENDENTES.md\`)`);
 
+    // Embargos primeiro: é o prazo mais curto, e é o que se perde calado.
+    const noPrazo = fila
+      .filter((i) => i.edclIso)
+      .map((i) => ({ ...i, uteis: uteisAte(i.edclIso, i.tribunal) }))
+      .filter((i) => i.uteis !== null && i.uteis >= 0)
+      .sort((a, b) => a.uteis - b.uteis);
+
+    const emb = noPrazo.filter((i) => !i.edclDuvida);
+    const duvida = noPrazo.filter((i) => i.edclDuvida);
+
+    if (emb.length) {
+      linhas.push(`🔴 **Embargos de declaração (${CFG.prazo_edcl} d.ú.) — ${emb.length} decisão(ões) no prazo:**`);
+      for (const i of emb.slice(0, 6)) {
+        const quanto = i.uteis === 0 ? '**VENCE HOJE**' : `faltam **${i.uteis}** dia(s) útil(eis)`;
+        linhas.push(`   - ${i.processo} (${i.tribunal}) — até ${i.edclIso}, ${quanto}`);
+      }
+    }
+
+    if (duvida.length) {
+      const menor = duvida[0];
+      linhas.push(
+        `🟡 **${duvida.length} comunicação(ões) de tipo ambíguo** (rótulo "Outros") ainda dentro dos ` +
+          `${CFG.prazo_edcl} dias — a mais próxima vence ${menor.edclIso}. Abrir para ver se é decisão.`,
+      );
+    }
+
+    const curtos = fila.filter((i) => {
+      const d = i.prazoIso ? diasAte(i.prazoIso) : null;
+      return d !== null && d >= 0 && d <= DIAS_PRAZO_CURTO;
+    });
+
     if (curtos.length) {
-      linhas.push(`🔴 **Prazo em ≤ ${DIAS_PRAZO_CURTO} dias — ${curtos.length}:**`);
-      for (const i of curtos.slice(0, 8)) {
-        linhas.push(`   - ${i.processo} (${i.orgao}) — fatal ${i.prazoTexto}`);
+      linhas.push(`🟠 **Recurso principal em ≤ ${DIAS_PRAZO_CURTO} dias — ${curtos.length}:**`);
+      for (const i of curtos.slice(0, 5)) {
+        linhas.push(`   - ${i.processo} (${i.tribunal}) — fatal ${i.prazoTexto}`);
       }
     }
   }

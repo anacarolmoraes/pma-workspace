@@ -126,11 +126,44 @@ function calcularPrazo({ disponibilizacao, dias, tribunal, feriadosExtra = [] })
   };
 }
 
+/**
+ * Quantos dias ÚTEIS faltam de `de` (exclusive) até `ate` (inclusive).
+ *
+ * É o número que interessa a quem tem de protocolar: "faltam 2 dias úteis" diz
+ * mais que "vence em 12/08". Negativo = prazo vencido. Zero = vence hoje.
+ *
+ * @param {string} ate  data fatal AAAA-MM-DD
+ * @param {string} [de] data base AAAA-MM-DD (padrão: hoje)
+ * @param {object} [opts] { tribunal, feriadosExtra }
+ */
+function diasUteisRestantes(ate, de, opts = {}) {
+  const locais = feriadosLocais(opts.tribunal);
+  const cal = criarCalendario([...locais.datas, ...(opts.feriadosExtra || [])]);
+
+  const fim = s2d(ate);
+  const base = de ? s2d(de) : s2d(d2s(new Date()));
+  if (Number.isNaN(fim.getTime()) || Number.isNaN(base.getTime())) return null;
+
+  if (d2s(fim) === d2s(base)) return 0;
+
+  const vencido = fim < base;
+  const [ini, alvo] = vencido ? [fim, base] : [base, fim];
+
+  let n = 0;
+  const x = new Date(ini);
+  while (d2s(x) < d2s(alvo)) {
+    x.setUTCDate(x.getUTCDate() + 1);
+    if (cal.diaUtil(x)) n += 1;
+  }
+  return vencido ? -n : n;
+}
+
 module.exports = {
   FERIADOS_NACIONAIS,
   criarCalendario,
   feriadosLocais,
   calcularPrazo,
+  diasUteisRestantes,
   d2s,
   s2d,
 };
