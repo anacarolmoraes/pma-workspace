@@ -280,12 +280,15 @@ function gravarAmbiente() {
 }
 
 function descobrirBundles() {
+  // Ordem importa: o acervo atual é o arsenal-juridico. A pasta "bundles"
+  // é a estrutura antiga (cinco repositórios separados), mantida só como
+  // histórico — só serve de último recurso.
   const candidatos = [
     path.resolve(RAIZ, '..', 'arsenal-juridico'),
-    path.resolve(RAIZ, '..', 'bundles'),
-    WIN ? 'D:/GITHUB/bundles' : null,
     WIN ? 'D:/GITHUB/arsenal-juridico' : null,
     path.join(os.homedir(), 'arsenal-juridico'),
+    path.resolve(RAIZ, '..', 'bundles'),
+    WIN ? 'D:/GITHUB/bundles' : null,
   ].filter(Boolean);
 
   for (const p of candidatos) if (existe(p)) return p;

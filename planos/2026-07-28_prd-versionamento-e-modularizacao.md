@@ -94,12 +94,22 @@
    (zsh/bash); regra de marketing (Fase 8).
 2. README (leigo): incluir setup.js, onboarding, fluxo Drive. IA_CONTEXT: variantes macOS.
 
-## Fase 7 — Publicação  ← PRÓXIMO PASSO (bloqueado: exige login da titular)
+## Fase 7 — Publicação  ✅ EXECUTADA em 28/07/2026
 
-O nome escolhido para o acervo é **`arsenal-juridico`**. O `gh` está instalado mas sem login;
-o passo depende de autenticação interativa.
+- <https://github.com/anacarolmoraes/pma-workspace> (privado) — 495 arquivos
+- <https://github.com/anacarolmoraes/arsenal-juridico> (privado) — 276 arquivos
 
-1. Criar 2 repositórios **privados** no GitHub: `pma-workspace` e `arsenal-juridico`; push.
+**Consolidação do acervo:** os cinco repositórios que existiam (roteador + 4 bundles) viraram
+um só. A equipe baixa dois projetos, não seis. O `D:\GITHUB\bundles` original **não foi
+tocado** — segue no disco com os cinco históricos, como backup. O acervo em uso passa a ser
+`D:\GITHUB\arsenal-juridico`, e o `setup.js` procura por ele primeiro.
+
+**Excluído do acervo na auditoria** (fica na máquina, não circula): 4 manuais/livros comerciais
+em `direito/pecas/raw` (Lei 9.610/98 — as teses derivadas permanecem) e a cadeia de documentos
+"golpe", petições de outro escritório com CPF de não-clientes (até a sentença publicada
+qualifica a parte com CPF). Menções a nome de cliente em 4 arquivos foram generalizadas.
+
+1. ~~Criar 2 repositórios **privados** no GitHub: `pma-workspace` e `arsenal-juridico`; push.~~
 2. `KnowledgeOperatingSystem` = 3º repo privado (só quem produz bundle clona).
 3. Convidar a equipe (Collaborators); cada colega: clone + setup.js + entrevista.
 

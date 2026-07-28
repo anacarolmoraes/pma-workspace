@@ -75,12 +75,12 @@ aos repositórios privados. Você receberá um convite por e-mail — aceite-o.
 
 ## 3. Como receber o projeto (uma vez só)
 
-Abra o **Git Bash** (Windows) ou o **Terminal** (macOS) e cole os comandos abaixo. A Ana te
-passa os dois endereços exatos — troque a parte entre `<...>`.
+Abra o **Git Bash** (Windows) ou o **Terminal** (macOS) e cole os comandos abaixo. Os dois
+repositórios são privados: só funcionam depois que você aceitar o convite da Ana.
 
 ```
-git clone <endereço-do-pma-workspace> advocacia
-git clone <endereço-do-arsenal-juridico> arsenal-juridico
+git clone https://github.com/anacarolmoraes/pma-workspace.git advocacia
+git clone https://github.com/anacarolmoraes/arsenal-juridico.git arsenal-juridico
 ```
 
 Deixe as duas pastas **lado a lado**, na mesma pasta-mãe: o instalador encontra o acervo
