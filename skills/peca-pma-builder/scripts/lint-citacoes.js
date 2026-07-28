@@ -31,13 +31,20 @@ const RAIZ = path.resolve(__dirname, '..', '..', '..');
 // ── Corpus: onde uma citação pode estar ancorada ───────────────────────────
 function raizesCorpus(pecaPath) {
   const raizes = [];
-  // 1. Bundles (caminho vem do perfil, não hardcoded — PRD F7)
-  try {
-    const perfil = JSON.parse(fs.readFileSync(path.join(RAIZ, 'perfil', 'perfil.json'), 'utf8'));
-    if (perfil?.caminhos?.bundles) raizes.push(perfil.caminhos.bundles);
-  } catch {
-    /* segue sem bundles */
-  }
+  // 1. Acervo (arsenal-juridico). O caminho é de máquina, então mora em
+  //    perfil/ambiente.json, gerado pelo setup.js — nunca hardcoded (PRD F7).
+  //    Fallback para perfil.json cobre workspace ainda não migrado.
+  const lerJson = (p) => {
+    try {
+      return JSON.parse(fs.readFileSync(p, 'utf8'));
+    } catch {
+      return null;
+    }
+  };
+  const ambiente = lerJson(path.join(RAIZ, 'perfil', 'ambiente.json'));
+  const perfil = lerJson(path.join(RAIZ, 'perfil', 'perfil.json'));
+  const acervo = ambiente?.bundles || perfil?.caminhos?.bundles;
+  if (acervo) raizes.push(acervo);
   // 2. Acervo local por tema (jurisprudencia_stj/, teses/, casos_decididos/)
   for (const area of ['direito_bancario', 'direito_digital', 'rescisao_contrato_imovel', 'recursos_gerais', 'cobranca_honorarios']) {
     const p = path.join(RAIZ, area);
