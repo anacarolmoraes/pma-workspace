@@ -24,14 +24,14 @@ Sempre que a titular editar manualmente uma peça `.docx` (ela revisa todas) e v
 
 ## Por que existe
 
-O laço "titular edita o .docx → eu extraio → comparo com o .md → destilo as preferências" era inteiramente manual e caro em tokens (foi feito à mão no caso Marivaldo). Este script faz a parte mecânica — extrair, normalizar e alinhar parágrafo a parágrafo — e devolve um diff legível. O **julgamento** (preferência durável × específico do caso) permanece com o agente, que é onde está o valor.
+O laço "titular edita o .docx → eu extraio → comparo com o .md → destilo as preferências" era inteiramente manual e caro em tokens (foi feito à mão numa inicial de rescisão de lote, em jul/2026). Este script faz a parte mecânica — extrair, normalizar e alinhar parágrafo a parágrafo — e devolve um diff legível. O **julgamento** (preferência durável × específico do caso) permanece com o agente, que é onde está o valor.
 
 ## Uso
 
 ```powershell
 $env:PYTHONUTF8=1
-& "D:\WORK\advocacia\adv_env\Scripts\python.exe" `
-  d:/WORK/advocacia/skills/diff-peca/scripts/diff_peca.py `
+& <python> `
+  skills/diff-peca/scripts/diff_peca.py `
   caminho/PECA_EDITADA.docx caminho/PECA_FONTE.md
 ```
 

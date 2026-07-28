@@ -6,8 +6,8 @@ out: INICIAL_RESCISAO_[[SLUG]].docx
 
 <!--
 TEMPLATE — inicial de rescisão de compromisso de compra e venda de LOTE urbano.
-Padrão do escritório validado no caso Marivaldo (jul/2026). Antes de redigir, LER:
-  D:\GITHUB\bundles\direito\imobiliario\playbooks\playbook-peticao-inicial-rescisao-imovel.md
+Padrão do escritório validado em caso real de jul/2026. Antes de redigir, LER:
+  <bundles>/direito\imobiliario\playbooks\playbook-peticao-inicial-rescisao-imovel.md
   + teses do regime aplicável (ver bifurcação pela data do contrato abaixo).
 
 BIFURCAÇÃO PELA DATA DO CONTRATO:

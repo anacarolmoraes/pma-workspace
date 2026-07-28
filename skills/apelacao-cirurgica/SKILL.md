@@ -122,7 +122,7 @@ Esqueleto mínimo do `_gerar_apelacao.js`:
 const path = require('path');
 const { p, pMixed, pQuote, pCentered, titulo, subtitulo,
         endereco, quebra, pageBreak, assinatura, buildDoc }
-  = require('d:/WORK/advocacia/skills/peca-pma-builder');
+  = require('../../skills/peca-pma-builder'); // relativo ao arquivo, nunca absoluto
 
 const conteudo = [ /* ... seções I a V ... */ ];
 

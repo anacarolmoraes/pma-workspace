@@ -37,7 +37,7 @@ no golpe, e amarrar essa medida aos seis critérios do precedente. Leia
 
 - Extratos já normalizados em CSV (saída do `validador-extrato-pdf-excel`).
   Se só houver PDF/imagem, rode antes aquela skill.
-- Ambiente Python **obrigatório**: `D:\WORK\advocacia\adv_env\Scripts\python.exe`
+- Ambiente Python **obrigatório**: `<python>`
   (nunca o Python global).
 - Fatos da fraude confirmados (não presumir): janela de dias do golpe, qual
   conta originou os pagamentos suspeitos, o dia do cluster e os **nomes dos
@@ -56,8 +56,8 @@ beneficiário desconhecido.
 ### 2. Rodar o motor determinístico
 
 ```powershell
-& "D:\WORK\advocacia\adv_env\Scripts\python.exe" `
-  "D:\WORK\advocacia\skills\analise-perfil\scripts\analise_perfil.py" `
+& <python> `
+  skills/analise-perfil/scripts/analise_perfil.py `
   --extratos     "<dir com os *_corrigido.csv>" `
   --janela       "12/12,13/12,14/12,15/12,16/12,17/12,18/12" `
   --conta-fraude "<csv da conta de origem dos PIX>" `
@@ -85,8 +85,8 @@ o JSON sair com ordem suspeita, force `--ordem reverse` ou `--ordem file`.
 ### 3. Redigir o relatório
 
 Use **exatamente** a estrutura abaixo, preenchida com os números do JSON.
-Modelo de referência completo já produzido:
-`direito_bancario/golpes/bolivar/provas/RELATORIO_PERFIL_CONSUMO_BOLIVAR.md`.
+Há relatório de referência já produzido na pasta do caso correspondente, em
+`clientes/<caso>/provas/` — consultar na máquina, não versionar.
 
 ```markdown
 # RELATÓRIO TÉCNICO DE PERFIL DE CONSUMO

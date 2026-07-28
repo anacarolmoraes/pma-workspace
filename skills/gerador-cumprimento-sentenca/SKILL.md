@@ -15,7 +15,7 @@ dois insumos da pasta do caso:
 ## Estrutura esperada da pasta do caso
 
 ```
-<caso>/                          (ex.: rescisao_contrato_imovel/cumprimento_sentenca/patrick)
+<caso>/                          (ex.: clientes/<nome do caso>/)
 ├── sentenca_*.pdf               ← título executivo (1º grau)
 ├── acordao_*.pdf                ← acórdão de apelação ou decisão monocrática (se houver)
 ├── embargos_*.pdf               ← acórdão em embargos de declaração (se anexado)
@@ -83,7 +83,7 @@ Use o script `scripts/processar_extrato.py` para o trabalho pesado sobre os PDFs
 > índice e juros do título. A planilha alimenta o sistema de cálculo; o percentual de retenção e
 > o índice vêm do PROTOCOLO acima.
 
-### Atenção ao parsear o demonstrativo (lições do caso Patrick)
+### Atenção ao parsear o demonstrativo (lições de um caso real)
 
 O extrato da incorporadora costuma listar **todas** as parcelas do contrato, não só as pagas:
 

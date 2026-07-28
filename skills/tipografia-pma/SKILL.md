@@ -93,7 +93,7 @@ O CDC exige fonte tamanho 12 em contratos de consumo. Mas "12" varia por famíli
 ## MÓDULO 2 — CABEÇALHO E RODAPÉ (PROTOCOLO DE EXECUÇÃO)
 
 > Modelo canônico do timbrado (decisão da usuária, 2026-07-16):
-> `D:\WORK\advocacia\material_padrao_escritorio\PETICAO_MODELO_FORMATACAO.docx`.
+> `material_padrao_escritorio/PETICAO_MODELO_FORMATACAO.docx`.
 > O `peca-pma-builder` já reproduz este padrão — gere .docx por ele, não à mão.
 
 **Cabeçalho:** UMA única imagem institucional centralizada (`timbrado.png` nos

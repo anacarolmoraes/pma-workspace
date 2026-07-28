@@ -28,7 +28,7 @@ Antes desta skill, cada caso (caso A, caso B, caso C) tinha seu próprio `gerar_
 Escreva a peça em um `.md` (dialeto abaixo) na pasta do caso e compile:
 
 ```powershell
-node d:/WORK/advocacia/skills/peca-pma-builder/scripts/md2docx.js clientes/caso/PECA.md
+node skills/peca-pma-builder/scripts/md2docx.js clientes/caso/PECA.md
 ```
 
 O `.md` é a **fonte da verdade** da peça: ~20–30% mais barato de escrever e de
@@ -110,7 +110,7 @@ visíveis só se a usuária pedir expressamente para uma peça específica.
 
 ## Timbrado (cabeçalho/rodapé)
 
-Fonte canônica: `D:\WORK\advocacia\material_padrao_escritorio\PETICAO_MODELO_FORMATACAO.docx`
+Fonte canônica: `material_padrao_escritorio/PETICAO_MODELO_FORMATACAO.docx`
 (definida pela usuária em 2026-07-16). O `buildDoc` reproduz:
 
 - **Cabeçalho:** `assets/timbrado.png` centralizado, 3449384 × 907733 EMU
@@ -130,7 +130,9 @@ com chaves erradas — usar `{ width, height }`, nunca `{ w, h }`).
 ## Como usar (API JS — apenas para layouts fora do dialeto)
 
 ```js
-const PMA = require('d:/WORK/advocacia/skills/peca-pma-builder'); // ajuste ao caminho onde esta skill está instalada
+// caminho RELATIVO a partir do arquivo que faz o require — nunca absoluto.
+// De clientes/<caso>/script.js, por exemplo: '../../skills/peca-pma-builder'
+const PMA = require('<caminho relativo até>/skills/peca-pma-builder');
 const { p, pMixed, pQuote, pCentered, titulo, subtitulo,
         endereco, quebra, pageBreak, assinatura, buildDoc } = PMA;
 
@@ -213,7 +215,7 @@ O `buildDoc` aplica automaticamente:
 Não editar sem coordenar com a usuária.
 
 ## Dependência externa
-`docx` (npm global). Path padrão: `C:\Users\anamo\AppData\Roaming\npm\node_modules`. Pode ser sobrescrito via env var `NPM_GLOBAL_NODE_MODULES`.
+`docx` (npm global). Path padrão: `node_modules/ na raiz do projeto`. Pode ser sobrescrito via env var `NPM_GLOBAL_NODE_MODULES`.
 
 ## Limites (FORA DO ESCOPO)
 - **Não** redige conteúdo jurídico — isso é tarefa do `legal-writer`/`legal-orchestrator` ou de skill específica (`apelacao-cirurgica`).

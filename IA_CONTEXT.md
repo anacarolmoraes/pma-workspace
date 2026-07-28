@@ -2,48 +2,55 @@
 
 Este arquivo define o contexto de execução, ambiente técnico e protocolos de operação do workspace.
 
-> **⚠️ OBRIGATÓRIO:** Para regras de estilo, tom de voz e perfil da advogada, **LEIA `USER.md`**. O `USER.md` é a autoridade máxima em comunicação.
+> **⚠️ OBRIGATÓRIO:** Para regras de estilo e tom de voz, **LEIA `USER.md`** (padrão do escritório) e `perfil/usuario.md` (a pessoa nesta máquina). O `USER.md` é a autoridade máxima em comunicação.
+
+O workspace roda em **Windows e macOS**. Tudo é montado por `node scripts/setup.js`.
 
 ## 🐍 Ambiente Python
 
-**REGRA OBRIGATÓRIA:** Toda execução de scripts Python neste projeto deve utilizar o ambiente virtual localizado em:
-`D:\WORK\advocacia\adv_env`
+**REGRA OBRIGATÓRIA:** todo script Python roda pelo interpretador declarado em
+`perfil/ambiente.json` → chave `python`. Nunca o Python do sistema, e **nunca com o caminho
+escrito à mão** — ele muda de máquina e de sistema operacional.
 
-### Comandos de Ativação
+```powershell
+# Windows
+$py = (Get-Content perfil\ambiente.json -Raw | ConvertFrom-Json).python
+& $py script.py
+```
 
-- **PowerShell:**
+```bash
+# macOS
+py=$(node -p "require('./perfil/ambiente.json').python")
+"$py" script.py
+```
 
-  ```powershell
-  & "D:\WORK\advocacia\adv_env\Scripts\Activate.ps1"
-  ```
-
-- **Command Prompt (cmd):**
-
-  ```cmd
-  D:\WORK\advocacia\adv_env\Scripts\activate.bat
-  ```
+Não é preciso "ativar" o ambiente: chamar o interpretador pelo caminho completo já usa as
+bibliotecas certas. Se `perfil/ambiente.json` não existir, a instalação não terminou — rodar
+`node scripts/setup.js`.
 
 ### Bibliotecas e Dependências
 
-O ambiente `adv_env` contém as dependências necessárias para:
+Declaradas em `requirements.txt` (Python) e `package.json` (Node) — essas são as listas
+verdadeiras; qualquer outra menção neste repositório é resumo e pode estar desatualizada.
+Cobrem: leitura de PDF (pdfplumber, PyMuPDF), Excel (openpyxl), `.docx` (python-docx),
+transcrição de áudio (faster-whisper), automação de navegador (playwright) e OCR (pytesseract,
+que depende do programa Tesseract instalado no sistema).
 
-- Processamento de PDFs e Excel (pandas, openpyxl, pdfplumber).
-- Integração com Google Drive API (google-api-python-client).
-- Transcrição de áudio (openai-whisper).
-- Automação de navegador (agent-browser/browser-use).
+O conversor `pdfmd` vive **dentro do `adv_env`**; o código-fonte está em `vendor/pdfmd/`.
 
 ## 🛠️ Ferramentas e Diretórios Críticos
 
-1. **Skills Jurídicas (`D:\WORK\advocacia\skills`):** **MANDATÓRIO.** Sempre procure uma skill (ex: `tipografia-pma`, `legal-orchestrator`, `pdfmd`) antes de criar scripts ou abordagens do zero.
+1. **Skills Jurídicas (`skills/`):** **MANDATÓRIO.** Sempre procure uma skill (ex: `tipografia-pma`, `legal-orchestrator`, `pdfmd`) antes de criar scripts ou abordagens do zero.
 2. **Tipografia:** Padrão PMA (**Montserrat 12pt**, entrelinhas 1.5). Consulte a skill `tipografia-pma`.
 3. **NotebookLM:** Base primária de conhecimento jurídico.
-4. **Outros:** `.agent/` (workflows), `scratch/` (testes), `direto_bancario/` (automação bancária).
+4. **Outros:** `scratch/` (testes, fora do versionamento), `clientes/` (documento de caso — **nunca** versionado).
+5. **Acervo jurídico (`arsenal-juridico`):** repositório separado, caminho em `perfil/ambiente.json` → `bundles`.
 
 ## ☁️ Integração Google Workspace (CLI)
 
 A ferramenta **Google Workspace CLI (`gws`)** está instalada globalmente. Utilize-a para gerenciar arquivos no Drive, Planilhas, Gmail e outros serviços diretamente via terminal.
 
-- **Configuração:** Localizada em `C:\Users\anamo\.config\gws`.
+- **Configuração:** na pasta pessoal do usuário (`~/.config/gws`). É credencial: **nunca** ler nem despejar no contexto.
 - **Uso:** Comando `gws <serviço> <método>` (ex: `gws drive files list`).
 - **Autenticação:** Gerenciada pela CLI; qualquer agente pode invocar os comandos se o token estiver válido.
 

@@ -18,7 +18,7 @@ Pedido do tipo "fazer a petição de rescisão de contrato de compra e venda de 
 
 ## Pré-requisitos na pasta do caso
 
-Contrato de compra e venda (PDF) e extrato de pagamento (PDF). Procuração, quando houver. Regime de conhecimento: bundle `D:\GITHUB\bundles\direito\imobiliario`.
+Contrato de compra e venda (PDF) e extrato de pagamento (PDF). Procuração, quando houver. Regime de conhecimento: bundle `<bundles>/direito\imobiliario`.
 
 ## Pipeline (com portões)
 
@@ -49,7 +49,7 @@ Rodar `lint-ia.js` e corrigir cacoetes de IA sem tocar em transcrições. (O `md
 
 ### Etapa 7 — Compilação (skill `peca-pma-builder`)
 ```powershell
-node d:/WORK/advocacia/skills/peca-pma-builder/scripts/md2docx.js clientes/<caso>/INICIAL_RESCISAO.md
+node skills/peca-pma-builder/scripts/md2docx.js clientes/<caso>/INICIAL_RESCISAO.md
 ```
 PORTÃO: os dois lints (remissões + anti-IA) e a validação de timbrado precisam passar — falhou, não compila.
 

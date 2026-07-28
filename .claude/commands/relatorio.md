@@ -20,12 +20,12 @@ escrever. Trate PDFs via skill `pdfmd` se não houver `.md` correspondente.
 ## 1. Substância analítica
 
 Se o assunto for **fraude bancária / perfil de consumo** (há `EXTRATOS\*.csv`):
-use a skill `analise-perfil` (`D:\WORK\advocacia\skills\analise-perfil\SKILL.md`
+use a skill `analise-perfil` (`skills/analise-perfil/SKILL.md`
 + `references\criterios_stj.md`). Rode o motor determinístico no `adv_env`:
 
 ```powershell
-& "D:\WORK\advocacia\adv_env\Scripts\python.exe" `
-  "D:\WORK\advocacia\skills\analise-perfil\scripts\analise_perfil.py" `
+& <python> `
+  skills/analise-perfil/scripts/analise_perfil.py `
   --extratos "<caso>\EXTRATOS" --janela "<DD/MM,...>" `
   --conta-fraude "<caso>\EXTRATOS\<csv>" --dia-fraude "<DD/MM>" `
   --saida "<caso>\analise_perfil_consumo.json"
@@ -50,7 +50,7 @@ de divergência dentro de *Análise Jurídica*; subsunção fator a fator do REs
 2.222.059/STJ no *Quadro-Resumo*; cada valor com fonte e data.
 
 **`.docx` (p/ o juiz), derivado do `.md`** — via skill `docx`
-(`D:\WORK\advocacia\skills\docx\SKILL.md`), docx-js em Node, com as
+(`skills/docx/SKILL.md`), docx-js em Node, com as
 especificações **exatas** do IA_CONTEXT:
 - A4; **Times New Roman 12 pt; entrelinha 1,5**
 - Margens **ABNT NBR 14724**: superior 3 cm, inferior 2 cm, esquerda 3 cm,

@@ -18,7 +18,7 @@ Ambiente: o script só depende do **ffmpeg** (já no PATH). Não precisa de pip 
 
 ```bash
 # converte todos os HEIC/HEIF da pasta -> <pasta>/_jpg (nomes saneados, sem acento)
-"D:/WORK/advocacia/adv_env/Scripts/python.exe" "D:/WORK/advocacia/skills/heic-converter/converter.py" "CAMINHO/DA/PASTA"
+<python> skills/heic-converter/converter.py "CAMINHO/DA/PASTA"
 
 # um arquivo só, ou saída custom, ou ao lado do original:
 python converter.py "foto.HEIC"

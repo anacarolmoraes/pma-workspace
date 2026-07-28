@@ -1,22 +1,23 @@
 {
   "skill_name": "analise-perfil",
+  "_comentario": "Casos de teste FICTÍCIOS. Nome, valores e caminhos são inventados — nunca colar aqui dado de caso real (regra dura 7 do AGENTS.md).",
   "evals": [
     {
       "id": 1,
-      "prompt": "Cliente novo, golpe do falso advogado. Os extratos já corrigidos em CSV estão em D:\\WORK\\advocacia\\direito_bancario\\golpes\\bolivar\\EXTRATOS. A fraude foi em 16/12/2025: ele recebeu R$5.000 do BB e R$1.168,07 do BRB na conta PAN, contratou um empréstimo de R$9.150 no BRB e disparou 4 PIX a Jefferson, Joyce, Israel e Helen. Preciso de um relatório pro juiz mostrando que isso foge totalmente do perfil de consumo dele.",
-      "expected_output": "Relatório .md estruturado pelos 6 critérios do REsp 2.222.059, com baseline real por banco (mediana/p95), cluster cronológico de 16/12 com saldo encadeado, múltiplos de divergência por PIX, fraudadores nomeados, quadro-resumo critério×situação×✔. JSON auditável gravado ao lado.",
+      "prompt": "Cliente novo, golpe do falso advogado. Os extratos já corrigidos em CSV estão em <pasta do caso>/EXTRATOS. A fraude foi em 16/12/2025: ele recebeu R$5.000 do banco A e R$1.100 do banco B na conta C, contratou um empréstimo de R$9.000 no banco B e disparou 4 PIX a quatro beneficiários que não conhece. Preciso de um relatório pro juiz mostrando que isso foge totalmente do perfil de consumo dele.",
+      "expected_output": "Relatório .md estruturado pelos 6 critérios do REsp 2.222.059, com baseline real por banco (mediana/p95), cluster cronológico do dia da fraude com saldo encadeado, múltiplos de divergência por PIX, beneficiários nomeados a partir do extrato, quadro-resumo critério×situação×✔. JSON auditável gravado ao lado.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "tenho os csv de extrato de uma vitima de golpe da mao fantasma em C:\\casos\\maria\\extratos . o golpe foi nos dias 3 e 4 de marco, ela tinha conta no nubank que ela usava quase como poupanca e sairam varios pix altos no dia 04/03 pra uns CPF que ela nao conhece. monta a pericia mostrando a divergencia do padrao dela",
-      "expected_output": "Roda o motor com a janela 03/03,04/03, conta-fraude o CSV do Nubank, dia-fraude 04/03; relatório com baseline (destacando uso como poupança), cluster de 04/03 ordenado pela cadeia de saldo, divergência vs mediana habitual, e enquadramento nos critérios STJ.",
+      "prompt": "tenho os csv de extrato de uma vitima de golpe da mao fantasma em <pasta do caso>/extratos . o golpe foi nos dias 3 e 4 de marco, ela tinha conta num banco digital que usava quase como poupanca e sairam varios pix altos no dia 04/03 pra uns CPF que ela nao conhece. monta a pericia mostrando a divergencia do padrao dela",
+      "expected_output": "Roda o motor com a janela 03/03,04/03, conta-fraude o CSV do banco digital, dia-fraude 04/03; relatório com baseline (destacando uso como poupança), cluster de 04/03 ordenado pela cadeia de saldo, divergência vs mediana habitual, e enquadramento nos critérios STJ.",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "O laudo pericial estatístico genérico do caso Bolívar está anonimizado e ancorado num crédito de R$37mil de agosto que não tem nada a ver com o golpe de dezembro. Refaz isso focado no que importa: o perfil de consumo dele versus os 4 PIX fraudulentos.",
-      "expected_output": "Reconhece que o baseline deve ser de saídas (não entradas — o crédito de R$37mil é inflow e não polui o padrão de consumo), produz relatório focado em 16/12 nomeando os fraudadores, com os múltiplos de divergência e a subsunção aos 6 critérios — não reaproveita o laudo anonimizado.",
+      "prompt": "O laudo pericial estatístico genérico está anonimizado e ancorado num crédito de R$37mil de agosto que não tem nada a ver com o golpe de dezembro. Refaz isso focado no que importa: o perfil de consumo dele versus os 4 PIX fraudulentos.",
+      "expected_output": "Reconhece que o baseline deve ser de saídas (não entradas — o crédito de R$37mil é inflow e não polui o padrão de consumo), produz relatório focado no dia da fraude nomeando os beneficiários, com os múltiplos de divergência e a subsunção aos 6 critérios — não reaproveita o laudo anonimizado.",
       "files": []
     }
   ]

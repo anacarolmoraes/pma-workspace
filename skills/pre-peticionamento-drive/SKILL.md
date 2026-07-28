@@ -52,8 +52,8 @@ Se faltar a pasta do caso, pare e peça. Jurisprudência ausente: registra lacun
 Garanta que todo PDF do corpus virou `.md` (skill `pdfmd`, idempotente). Depois gere o índice:
 
 ```powershell
-& "D:\WORK\advocacia\adv_env\Scripts\python.exe" `
-  "D:\WORK\advocacia\skills\pre-peticionamento-drive\indexar_corpus.py" `
+& <python> `
+  skills/pre-peticionamento-drive/indexar_corpus.py `
   "<pasta_do_caso>" "<dir_provas>" "<dir_jurisprudencia_1>" "<dir_jurisprudencia_2>"
 ```
 

@@ -15,13 +15,13 @@ description: |
 
 ## Quando usar
 
-Sempre que for redigir uma **inicial de rescisão de compromisso de compra e venda de lote urbano** (Lei 6.766/79), logo após converter contrato e extrato com `pdfmd`. Substitui a apuração manual dos números — que no caso Marivaldo (jul/2026) produziu erro de valor da causa e leitura equivocada de percentuais.
+Sempre que for redigir uma **inicial de rescisão de compromisso de compra e venda de lote urbano** (Lei 6.766/79), logo após converter contrato e extrato com `pdfmd`. Substitui a apuração manual dos números — que num caso real de jul/2026 produziu erro de valor da causa e leitura equivocada de percentuais.
 
 ## Por que existe
 
 Dois erros recorrentes que esta skill previne:
 1. **Aritmética no olhômetro:** total pago, % pago, cenários de retenção (10%/25% sobre o pago × sobre o contrato), exposição de fruição e valor da causa passam a ser calculados por script, não estimados.
-2. **Número de cláusula do OCR:** o extrato/contrato escaneado, lido por OCR posicional, troca números de cláusula (no Marivaldo trocou cinco). A ficha exige que as cláusulas sejam preenchidas por **leitura do contrato assinado**, e as registra num quadro conferível.
+2. **Número de cláusula do OCR:** o extrato/contrato escaneado, lido por OCR posicional, troca números de cláusula (naquele caso trocou cinco). A ficha exige que as cláusulas sejam preenchidas por **leitura do contrato assinado**, e as registra num quadro conferível.
 
 ## Fluxo
 
@@ -35,10 +35,10 @@ Dois erros recorrentes que esta skill previne:
 4. **Montar o `dados_caso.json`** (ver `exemplo_dados_caso.json`).
 5. **Rodar a calculadora:**
    ```powershell
-   node d:/WORK/advocacia/skills/ficha-rescisao-lote/scripts/calc.js caminho/dados_caso.json
+   node skills/ficha-rescisao-lote/scripts/calc.js caminho/dados_caso.json
    ```
 6. **Ler a `FICHA_CASO.md` gerada** e usá-la para preencher o template
-   `D:\WORK\advocacia\material_padrao_escritorio\TEMPLATE_INICIAL_RESCISAO_LOTE.md`.
+   `material_padrao_escritorio/TEMPLATE_INICIAL_RESCISAO_LOTE.md`.
 
 ## Schema do `dados_caso.json`
 

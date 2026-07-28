@@ -15,18 +15,20 @@ O trabalho está repartido em **três repositórios**. Nenhum agente encontra o 
 por isso ele está declarado aqui.
 
 ```
-D:\WORK\advocacia\              ← ESTE workspace: casos, skills, ferramentas
-  clientes/<nome>/                 camada C1: dados reais de cliente. NUNCA versionar nem distribuir
-  perfil/                          identidade + regras canônicas do escritório
-  skills/                          46 skills — consultar ANTES de escrever qualquer script
-  scripts/                         lints de workspace
+<raiz do workspace>             ← ESTE repositório (pma-workspace): o MOTOR
+  perfil/                          identidade do escritório + regras canônicas
+    ambiente.json                  caminhos DESTA máquina (gerado, fora do git)
+    usuario.md                     quem opera esta máquina (gerado, fora do git)
+  skills/                          consultar ANTES de escrever qualquer script
+  scripts/                         setup.js (instalador) e lints de workspace
   hooks/                           hooks do Claude Code (não funcionam em outros agentes)
   material_padrao_escritorio/      marca, modelo de formatação, templates de peça
+  vendor/pdfmd/                    conversor de PDF, embarcado no repositório
   planos/                          PRDs de evolução do sistema
-  direito_bancario/, direito_digital/, rescisao_contrato_imovel/, recursos_gerais/
-                                   acervo local por tema (jurisprudencia_stj/, estrategias/, casos_decididos/)
+  clientes/<nome>/                 camada C1: dado real de cliente. NUNCA versionar
+                                   nem distribuir. Migra para o Drive do escritório
 
-D:\GITHUB\bundles\              ← ACERVO DE CONHECIMENTO (repositório SEPARADO)
+<acervo>                        ← arsenal-juridico: CONHECIMENTO (repo SEPARADO)
   index.md                         roteador global — COMECE AQUI ao procurar tese ou precedente
   direito/bancario/emprestimo-nao-realizado/
   direito/bancario/golpes/
@@ -35,12 +37,32 @@ D:\GITHUB\bundles\              ← ACERVO DE CONHECIMENTO (repositório SEPARAD
   direito/pecas/                   transversal: técnica de peça, independente de matéria
   lint-bundle.py                   verificação estrutural do acervo
 
-D:\GITHUB\KnowledgeOperatingSystem\
+<KnowledgeOperatingSystem>       ← só para quem PRODUZ bundle
   piloto/SCHEMA_BUNDLE_PILOTO.md   contrato que disciplina a produção dos bundles
 ```
 
-O caminho dos bundles é lido de [`perfil/perfil.json`](perfil/perfil.json) → `caminhos.bundles`.
-Use essa chave em vez de escrever o caminho em código novo.
+**Nunca escrever caminho absoluto.** A raiz do acervo e o interpretador Python mudam de
+máquina e de sistema operacional: leia de [`perfil/ambiente.json`](perfil/ambiente.json)
+(chaves `bundles`, `python`, `raiz`), gerado pelo `scripts/setup.js`. Se o arquivo não
+existir, a instalação não terminou — rodar `node scripts/setup.js`.
+
+**Convenção nas skills e comandos:**
+
+| Escrito | Significa |
+|---|---|
+| `<python>` | `perfil/ambiente.json` → `python` (o interpretador do `adv_env`) |
+| `<bundles>` | `perfil/ambiente.json` → `bundles` (raiz do arsenal-juridico) |
+| `skills/...`, `clientes/...` | relativo à **raiz do workspace** |
+| `require('../../skills/...')` | em código Node, relativo ao **arquivo** que faz o require |
+
+Resolver o marcador na hora de executar. Exemplo em PowerShell:
+`$py = (Get-Content perfil\ambiente.json -Raw | ConvertFrom-Json).python`.
+
+O acervo local por tema (`direito_bancario/`, `direito_digital/`, `rescisao_contrato_imovel/`,
+`recursos_gerais/`, `cobranca_honorarios/`) está **em migração para o arsenal-juridico** e não
+é versionado: a auditoria de 28/07/2026 encontrou nele documento bruto de processo, com CPF de
+terceiros, misturado à jurisprudência pública. Enquanto a migração não termina, essas pastas
+existem só na máquina da titular.
 
 **Dentro de um bundle:** `index.md` para conhecer · `atividades.md` para executar ·
 `jurisprudencia/` e `teses/` (fundamento) · `heuristicas/`, `estrategias/`, `playbooks/`
@@ -68,11 +90,13 @@ Antes de escrever **qualquer** peça (inicial, contestação, réplica, apelaç�
 manifestação), ler nesta ordem:
 
 1. **`perfil/definicoes.md`** — valor da causa, gratuidade, assinatura, prazos, custas.
-2. **Bundle da matéria** (`D:\GITHUB\bundles\index.md` → bundle → `index.md`): `jurisprudencia/`,
+2. **`perfil/usuario.md`** — quem assina, em que comarca. Se não existir, acionar
+   `onboarding-usuario` antes de redigir.
+3. **Bundle da matéria** (`<bundles>/index.md` → bundle → `index.md`): `jurisprudencia/`,
    `teses/`, `heuristicas/`, `casos_decididos/`.
-3. **`direito/pecas/<tipo>/`** — técnica da peça (playbooks e heurísticas por tipo de recurso).
-4. **Acervo local do tema-pai**, quando o caso estiver em `direito_bancario/<tema>/` etc.
-5. **Documentos do próprio caso** — `INICIAL.md`, `CONTESTACAO.md`, `SENTENCA.md`, `REPLICA.md`.
+4. **`direito/pecas/<tipo>/`** — técnica da peça (playbooks e heurísticas por tipo de recurso).
+5. **Acervo local do tema-pai**, se ainda existir na máquina (em migração — ver §1).
+6. **Documentos do próprio caso** — `INICIAL.md`, `CONTESTACAO.md`, `SENTENCA.md`, `REPLICA.md`.
 
 Não centralizar `jurisprudencia`, `estrategias` ou `casos_decididos`: tese de "empréstimo não
 realizado" não se confunde com tese de "golpe bancário". O caso herda o contexto do tema-pai.
@@ -130,9 +154,12 @@ peça não pode ser protocolada como conferida.
 Outros lints, fora do caminho da peça:
 
 ```powershell
-node scripts\lint-skills.js                                        # integridade das skills
-python D:\GITHUB\bundles\lint-bundle.py --quiet                     # integridade do acervo
+node scripts\lint-skills.js                     # integridade das skills
+<python> <bundles>\lint-bundle.py --quiet       # integridade do acervo
 ```
+
+`<python>` e `<bundles>` saem de [`perfil/ambiente.json`](perfil/ambiente.json). No macOS os
+mesmos comandos rodam trocando `\` por `/`.
 
 ---
 
@@ -169,24 +196,39 @@ quando mencionado explicitamente pela titular, o NotebookLM.
    Exceção única: conferência visual de layout, assinatura ou carimbo.
 4. **Nunca fabricar ementa, número de REsp, Súmula ou Tema.** Se o acervo não cobre, dizer que
    não cobre. O `lint-citacoes` bloqueia, mas a regra vale antes dele.
-5. **Python sempre do `adv_env`** (`adv_env\Scripts\python.exe`), nunca o global. O `pdfmd` tem
-   ambiente próprio (`pdfmd\pdfmd_env`).
+5. **Python sempre do `adv_env`**, pelo caminho em `perfil/ambiente.json` → `python`, nunca o
+   do sistema e nunca escrito à mão. O `pdfmd` mora nesse mesmo ambiente.
 6. **Nunca editar peça com `Set-Content` ou `-replace` do PowerShell** — corrompe o UTF-8. Usar
    ferramenta de edição de arquivo.
 7. **Camada C1 não sai do lugar.** `clientes/` não vai para bundle, nem para repositório, nem
-   para pacote distribuível.
+   para pacote distribuível. Vale para **qualquer** documento de caso, onde quer que esteja:
+   petição, decisão e extrato com nome, CPF ou número de processo de pessoa real ficam fora
+   do git — inclusive dentro de pasta de skill ou de tema. Se precisar circular, vai pelo
+   Drive do escritório, onde o acesso é revogável.
 8. **Assinar conforme `perfil/advogados.json`** — por padrão só quem atua.
+9. **Caso de cliente não vira conteúdo de marketing por cópia.** Só despersonalizado, sem
+   número de processo (ele identifica as partes em consulta pública) e com aprovação humana.
 
 ---
 
 ## 7. Ambiente
 
-- **Python:** `D:\WORK\advocacia\adv_env\Scripts\python.exe` · libs: pandas, openpyxl, pdfplumber,
-  google-api-python-client, whisper.
-- **Node:** LTS. `docx` instalado globalmente em `C:\Users\anamo\AppData\Roaming\npm\node_modules`.
-- **Google Workspace CLI:** `gws drive files list` etc. Config em `C:\Users\anamo\.config\gws`.
-- **Shell padrão:** PowerShell. Sintaxe e armadilhas em [`IA_CONTEXT.md`](IA_CONTEXT.md).
-- **Tarefa agendada:** `PMA_DJEN_Monitor` roda o vigia do DJEN diariamente às 08:10.
+O workspace roda em **Windows e macOS**. Tudo é montado por `node scripts/setup.js`, que pode
+ser rodado quantas vezes for preciso.
+
+- **Python:** o do `adv_env`, sempre pelo caminho em `perfil/ambiente.json` → `python`
+  (Windows: `adv_env\Scripts\python.exe` · macOS: `adv_env/bin/python`). Nunca o do sistema.
+  Bibliotecas declaradas em [`requirements.txt`](requirements.txt) — entre elas pdfplumber,
+  PyMuPDF, python-docx, openpyxl, faster-whisper, playwright, pytesseract.
+- **Conversor de PDF:** `pdfmd` vive **dentro do `adv_env`** (não tem mais ambiente próprio);
+  o código-fonte está em `vendor/pdfmd/`. Depende do programa Tesseract instalado no sistema.
+- **Node:** LTS (18+). Dependências em [`package.json`](package.json), instaladas em
+  `node_modules/` na raiz — não depender mais de pacote global.
+- **Google Workspace CLI:** `gws drive files list` etc.
+- **Shell:** PowerShell no Windows, zsh/bash no macOS. Armadilhas de sintaxe em
+  [`IA_CONTEXT.md`](IA_CONTEXT.md).
+- **Tarefa agendada:** `PMA_DJEN_Monitor` roda o vigia do DJEN diariamente às 08:10 — existe
+  só na máquina da titular (um vigia por escritório basta).
 
 ---
 

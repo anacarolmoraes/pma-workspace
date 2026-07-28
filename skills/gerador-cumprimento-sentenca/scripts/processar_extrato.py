@@ -2,7 +2,7 @@
 """Processa o extrato de pagamentos e gera a planilha de upload + a petição de
 cumprimento de sentença.
 
-Diferenças em relação à versão legada (lições do caso Patrick):
+Diferenças em relação à versão legada (lições de um caso real):
 - Parsing por LINHA (pdfplumber.extract_text), sem depender de coordenadas x0 de um
   layout específico.
 - Filtra PROJEÇÕES FUTURAS: só considera parcelas com Dt. Receb. <= data em que o

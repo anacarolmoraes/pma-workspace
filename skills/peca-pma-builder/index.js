@@ -6,7 +6,7 @@
 // (assets/timbrado.png); rodapé = filete laranja + linha de contatos + "Fl. X de Y".
 //
 // Uso típico:
-//   const PMA = require('d:/WORK/advocacia/skills/peca-pma-builder');
+//   const PMA = require('<caminho relativo até>/skills/peca-pma-builder');
 //   const { p, pMixed, pQuote, titulo, subtitulo, pageBreak, buildDoc } = PMA;
 //   const conteudo = [ titulo('I.', 'Síntese'), p('texto...'), ... ];
 //   buildDoc({ titulo: '...', processo: '...', conteudo, outPath: 'APELACAO.docx' });

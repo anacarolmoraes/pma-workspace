@@ -33,14 +33,14 @@ Sistema AI-first do escritório Paulo Moraes Advocacia.
 
 **Pré-requisito:** caso já tem `SENTENCA.md`, `INICIAL.md`, `REPLICA.md` (PDFs convertidos via `pdfmd` se necessário).
 
-**Comando** (exemplo Marly):
+**Comando:**
 ```
-Revise a apelação da Marly em d:/WORK/advocacia/direito_bancario/emprestimo_nao_realizado/marly/
+Revise a apelação do caso <nome> em clientes/<nome>/
 ```
 
 O Claude vai (skill `apelacao-cirurgica` é acionada automaticamente):
 
-1. Ler **`../jurisprudencia_stj/`**, **`../estrategias/`**, **`../casos_decididos/`** do tema-pai (regra inviolável do [CLAUDE.md](CLAUDE.md))
+1. Ler o bundle da matéria no acervo `arsenal-juridico` — `jurisprudencia/`, `teses/`, `heuristicas/`, `casos_decididos/` (protocolo do [AGENTS.md](AGENTS.md) §3)
 2. Ler os docs do próprio caso (sentença, inicial, réplica, contestação)
 3. Montar mapa de impugnação cirúrgica (trecho da sentença ↔ vício ↔ tese que neutraliza)
 4. Redigir `APELACAO_<NOME>.md` na estrutura I→II→III→IV→V
@@ -52,9 +52,9 @@ O Claude vai (skill `apelacao-cirurgica` é acionada automaticamente):
 Já existe um `_gerar_apelacao.js` no diretório do caso (criado pelo Claude).
 
 ```powershell
-cd "d:\WORK\advocacia\direito_bancario\emprestimo_nao_realizado\marly"
+cd clientes\<nome>
 node _gerar_apelacao.js
-# → OK: D:\...\APELACAO_MARLY.docx
+# → OK: ...\APELACAO_<NOME>.docx
 ```
 
 Banner, logo, paginação, Montserrat 12pt, margens 3cm, entrelinha 1,3 saem automaticamente — vêm da skill [`peca-pma-builder`](skills/peca-pma-builder/).
@@ -64,9 +64,10 @@ Banner, logo, paginação, Montserrat 12pt, margens 3cm, entrelinha 1,3 saem aut
 Esqueleto mínimo (≈30 linhas):
 ```js
 const path = require('path');
+// caminho relativo a partir do arquivo — nunca absoluto (quebra em outra máquina)
 const { p, pMixed, pQuote, pCentered, titulo, subtitulo,
         endereco, quebra, pageBreak, assinatura, buildDoc }
-  = require('d:/WORK/advocacia/skills/peca-pma-builder');
+  = require('../../skills/peca-pma-builder');
 
 const conteudo = [
   ...endereco([ 'EXMO. SR. JUIZ...', 'COMARCA DE...' ]),
@@ -138,10 +139,14 @@ Em `<area>/<tema>/casos_decididos/<descritivo>.md` (e o `.docx`/`.pdf` da peça 
 
 ## ⚙️ Ambiente técnico
 
-- **Python:** SEMPRE `D:\WORK\advocacia\adv_env\Scripts\python.exe` (nunca python global)
-- **Node:** versão LTS, com `docx` instalado globalmente em `C:\Users\anamo\AppData\Roaming\npm\node_modules`
-- **Google Workspace CLI:** `gws drive files list`, etc. (config em `C:\Users\anamo\.config\gws`)
-- **PowerShell:** shell padrão. Detalhes de sintaxe (vs bash) no [IA_CONTEXT.md](IA_CONTEXT.md).
+Roda em **Windows e macOS**; tudo é montado por `node scripts/setup.js`.
+
+- **Python:** o do `adv_env`, sempre pelo caminho em `perfil/ambiente.json` → `python`. Nunca o
+  do sistema, nunca escrito à mão.
+- **Node:** LTS (18+). Dependências em `package.json`, instaladas em `node_modules/` na raiz.
+- **PDF:** `pdfmd` vive dentro do `adv_env`; fonte em `vendor/pdfmd/`.
+- **Google Workspace CLI:** `gws drive files list`, etc.
+- **Shell:** PowerShell no Windows, zsh/bash no macOS. Armadilhas no [IA_CONTEXT.md](IA_CONTEXT.md).
 
 ---
 
