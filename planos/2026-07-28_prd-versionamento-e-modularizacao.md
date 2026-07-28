@@ -1,7 +1,21 @@
 # PRD — Versionamento, modularização e replicação para a equipe
 
-> Status: **planejado** (nada executado). Consolidado em 28/07/2026 a partir do planejamento
-> com a titular. Nenhuma skill sai da máquina da titular — exclusões são só de versionamento.
+> Status: **Fases 1, 2, 3 e 6 executadas em 28/07/2026.** Pendentes: 4 (migração do acervo),
+> 5 (triagem final de skills), 7 (publicação no GitHub) e 8 (marketing).
+> Nenhuma skill saiu da máquina da titular — as exclusões são só de versionamento.
+>
+> **Decisão alterada na execução (Fase 1):** as pastas de tema **não** foram versionadas nem
+> parcialmente. A auditoria mostrou que a "jurisprudência" convive com documento bruto de
+> processo contendo CPF de terceiros, boa parte em PDF/DOCX — conteúdo que não se inspeciona
+> automaticamente. Versioná-las gravaria dado pessoal no histórico permanente para depois ter
+> de refazer o repositório na Fase 4.
+>
+> **Achados de LGPD durante a execução** (todos corrigidos): ficha de cliente dentro de
+> `skills/ficha-rescisao-lote/`; nome completo e valores reais de contrato no
+> `exemplo_dados_caso.json`; caso real com nomes dos beneficiários da fraude no `evals.json`
+> da `analise-perfil`; menções a nome de cliente em 5 skills e no template da inicial; fila do
+> DJEN com números de processo. **Lição:** dado de cliente não fica só em `clientes/` — vaza
+> para dentro de pasta técnica. Auditar conteúdo, não só estrutura de pastas.
 
 ## Decisões já tomadas
 
@@ -80,9 +94,12 @@
    (zsh/bash); regra de marketing (Fase 8).
 2. README (leigo): incluir setup.js, onboarding, fluxo Drive. IA_CONTEXT: variantes macOS.
 
-## Fase 7 — Publicação
+## Fase 7 — Publicação  ← PRÓXIMO PASSO (bloqueado: exige login da titular)
 
-1. Criar 2 repositórios **privados** no GitHub: `pma-workspace` e o de bundles; push.
+O nome escolhido para o acervo é **`arsenal-juridico`**. O `gh` está instalado mas sem login;
+o passo depende de autenticação interativa.
+
+1. Criar 2 repositórios **privados** no GitHub: `pma-workspace` e `arsenal-juridico`; push.
 2. `KnowledgeOperatingSystem` = 3º repo privado (só quem produz bundle clona).
 3. Convidar a equipe (Collaborators); cada colega: clone + setup.js + entrevista.
 
