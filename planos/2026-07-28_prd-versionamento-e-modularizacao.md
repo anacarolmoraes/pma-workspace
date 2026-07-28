@@ -105,9 +105,21 @@ tocado** — segue no disco com os cinco históricos, como backup. O acervo em u
 `D:\GITHUB\arsenal-juridico`, e o `setup.js` procura por ele primeiro.
 
 **Excluído do acervo na auditoria** (fica na máquina, não circula): 4 manuais/livros comerciais
-em `direito/pecas/raw` (Lei 9.610/98 — as teses derivadas permanecem) e a cadeia de documentos
-"golpe", petições de outro escritório com CPF de não-clientes (até a sentença publicada
-qualifica a parte com CPF). Menções a nome de cliente em 4 arquivos foram generalizadas.
+em `direito/pecas/raw` (Lei 9.610/98 — as teses derivadas permanecem). Menções a nome de cliente
+em 4 arquivos foram generalizadas.
+
+**Cadeia "golpe" — anonimizada e republicada** (28/07, após decisão da titular): os 7 `.md` de
+processo de outro escritório voltaram ao acervo com 147 supressões, conforme o critério agora
+fixado na regra dura 10 do [`AGENTS.md`](../AGENTS.md). Os PDFs continuam fora — binário não se
+redige com segurança. Medido antes de publicar: `lint-bundle` mantém os mesmos 26 erros
+pré-existentes (nenhum novo) e as transcrições das páginas de trabalho já eram anônimas, então
+o `lint-citacoes` não passa a divergir.
+
+**Regressão encontrada e corrigida:** ao mover os caminhos de máquina para `ambiente.json`, o
+`lint-citacoes` continuou lendo `perfil.caminhos.bundles` e falhava em silêncio — sem acervo no
+corpus, citação a precedente de tribunal superior cairia em `NAO_ENCONTRADA` e **bloquearia a
+peça sem motivo real**. Lição: ao mover uma chave de configuração, procurar quem a lê
+(`git grep`), porque o `catch` silencioso esconde a quebra.
 
 1. ~~Criar 2 repositórios **privados** no GitHub: `pma-workspace` e `arsenal-juridico`; push.~~
 2. `KnowledgeOperatingSystem` = 3º repo privado (só quem produz bundle clona).

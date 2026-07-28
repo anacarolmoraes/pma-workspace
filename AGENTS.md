@@ -208,6 +208,21 @@ quando mencionado explicitamente pela titular, o NotebookLM.
 8. **Assinar conforme `perfil/advogados.json`** — por padrão só quem atua.
 9. **Caso de cliente não vira conteúdo de marketing por cópia.** Só despersonalizado, sem
    número de processo (ele identifica as partes em consulta pública) e com aprovação humana.
+10. **Documento de processo de terceiro só entra no acervo anonimizado** — critério fixado em
+    28/07/2026 e aplicado à cadeia "golpe":
+
+    | Sai | Fica |
+    |---|---|
+    | nome de parte, de beneficiário e de advogado → rótulo de papel (`[AUTOR]`, `[BENEFICIÁRIO 1]`) | nome do magistrado — assinar decisão é ato público do Estado |
+    | CPF, RG, e-mail, telefone, CEP, endereço, agência e conta | número do processo — é a chave de citação do precedente |
+    | o PDF (binário não se redige com segurança nem se confere) | o `.md` anonimizado, com aviso no cabeçalho |
+
+    Manter o número do processo torna isto **pseudonimização**, não anonimização
+    irreversível: o feito é público e consultável. O ganho real é que CPF, RG, telefone,
+    e-mail e conta bancária deixam de circular — esses não estão na consulta pública.
+    Depois de anonimizar, conferir se as transcrições já existentes nas páginas de trabalho
+    não continham os nomes suprimidos: se continham, o `lint-citacoes` passaria a acusar
+    divergência e bloquearia peça sem motivo real.
 
 ---
 
