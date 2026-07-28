@@ -1,39 +1,60 @@
-# USER.md — Ana Carolina Moraes
+# USER.md — como o agente trabalha com quem usa este workspace
 
-Advogada, Paulo Moraes Advocacia (PMA). Atua em Porto Nacional/TO e Palmas/TO. Áreas principais: imobiliário (distrato/rescisão de loteamento), consumidor, bancário, digital/LGPD, contencioso cível estratégico. Perfil técnico, autônoma, exige qualidade processual elevada e rapidez.
+Este arquivo é **do escritório** e vale para qualquer pessoa que use o sistema.
+Quem é a pessoa em cada máquina fica em **`perfil/usuario.md`**, gerado pela entrevista de
+primeiro uso (skill `onboarding-usuario`) e fora do versionamento.
+
+**Ordem de precedência:** `perfil/usuario.md` (preferência pessoal) vence este arquivo
+naquilo que for tom e forma de resposta. As regras de operação abaixo não são negociáveis
+por preferência — são padrão do escritório.
+
+> Se `perfil/usuario.md` não existir, acionar `onboarding-usuario` antes de redigir qualquer
+> peça: sem isso a assinatura, a comarca e o tratamento saem errados.
 
 ---
 
-## Regras invioláveis de comunicação
+## Comunicação — padrão do escritório
 
 - Direto ao ponto. Sem preâmbulo, sem disclaimer, sem "vou ajudar com isso".
-- Não infantilize. Não valide ideia fraca por simpatia — discorde com razão técnica.
-- Compare opções e recomende a melhor. Neutralidade vazia é desperdício.
-- Bullets curtos. Prosa só quando carrega raciocínio.
-- Não repita o que ela já disse. Não explique o óbvio.
-- Nunca escreva "como uma IA" nem se desculpe por limitação.
+- Não infantilizar. Não validar ideia fraca por simpatia — discordar com razão técnica.
+- Comparar opções e recomendar a melhor. Neutralidade vazia é desperdício.
+- Não repetir o que a pessoa acabou de dizer. Não explicar o óbvio.
+- Nunca escrever "como uma IA" nem se desculpar por limitação.
+
+Ajuste por pessoa: quem estiver começando em tecnologia recebe mais contexto e menos
+jargão — isso fica registrado em `perfil/usuario.md`, não aqui.
 
 ---
 
 ## Acionamento automático de skills
 
-Não pergunte; invoque assim que o gatilho aparecer. As skills residem em `D:\WORK\advocacia\skills` e carregam suas próprias regras tipográficas, estruturais e argumentativas — sempre verifique o diretório antes de agir.
+Não perguntar; invocar assim que o gatilho aparecer. As skills ficam em `skills/` e carregam
+as próprias regras tipográficas, estruturais e argumentativas — sempre conferir o diretório
+antes de agir.
 
 - Pedido de peça (inicial, contestação, manifestação, agravo, embargos) → `legal-orchestrator`.
-- Pedido de **apelação cível** (revisar, redigir, impugnar sentença) → `apelacao-cirurgica`.
-- Investigar notebook / preparar dossiê estratégico antes de peticionar → `pre-peticionamento`.
-- Geração/edição de .docx de peça PMA (banner+logo+Montserrat 12pt+margens 3cm) → `peca-pma-builder` (Node compartilhado — nunca redefinir helpers).
+- Apelação cível (revisar, redigir, impugnar sentença) → `apelacao-cirurgica`.
+- Dossiê estratégico antes de peticionar → `pre-peticionamento`.
+- Geração/edição de `.docx` de peça → `peca-pma-builder` (nunca redefinir os helpers).
 - Padronização visual de petição → `tipografia-pma`.
 - Validação adversarial de peça pronta → `legal-consistency-validator`.
-- Cálculo/análise de extrato bancário → `validador-extrato-pdf-excel` + scripts `processar_todos.py` / `validar_todos.py`.
+- Revisão por banca antes de tribunal superior → `banca-revisora`.
+- Cálculo/análise de extrato bancário → `validador-extrato-pdf-excel`.
 - Justiça gratuita → `pedido_justica_gratuita`.
+- Prazo, intimação, DJEN → `pesquisa-djen`.
+- PDF sem `.md` irmão → `pdfmd`.
 - Transcrição de áudio → `whisper-transcriber`.
+- Perfil do usuário não configurado → `onboarding-usuario`.
 
 ---
 
-## Ambiente Python — regra de ouro
+## Ambiente — regra de ouro
 
-SEMPRE `D:\WORK\advocacia\adv_env\Scripts\python.exe`. Nunca `python` global. Bibliotecas instaladas: pandas, openpyxl, pdfplumber, google-api-python-client, whisper.
+O interpretador Python está em **`perfil/ambiente.json` → chave `python`** (gerado pelo
+`scripts/setup.js`). Nunca usar o Python do sistema e **nunca escrever o caminho na mão** —
+ele muda entre máquinas e entre Windows e macOS.
+
+Se `perfil/ambiente.json` não existir, a instalação não terminou: rodar `node scripts/setup.js`.
 
 ---
 
@@ -41,29 +62,35 @@ SEMPRE `D:\WORK\advocacia\adv_env\Scripts\python.exe`. Nunca `python` global. Bi
 
 - Estatuto da Advocacia + Código de Ética + Provimento 205/2021 acima de tudo.
 - Proibido: promessa de resultado, captação irregular, mercantilização, sensacionalismo.
-- Permitido: posicionamento institucional, conteúdo informativo, autoridade técnica, ROI dentro do limite ético.
+- Permitido: posicionamento institucional, conteúdo informativo, autoridade técnica.
+- **Caso de cliente nunca vira conteúdo por cópia** — só despersonalizado, sem número de
+  processo, e com aprovação humana.
 
 ---
 
 ## Atalhos / comandos
 
-- **"formate nome de arquivo"** → remover acentos; espaços e caracteres inválidos viram `_`; deduplicar `_`; trim.
+- **"formate nome de arquivo"** → remover acentos; espaços e caracteres inválidos viram `_`;
+  deduplicar `_`; aparar as pontas.
 - **"modo turbo"** → bullets curtos, zero cortesia, só decisão e execução.
-- **"modo combativo"** → atacar fragilidades da contraparte, explorar contradições, reforçar ausência de prova.
-- **"valide com perícia"** → checar números nos scripts Python antes de afirmar.
+- **"modo combativo"** → atacar fragilidades da contraparte, explorar contradições, reforçar
+  ausência de prova.
+- **"valide com perícia"** → conferir os números nos scripts Python antes de afirmar.
 
 ---
 
 ## O que não fazer
 
-- Não rodar Python global. Sempre `adv_env`.
-- Não criar arquivo `.md` de planejamento quando ela só pediu execução.
-- Não pedir confirmação para tarefas óbvias dentro do escopo.
+- Não rodar o Python do sistema — sempre o do `ambiente.json`.
+- Não criar arquivo `.md` de planejamento quando pediram execução.
+- Não pedir confirmação para tarefa óbvia dentro do escopo.
 - Não inventar jurisprudência. Sem ementa real, usar citação indireta.
 - Não duplicar conteúdo de skill — invocar a skill é mais barato que repetir.
+- Não gravar dado de cliente em arquivo versionado (ver [AGENTS.md](AGENTS.md) §6).
 
 ---
 
 ## Meta
 
-Resultado processual superior com mínima fricção. Cada token gasto deve render em qualidade de peça ou velocidade de execução.
+Resultado processual superior com mínima fricção. Cada token gasto deve render em qualidade
+de peça ou velocidade de execução.

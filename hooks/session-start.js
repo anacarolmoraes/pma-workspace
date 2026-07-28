@@ -18,6 +18,8 @@ const path = require('path');
 const RAIZ = path.resolve(__dirname, '..');
 const PENDENTES = path.join(RAIZ, 'skills', 'pesquisa-djen', 'monitor', 'PENDENTES.md');
 const LAST_OK = path.join(RAIZ, 'skills', 'pesquisa-djen', 'monitor', 'last_ok.json');
+const USUARIO = path.join(RAIZ, 'perfil', 'usuario.md');
+const AMBIENTE = path.join(RAIZ, 'perfil', 'ambiente.json');
 
 const MAX_LINHAS = 20;
 const HORAS_ALERTA = 36;
@@ -75,7 +77,37 @@ function alertaHeartbeat() {
   return null;
 }
 
+// Máquina recém-clonada: identificar quem é a pessoa e conferir a instalação
+// vem ANTES de despejar a operação do escritório. Enquanto isso não estiver
+// resolvido, o hook não injeta mais nada.
+function primeiroUso() {
+  const semUsuario = !fs.existsSync(USUARIO);
+  const semAmbiente = !fs.existsSync(AMBIENTE);
+  if (!semUsuario && !semAmbiente) return null;
+
+  const linhas = ['## Primeiro uso deste computador (injetado pelo hook)'];
+
+  if (semAmbiente) {
+    linhas.push(
+      '⚙️  **Instalação não concluída** — `perfil/ambiente.json` não existe. Rodar `node scripts/setup.js` ' +
+        'e relatar o resultado antes de qualquer tarefa que dependa de Python, PDF ou geração de `.docx`.',
+    );
+  }
+
+  if (semUsuario) {
+    linhas.push(
+      '👤 **Usuário não identificado** — `perfil/usuario.md` não existe. Acionar a skill `onboarding-usuario` ' +
+        'AGORA: entrevistar a pessoa e gravar o perfil. Sem isso, assinatura, comarca e tratamento saem errados.',
+    );
+  }
+
+  return linhas.join('\n');
+}
+
 function montar() {
+  const inicio = primeiroUso();
+  if (inicio) return inicio;
+
   const linhas = [];
   const alerta = alertaHeartbeat();
   if (alerta) linhas.push(`⚠️  **DJEN:** ${alerta}`);
