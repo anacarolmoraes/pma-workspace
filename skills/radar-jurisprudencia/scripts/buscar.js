@@ -88,10 +88,10 @@ function elegivel(item, texto) {
 // Recorte para triagem: abertura (identifica a matéria) + janela do dispositivo (identifica quem ganhou).
 // É isso que o triador lê — nunca o texto integral, que fica em textos/<id>.txt para os finalistas.
 function recortar(texto) {
-  const abertura = texto.slice(0, 600);
+  const abertura = texto.slice(0, 500);
   const m = MARCA_DISPOSITIVO.exec(texto);
-  if (!m || m.index < 600) return texto.slice(0, 2400);
-  return `${abertura} [...] ${texto.slice(m.index, m.index + 2200)}`;
+  if (!m || m.index < 500) return texto.slice(0, 2000);
+  return `${abertura} [...] ${texto.slice(m.index, m.index + 1500)}`;
 }
 
 const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();

@@ -73,9 +73,13 @@ para cedo quando já tem candidato de sobra, e grava:
 - `candidatos.json` — metadados + **trecho** (abertura + dispositivo) de cada candidato
 - `textos/<id>.txt` — texto integral, um por arquivo
 
-Ler o `candidatos.json`; **nunca** ler a pasta `textos/` inteira.
+**Não dar `Read` no `candidatos.json`** — ele carrega todos os trechos (dezenas de milhares
+de tokens que você não precisa ver). As contagens vêm do resumo do console; os trechos vão
+direto do disco para os triadores via `scripts/lotes.js`. E **nunca** ler a pasta `textos/`
+inteira.
 
 Interpretar o resumo do console:
+
 - `countApi` alto (milhares) → termo largo demais; a triagem vai se afogar. Estreitar.
 - Poucos ou zero candidatos → reformular os termos (sinônimos, termo mais amplo, sem número
   de artigo) e rodar de novo. Até 3 rodadas; se seguir seco, reportar honestamente que o
@@ -83,15 +87,25 @@ Interpretar o resumo do console:
 
 ## 5. Triagem barata (Haiku)
 
-Se houver **mais de 60 candidatos**, triar só os 60 de maior `score` (o buscar.js já
-ranqueia por relevância zero-LLM; passar `--relevantes` com palavras da tese que não servem
-de busca mas indicam aderência, ex. `32-A`). O resto fica no JSON caso a triagem venha seca.
+Gerar os lotes com o fatiador (zero LLM — corta o top-60 por score e grava os arquivos):
 
-Preparar arquivo(s) de lote com até 12 candidatos (id, tribunal, tipoDocumento, classe,
-trecho — extraídos do `candidatos.json` com script, sem passar pelo seu contexto) e
-disparar subagente(s) com `model: haiku` que **leem o arquivo de lote**. Prompt do triador:
-
+```bash
+node scripts/lotes.js --entrada <pasta-do-caso>/radar-djen/candidatos.json --top 60 --tamanho 25
 ```
+
+Lotes de **25–30, não menos**: cada subagente paga um custo fixo alto só por existir
+(prompt de sistema), então lote pequeno é o jeito mais caro de triar — 6 lotes de 12 custam
+o dobro de 2 lotes de 30 para o mesmo trabalho. Haiku classifica 30 itens tão bem quanto 12.
+No buscar.js, `--relevantes` (palavras da tese que não servem de busca mas indicam aderência,
+ex. `32-A`) melhora o ranking que define o corte. O que ficar fora do top-60 segue no JSON
+para segunda passada se a triagem vier seca.
+
+Disparar os triadores `model: haiku` **todos numa única mensagem, em paralelo e aguardando
+o resultado (nunca em background)** — orquestrador que devolve o turno precisa ser retomado
+depois, e cada retomada recarrega o contexto inteiro dele, além de deixar as notificações
+órfãs. Cada triador **lê o seu arquivo de lote**. Prompt do triador:
+
+```text
 Você é triador de jurisprudência. Tese do cliente: "<tese>" (representamos <lado>).
 "Favorável" = o conteúdo da decisão sustenta essa tese, independentemente de quem ganhou
 ou de a decisão ter sido provida ou improvida.

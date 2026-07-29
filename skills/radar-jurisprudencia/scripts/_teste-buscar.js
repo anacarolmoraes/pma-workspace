@@ -40,8 +40,8 @@ const relatorio = 'R'.repeat(1500);
 const comDispositivo = `${relatorio} Ante o exposto, JULGO PROCEDENTE o pedido para limitar a retenção a 25%. ${'F'.repeat(3000)}`;
 teste('com marcador longe da abertura: junta abertura + dispositivo',
   recortar(comDispositivo).includes('[...]') && recortar(comDispositivo).includes('JULGO PROCEDENTE'));
-teste('sem marcador: primeiros 2400 chars',
-  recortar('S'.repeat(5000)).length === 2400 && !recortar('S'.repeat(5000)).includes('[...]'));
+teste('sem marcador: primeiros 2000 chars',
+  recortar('S'.repeat(5000)).length === 2000 && !recortar('S'.repeat(5000)).includes('[...]'));
 teste('marcador já na abertura: recorte simples sem duplicar',
   !recortar('Ante o exposto, julgo. ' + 'y'.repeat(3000)).includes('[...]'));
 
