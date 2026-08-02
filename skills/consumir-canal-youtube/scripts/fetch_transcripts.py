@@ -27,6 +27,12 @@ from pathlib import Path
 
 import yt_dlp
 
+# console do Windows (cp1252) nao decodifica todo titulo do YouTube (ex.: zero-width
+# non-joiner U+200C); sem isso o script derruba no meio de um fetch longo.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(errors="replace")
+
 
 def slugify(title: str) -> str:
     # remove acentos antes de filtrar (senao "rescisão" vira "resciso")
