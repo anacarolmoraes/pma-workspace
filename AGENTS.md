@@ -11,8 +11,8 @@ Leituras complementares: [`IA_CONTEXT.md`](IA_CONTEXT.md) (ambiente técnico) ·
 
 ## 1. Onde está cada coisa
 
-O trabalho está repartido em **três repositórios**. Nenhum agente encontra o segundo sozinho —
-por isso ele está declarado aqui.
+O trabalho está repartido em **quatro repositórios**. Nenhum agente encontra o segundo sozinho —
+por isso eles estão declarados aqui.
 
 ```
 <raiz do workspace>             ← ESTE repositório (pma-workspace): o MOTOR
@@ -39,6 +39,11 @@ por isso ele está declarado aqui.
 
 <KnowledgeOperatingSystem>       ← só para quem PRODUZ bundle
   piloto/SCHEMA_BUNDLE_PILOTO.md   contrato que disciplina a produção dos bundles
+
+<pma-marketing>                  ← MARKETING (repo próprio, Fase 8 — D:\GITHUB\pma-marketing)
+  skills de conteúdo + artigos/ + fila de pautas + lints LGPD/OAB. Trabalho de
+  marketing acontece LÁ (workspace próprio), nunca aqui. Consome o acervo como
+  matéria-prima; caso de cliente só entra lá pela skill caso-para-conteudo.
 ```
 
 **Nunca escrever caminho absoluto.** A raiz do acervo e o interpretador Python mudam de

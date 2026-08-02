@@ -1,8 +1,8 @@
 # PRD — Versionamento, modularização e replicação para a equipe
 
-> Status: **Fases 1, 2, 3, 6 e 7 executadas; 4 e 5 executadas em 02/08/2026** (na Fase 4
-> resta só o passo travado por portão: exclusão das pastas de tema após conferência da
-> titular, e a mudança dos casos encerrados para o Drive). Pendente: 8 (marketing).
+> Status: **Todas as fases executadas** (1, 2, 3, 6, 7 em 28/07; 4, 5 e 8 em 02/08/2026).
+> Na Fase 4 resta só o passo travado por portão: exclusão das pastas de tema após
+> conferência da titular, e a mudança dos casos encerrados para o Drive.
 > Nenhuma skill saiu da máquina da titular — as exclusões são só de versionamento.
 >
 > **Decisão alterada na execução (Fase 1):** as pastas de tema **não** foram versionadas nem
@@ -170,7 +170,22 @@ peça sem motivo real**. Lição: ao mover uma chave de configuração, procurar
 2. `KnowledgeOperatingSystem` = 3º repo privado (só quem produz bundle clona).
 3. Convidar a equipe (Collaborators); cada colega: clone + setup.js + entrevista.
 
-## Fase 8 — Marketing (repo próprio: `pma-marketing`)
+## Fase 8 — Marketing (repo próprio: `pma-marketing`)  ✅ EXECUTADA em 02/08/2026
+
+> <https://github.com/anacarolmoraes/pma-marketing> (privado) — 131 arquivos, commit `977e94e`.
+>
+> Executado conforme especificado abaixo: 7 skills migradas do motor (caminhos absolutos
+> convertidos para relativos; python do `yt-search` sai de `perfil/ambiente.json`),
+> `artigos/` migrada (série desmonetização), fila de pautas semeada com 5 pautas dos
+> bundles novos da Fase 4, skill-portão `caso-para-conteudo`, `lint-lgpd` (nomes de
+> cliente lidos em runtime de `<motor>/clientes/` + lista local fora do git; número CNJ
+> só passa se for precedente capturado no acervo) e `lint-oab` (Provimento 205/2021, com
+> guarda de negação para disclaimers). Minuta da cláusula de consentimento em
+> `documentos/` — **pendente de aprovação da titular antes do primeiro uso**.
+> Auditoria prévia do material: nenhum nome de cliente, CPF ou processo do escritório;
+> as citações CNJ do artigo acadêmico são precedentes públicos capturados no acervo.
+> Pendências deixadas na fila: rodar os lints peça a peça da série desmonetização (o
+> artigo 01 está sem identificação OAB) e aprovação/calendário de publicação.
 
 **Arquitetura**: 4º repo privado — skills de marketing (pptx-generator, brand-voice-generator,
 remotion, yt-search, linkedin-profile-optimizer, artigo-jornalistico-persuasivo,

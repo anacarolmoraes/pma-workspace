@@ -106,7 +106,9 @@ venv/
 
 
 # ------------------------------------------------------------
-# 6. MARKETING — vai para repositório próprio (pma-marketing)
+# 6. MARKETING — migrou para o repositório próprio (pma-marketing)
+# em 02/08/2026 (Fase 8). As pastas abaixo NÃO existem mais aqui;
+# as regras ficam como trava caso alguma cópia reapareça.
 # ------------------------------------------------------------
 artigos/
 skills/pptx-generator/
