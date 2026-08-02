@@ -9,7 +9,8 @@ Stages:
     1) Extract → PageText pages   (native or OCR depending on Options)
     2) Transform → clean/annotate pages (drop caps, header/footer removal, table detection)
     3) Render → Markdown
-    4) Optional: export images to _assets/ and append simple references
+    4) Export positioned image occurrences and render them in document flow
+    5) Write canonical Markdown, compact index and provenance manifest atomically
 
 Notes:
     - `progress_cb` receives (done, total) at a few milestones; GUI can map this
@@ -22,16 +23,21 @@ Notes:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Optional, List, Dict
+from typing import Callable, Optional, List, Dict, Any
+import hashlib
+import json
 import os
+import re
+import shutil
+import tempfile
 
 try:
     import fitz  # PyMuPDF
 except Exception:
     fitz = None
 
-from .models import Options
-from .extract import extract_pages, _open_pdf_with_password
+from .models import Options, ImagePlacement, PageText
+from .extract import extract_pages, _open_pdf_with_password, _tesseract_available
 from .transform import transform_pages
 from .render import render_document
 from .utils import log as default_log
@@ -41,40 +47,45 @@ DefProgress = Optional[Callable[[int, int], None]]
 DefLogger = Optional[Callable[[str], None]]
 
 
-def _append_image_refs(md: str, page_to_relpaths: Dict[int, List[str]]) -> str:
-    """Append image references to the end of the Markdown document.
-    
-    Args:
-        md: Markdown content
-        page_to_relpaths: Mapping of page_index → list of relative image paths
-        
-    Returns:
-        Markdown with image references appended
-    """
-    if not page_to_relpaths:
-        return md
-    
-    lines: List[str] = [md.rstrip(), ""]
-    
-    for pno in sorted(page_to_relpaths):
-        paths = page_to_relpaths[pno]
-        if not paths:
-            continue
-        lines.append(f"**Images from page {pno + 1}:**")
-        for i, rel in enumerate(paths, start=1):
-            lines.append(f"- ![p{pno + 1}-{i}]({rel})")
-        lines.append("")
-    
-    return "\n".join(lines).rstrip() + "\n"
+def _ocr_image_bytes(png_bytes: bytes, lang: str) -> tuple[str, Optional[float]]:
+    """OCR one rendered image locally; return text and mean positive confidence."""
+    try:
+        import io
+        import pytesseract  # type: ignore
+        from PIL import Image  # type: ignore
+
+        if not _tesseract_available():
+            return "", None
+        image = Image.open(io.BytesIO(png_bytes))
+        data = pytesseract.image_to_data(
+            image,
+            lang=lang or "por",
+            output_type=pytesseract.Output.DICT,
+        )
+        words = [str(text or "").strip() for text in data.get("text", [])]
+        text = " ".join(word for word in words if word)
+        confidences: List[float] = []
+        for raw in data.get("conf", []):
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                continue
+            if value >= 0:
+                confidences.append(value)
+        confidence = sum(confidences) / len(confidences) if confidences else None
+        return text, confidence
+    except Exception:
+        return "", None
 
 
 def _export_images(
     pdf_path: str,
     output_md: str,
     options: Options,
+    pages: Optional[List[PageText]] = None,
     log_cb: DefLogger = None,
     pdf_password: Optional[str] = None,
-) -> Dict[int, List[str]]:
+) -> Dict[int, List[ImagePlacement]]:
     """Export images to an _assets folder next to output_md and return relative paths.
 
     Returns a mapping: page_index → [relpath, ...].
@@ -90,7 +101,7 @@ def _export_images(
         pdf_password: Optional PDF password (ephemeral, in-memory only)
         
     Returns:
-        Dictionary mapping page indices to lists of relative image paths
+        Dictionary mapping page indices to positioned image occurrences
     """
     if not options.export_images:
         return {}
@@ -113,49 +124,100 @@ def _export_images(
         assets_dir = out_path.with_name(out_path.stem + "_assets")
         assets_dir.mkdir(parents=True, exist_ok=True)
 
-        mapping: Dict[int, List[str]] = {}
+        mapping: Dict[int, List[ImagePlacement]] = {}
+        digest_to_relpath: Dict[str, str] = {}
+        generated_files: set[str] = set()
         page_count = doc.page_count
         limit = page_count if not options.preview_only else min(3, page_count)
 
         for pno in range(limit):
             page = doc.load_page(pno)
-            images = page.get_images(full=True)
-            rels: List[str] = []
-            
-            for idx, img in enumerate(images, start=1):
-                xref = img[0]
+            try:
+                occurrences = page.get_image_info(xrefs=True)
+            except Exception:
+                occurrences = []
+            if (
+                not occurrences
+                and pages
+                and pno < len(pages)
+                and not pages[pno].tables
+                and (pages[pno].vector_drawings or pages[pno].annotations or pages[pno].widgets)
+            ):
+                occurrences = [
+                    {
+                        "xref": 0,
+                        "bbox": tuple(page.rect),
+                        "pdfmd_full_page_visual": True,
+                    }
+                ]
+            placements: List[ImagePlacement] = []
+
+            for idx, info in enumerate(occurrences, start=1):
+                xref = int(info.get("xref", 0) or 0) or None
+                raw_bbox = info.get("bbox")
+                if not raw_bbox or len(raw_bbox) != 4:
+                    continue
                 try:
-                    pix = fitz.Pixmap(doc, xref)
+                    bbox = fitz.Rect(*raw_bbox) & page.rect
+                    if bbox.is_empty or bbox.width <= 0 or bbox.height <= 0:
+                        continue
+                    pix = page.get_pixmap(clip=bbox, dpi=max(72, int(options.image_dpi)), alpha=False)
                 except Exception as exc:
                     if log_cb:
-                        log_cb(f"[pipeline] Skipping image xref={xref} on page {pno + 1}: {exc}")
+                        log_cb(f"[pipeline] Skipping image occurrence on page {pno + 1}: {exc}")
                     continue
-                
-                # Convert any non-RGB/Gray colorspace (CMYK, ICC, etc.) to RGB.
-                # PNG only supports RGB(A) and Gray(A), so anything else must
-                # be converted before saving.
-                if pix.colorspace and pix.colorspace.n > 3:
-                    pix = fitz.Pixmap(fitz.csRGB, pix)
-                
-                # Drop alpha channel if present — avoids issues with some
-                # viewers and keeps file sizes smaller.
-                if pix.alpha:
-                    pix = fitz.Pixmap(pix, 0)  # 0 = drop alpha
-                
+
+                png_bytes = pix.tobytes("png")
+                digest = hashlib.sha256(png_bytes).hexdigest()
                 fname = assets_dir / f"img_{pno + 1:03d}_{idx:02d}.png"
-                try:
-                    pix.save(str(fname))
-                except Exception as exc:
-                    if log_cb:
-                        log_cb(f"[pipeline] Could not save image p{pno + 1}-{idx}: {exc}")
-                    continue
-                
-                # Markdown wants forward slashes for portability
-                rel = assets_dir.name + "/" + fname.name
-                rels.append(rel)
-            
-            if rels:
-                mapping[pno] = rels
+                repeated = digest in digest_to_relpath
+                if repeated:
+                    rel = digest_to_relpath[digest]
+                else:
+                    try:
+                        _atomic_write_bytes(fname, png_bytes)
+                    except Exception as exc:
+                        if log_cb:
+                            log_cb(f"[pipeline] Could not save image p{pno + 1}-{idx}: {exc}")
+                        continue
+                    rel = assets_dir.name + "/" + fname.name
+                    digest_to_relpath[digest] = rel
+                    generated_files.add(fname.name)
+
+                ocr_text = ""
+                confidence: Optional[float] = None
+                page_area = max(float(page.rect.width * page.rect.height), 1.0)
+                occurrence_area = float(bbox.width * bbox.height)
+                page_already_ocr = bool(pages and pno < len(pages) and pages[pno].ocr_used)
+                if (
+                    options.ocr_embedded_images
+                    and occurrence_area / page_area >= 0.005
+                    and not (page_already_ocr and occurrence_area / page_area > 0.50)
+                ):
+                    ocr_text, confidence = _ocr_image_bytes(png_bytes, options.ocr_lang)
+
+                placements.append(
+                    ImagePlacement(
+                        bbox=tuple(float(v) for v in raw_bbox),  # type: ignore[arg-type]
+                        relpath=rel,
+                        element_id=f"p{pno + 1:04d}-i{idx:03d}",
+                        xref=xref,
+                        ocr_text=ocr_text,
+                        confidence=confidence,
+                        repeated=repeated,
+                    )
+                )
+
+            if placements:
+                mapping[pno] = placements
+
+        for old in assets_dir.glob("img_*.png"):
+            if old.name not in generated_files and not any(
+                placement.relpath.endswith("/" + old.name)
+                for placements in mapping.values()
+                for placement in placements
+            ):
+                old.unlink()
         
         if log_cb and mapping:
             log_cb(f"[pipeline] Exported images to folder: {assets_dir}")
@@ -164,6 +226,238 @@ def _export_images(
     
     finally:
         doc.close()
+
+
+def _atomic_write_bytes(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=str(path.parent))
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, path)
+    except Exception:
+        try:
+            os.unlink(temp_name)
+        except OSError:
+            pass
+        raise
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    _atomic_write_bytes(path, text.encode("utf-8"))
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    elif path.exists() or path.is_symlink():
+        path.unlink()
+
+
+def _commit_staged_bundle(items: List[tuple[Path, Path]]) -> None:
+    """Replace a related set of outputs and roll everything back on failure."""
+    if not items:
+        return
+
+    destination_parent = items[0][1].parent
+    destination_parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix=".pdfmd-backup-",
+        dir=str(destination_parent),
+    ) as backup_name:
+        backup_root = Path(backup_name)
+        backups: List[tuple[Path, Path]] = []
+        installed: List[Path] = []
+        try:
+            for position, (staged, destination) in enumerate(items):
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                if destination.exists() or destination.is_symlink():
+                    backup = backup_root / f"{position:02d}-{destination.name}"
+                    os.replace(destination, backup)
+                    backups.append((backup, destination))
+                os.replace(staged, destination)
+                installed.append(destination)
+        except Exception:
+            for destination in reversed(installed):
+                if destination.exists() or destination.is_symlink():
+                    _remove_path(destination)
+            for backup, destination in reversed(backups):
+                if backup.exists() or backup.is_symlink():
+                    os.replace(backup, destination)
+            raise
+
+
+def _sha256_file(path: str) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _page_character_count(page: PageText) -> int:
+    return sum(
+        len(span.text)
+        for block in page.blocks
+        for line in block.lines
+        for span in line.spans
+    )
+
+
+def _printed_page(page: PageText) -> Optional[int]:
+    candidates: List[int] = []
+    for item in page.suppressed_repeated:
+        if item.get("kind") != "page_number":
+            continue
+        text = str(item.get("text") or "").strip()
+        if text.isdigit():
+            candidates.append(int(text))
+    return candidates[0] if len(set(candidates)) == 1 else None
+
+
+def _page_line_ranges(md: str) -> Dict[int, Dict[str, int]]:
+    ranges: Dict[int, Dict[str, int]] = {}
+    current: Optional[int] = None
+    for line_no, line in enumerate(md.splitlines(), start=1):
+        match = re.match(r"<!-- pdfmd:page=(\d+);", line)
+        if match:
+            if current is not None:
+                ranges[current]["end_line"] = line_no - 1
+            current = int(match.group(1))
+            ranges[current] = {"start_line": max(1, line_no - 1), "end_line": line_no}
+    if current is not None:
+        ranges[current]["end_line"] = len(md.splitlines())
+    return ranges
+
+
+def _manifest_data(input_pdf: str, output_md: str, pages: List[PageText], md: str, options: Options) -> Dict[str, Any]:
+    line_ranges = _page_line_ranges(md)
+    page_records: List[Dict[str, Any]] = []
+    for page in pages:
+        number = page.page_number or (len(page_records) + 1)
+        page_records.append(
+            {
+                "pdf_page": number,
+                "printed_page": _printed_page(page),
+                "anchor": f"pdf-page-{number}",
+                "markdown_lines": line_ranges.get(number),
+                "width": page.width,
+                "height": page.height,
+                "rotation": page.rotation,
+                "extraction_method": page.extraction_method,
+                "ocr_used": page.ocr_used,
+                "characters": _page_character_count(page),
+                "blocks": len(page.blocks),
+                "elements": [
+                    {
+                        "id": block.element_id,
+                        "bbox": list(block.bbox) if block.bbox else None,
+                        "characters": sum(len(span.text) for line in block.lines for span in line.spans),
+                        "source": next(
+                            (span.source for line in block.lines for span in line.spans if span.source),
+                            page.extraction_method,
+                        ),
+                    }
+                    for block in page.blocks
+                ],
+                "vector_drawings": page.vector_drawings,
+                "annotations": page.annotations,
+                "widgets": page.widgets,
+                "tables": [
+                    {
+                        "id": table.element_id,
+                        "bbox": list(table.bbox),
+                        "rows": len(table.rows),
+                        "columns": max((len(row) for row in table.rows), default=0),
+                        "header_detected": table.header_detected,
+                        "source": table.source,
+                        "confidence": table.confidence,
+                    }
+                    for table in page.tables
+                ],
+                "images": [
+                    {
+                        "id": image.element_id,
+                        "bbox": list(image.bbox),
+                        "asset": image.relpath,
+                        "xref": image.xref,
+                        "ocr_confidence": image.confidence,
+                        "ocr_characters": len(image.ocr_text),
+                        "repeated": image.repeated,
+                    }
+                    for image in page.images
+                ],
+                "suppressed_repeated": page.suppressed_repeated,
+                "warnings": page.warnings,
+            }
+        )
+    return {
+        "schema": "pdfmd-manifest-v1",
+        "source_file": Path(input_pdf).name,
+        "source_sha256": _sha256_file(input_pdf),
+        "markdown_file": Path(output_md).name,
+        "pages": page_records,
+        "options": {
+            "ocr_mode": options.ocr_mode,
+            "ocr_lang": options.ocr_lang,
+            "ocr_embedded_images": options.ocr_embedded_images,
+            "page_anchors": True,
+            "export_images": options.export_images,
+        },
+    }
+
+
+def _build_index(output_md: str, pages: List[PageText], md: str, source_hash: str) -> str:
+    md_name = Path(output_md).name
+    lines = [
+        f"# Mapa de {md_name}",
+        "",
+        f"<!-- pdfmd:index; source_sha256={source_hash} -->",
+        "",
+        f"- Páginas PDF: {len(pages)}",
+        f"- Caracteres no Markdown canônico: {len(md)}",
+        f"- Tokens estimados se lido integralmente: {max(1, len(md) // 4)}",
+        "",
+        "## Estrutura detectada",
+        "",
+    ]
+    current_page = 1
+    headings = 0
+    for line in md.splitlines():
+        page_match = re.match(r"<!-- pdfmd:page=(\d+);", line)
+        if page_match:
+            current_page = int(page_match.group(1))
+            continue
+        heading = re.match(r"^(#{1,4})\s+(.+?)\s*$", line)
+        if heading:
+            headings += 1
+            indent = "  " * (len(heading.group(1)) - 1)
+            lines.append(
+                f"{indent}- {heading.group(2)} — [p. PDF {current_page}]({md_name}#pdf-page-{current_page})"
+            )
+    if headings == 0:
+        lines.append("- Nenhum título estrutural detectado")
+
+    lines.extend(["", "## Inventário por página", ""])
+    for page in pages:
+        number = page.page_number or 1
+        flags: List[str] = []
+        if page.ocr_used:
+            flags.append("OCR")
+        if page.tables:
+            flags.append(f"{len(page.tables)} tabela(s)")
+        if page.images:
+            flags.append(f"{len(page.images)} imagem(ns)")
+        if page.warnings:
+            flags.append("conferir")
+        suffix = "; " + "; ".join(flags) if flags else ""
+        lines.append(
+            f"- [p. PDF {number}]({md_name}#pdf-page-{number}) — {_page_character_count(page)} caracteres{suffix}"
+        )
+    lines.append("")
+    return "\n".join(lines)
 
 
 def pdf_to_markdown(
@@ -249,47 +543,102 @@ def pdf_to_markdown(
     if progress_cb:
         progress_cb(60, 100)
 
-    # --- Stage 3: Render ---
-    if log_cb:
-        log_cb("[pipeline] Rendering Markdown…")
-    
-    md = render_document(
-        pages_t,
-        options,
-        body_sizes=body_sizes,
-    )
-
-    if progress_cb:
-        progress_cb(80, 100)
-
-    # --- Stage 4: Optional image export ---
-    if options.export_images:
-        if log_cb:
-            log_cb("[pipeline] Exporting images…")
-        
-        page_to_rel = _export_images(
-            input_pdf,
-            output_md,
-            options,
-            log_cb=log_cb,
-            pdf_password=pdf_password,
-        )
-        
-        if page_to_rel:
-            md = _append_image_refs(md, page_to_rel)
-
-    if progress_cb:
-        progress_cb(90, 100)
-
-    # --- Write output ---
-    if log_cb:
-        log_cb("[pipeline] Writing output file…")
-    
+    # Stage every derived artifact away from the live outputs. Only after the
+    # complete bundle exists do we replace the previous version as one
+    # rollback-capable transaction.
+    out_path = Path(output_md)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        Path(output_md).write_text(md, encoding="utf-8")
+        with tempfile.TemporaryDirectory(
+            prefix=f".{out_path.stem}-pdfmd-stage-",
+            dir=str(out_path.parent),
+        ) as stage_name:
+            stage_root = Path(stage_name)
+            staged_out = stage_root / out_path.name
+
+            # --- Stage 3: Optional positioned image export ---
+            if options.export_images:
+                if log_cb:
+                    log_cb("[pipeline] Exporting images…")
+
+                page_to_images = _export_images(
+                    input_pdf,
+                    str(staged_out),
+                    options,
+                    pages=pages_t,
+                    log_cb=log_cb,
+                    pdf_password=pdf_password,
+                )
+                for page_index, images in page_to_images.items():
+                    if page_index < len(pages_t):
+                        pages_t[page_index].images = images
+
+            if progress_cb:
+                progress_cb(75, 100)
+
+            if options.strict:
+                warnings = [
+                    f"p. PDF {page.page_number}: {warning}"
+                    for page in pages_t
+                    for warning in page.warnings
+                ]
+                if warnings:
+                    raise ValueError(
+                        "Conversão estrita exige conferência: " + " | ".join(warnings)
+                    )
+
+            # --- Stage 4: Render canonical Markdown ---
+            if log_cb:
+                log_cb("[pipeline] Rendering canonical Markdown…")
+
+            md = render_document(
+                pages_t,
+                options,
+                body_sizes=body_sizes,
+            )
+
+            if progress_cb:
+                progress_cb(85, 100)
+
+            if log_cb:
+                log_cb("[pipeline] Staging output bundle…")
+
+            _atomic_write_text(staged_out, md)
+            staged_items: List[tuple[Path, Path]] = [(staged_out, out_path)]
+
+            manifest: Optional[Dict[str, Any]] = None
+            if options.write_manifest or options.write_index:
+                manifest = _manifest_data(input_pdf, output_md, pages_t, md, options)
+
+            if options.write_manifest and manifest is not None:
+                staged_manifest = staged_out.with_suffix(".pdfmd.json")
+                manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
+                _atomic_write_text(staged_manifest, manifest_text)
+                staged_items.append(
+                    (staged_manifest, out_path.with_suffix(".pdfmd.json"))
+                )
+
+            if options.write_index and manifest is not None:
+                staged_index = staged_out.with_suffix(".index.md")
+                index_text = _build_index(
+                    output_md,
+                    pages_t,
+                    md,
+                    str(manifest["source_sha256"]),
+                )
+                _atomic_write_text(staged_index, index_text)
+                staged_items.append((staged_index, out_path.with_suffix(".index.md")))
+
+            if options.export_images:
+                staged_assets = staged_out.with_name(staged_out.stem + "_assets")
+                if staged_assets.exists():
+                    final_assets = out_path.with_name(out_path.stem + "_assets")
+                    staged_items.append((staged_assets, final_assets))
+
+            _commit_staged_bundle(staged_items)
     except Exception as e:
         if log_cb:
-            log_cb(f"[pipeline] Error writing output: {e}")
+            log_cb(f"[pipeline] Error writing output bundle: {e}")
         raise
 
     if progress_cb:

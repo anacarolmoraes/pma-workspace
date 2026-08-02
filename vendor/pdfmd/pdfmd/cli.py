@@ -162,13 +162,44 @@ Security notes:
     parser.add_argument(
         "--export-images",
         action="store_true",
-        help="Export images to an _assets/ folder and append Markdown references.",
+        help="Export positioned image occurrences and insert references in document flow.",
+    )
+
+    parser.add_argument(
+        "--ocr-images",
+        action="store_true",
+        help="Run local Tesseract OCR on relevant embedded image occurrences.",
+    )
+
+    parser.add_argument(
+        "--image-dpi",
+        type=int,
+        default=200,
+        help="DPI used to render image occurrences (default: 200).",
     )
 
     parser.add_argument(
         "--page-breaks",
         action="store_true",
-        help="Insert '---' page break markers between pages in the output.",
+        help="Insert stable PDF page anchors for citation.",
+    )
+
+    parser.add_argument(
+        "--no-index",
+        action="store_true",
+        help="Do not create the compact .index.md navigation map.",
+    )
+
+    parser.add_argument(
+        "--no-manifest",
+        action="store_true",
+        help="Do not create the .pdfmd.json provenance manifest.",
+    )
+
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail conversion when a page has an unresolved fidelity warning.",
     )
 
     parser.add_argument(
@@ -238,6 +269,11 @@ def _make_options(args: argparse.Namespace) -> Options:
     # Rendering / output
     opts.insert_page_breaks = bool(args.page_breaks)
     opts.export_images = bool(args.export_images)
+    opts.ocr_embedded_images = bool(args.ocr_images)
+    opts.image_dpi = max(72, int(args.image_dpi or 200))
+    opts.write_index = not bool(args.no_index)
+    opts.write_manifest = not bool(args.no_manifest)
+    opts.strict = bool(args.strict)
 
     # Transform heuristics remain at their defaults; they can be exposed later.
     return opts

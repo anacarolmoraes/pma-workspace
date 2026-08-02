@@ -7,7 +7,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
-![Version](https://img.shields.io/badge/version-1.6.0-purple)
+![Version](https://img.shields.io/badge/version-1.7.0-purple)
 
 ---
 
@@ -166,6 +166,9 @@ Supports all PDF encryption standards: 40-bit RC4, 128-bit RC4, 128/256-bit AES.
 - **Inline formatting** — Preserves **bold** and *italic* styling
 - **Header/footer removal** — Detects and strips repeating page elements
 - **Multi-column awareness** — Reduces cross-column text mixing
+- **Stable page provenance** — Adds citeable PDF-page anchors and a machine-readable manifest
+- **Selective-reading index** — Generates a compact page/section map before the full Markdown is loaded
+- **Transactional output** — Replaces Markdown, index, manifest, and assets together or preserves the prior bundle
 
 ### 📊 Automatic Table Detection & Reconstruction
 
@@ -175,6 +178,7 @@ Your PDFs often contain tables split across blocks, columns, and various layout 
 - **Bordered tables** — Recognises explicit `|` and `¦` delimiters
 - **Tab-separated blocks** — Handles tab-delimited data
 - **Multi-block vertical tables** — Stitches tables split across PyMuPDF blocks
+- **Geometric tables** — Uses PyMuPDF table regions and bounding boxes before textual heuristics
 - **Full Markdown rendering** — Generates proper pipe tables with alignment
 - **Header row detection** — Automatically identifies table headers
 - **Conservative heuristics** — Avoids false positives on prose and lists
@@ -209,6 +213,7 @@ Ideal for scientific PDFs in physics, mathematics, engineering, and chemistry.
 - **Tesseract OCR** — Lightweight, accurate, works on all major platforms
 - **OCRmyPDF** — High-fidelity layout preservation
 - **Auto-detection** — Automatically identifies scanned pages
+- **Per-page decisions** — Mixed PDFs retain native text where reliable and OCR only the pages that need it
 - **Language selection** — Choose from 17+ Tesseract language packs or combine them (e.g. `eng+fra`)
 - **Configurable quality** — Balance between speed and accuracy
 - **Mixed-mode support** — Handles PDFs with both digital text and scanned pages
@@ -262,14 +267,14 @@ PDF Input
 └─────────────────┘
     ↓
 ┌─────────────────┐
-│  3. RENDER      │ ← Generate Markdown with headings, lists, links
+│  3. EXPORT      │ ← Render positioned image occurrences and optional local OCR
 └─────────────────┘
     ↓
 ┌─────────────────┐
-│  4. EXPORT      │ ← Write .md file + optional image assets
+│  4. RENDER      │ ← Generate Markdown with page anchors and visual references
 └─────────────────┘
     ↓
-Markdown Output
+Transactional bundle: .md + .index.md + .pdfmd.json + optional _assets/
 ```
 
 ### 📦 Module Overview
@@ -343,7 +348,6 @@ This modular pipeline allows tables and equations to slot into the flow cleanly,
 With tables and equations now modularised, future upgrades can be added easily:
 
 * Better table spanning (row/column spans)
-* Layout-aware table detection using bounding-box coordinates
 * Math rendering modes (strict, permissive)
 * Multi-line header/footer detection
 * Charts detection
@@ -497,8 +501,9 @@ python app_gui.py
    - **Language:** Select from 17 common Tesseract language codes or type any valid code. Combine with `+` for multi-language documents (e.g. `eng+fra`).
    
    **Output Options:**
-   - ☑️ **Export images** — Save images to `_assets/` folder
-   - ☑️ **Insert page breaks** — Add `---` between pages
+   - ☑️ **Export positioned images** — Save visual occurrences to `_assets/` and keep them in document flow
+   - ☑️ **OCR embedded images** — Run local OCR on relevant visual occurrences
+   - ☑️ **Insert page anchors** — Add stable anchors for citation by physical PDF page
    - ☑️ **Preview first 3 pages** — Quick test before full conversion
    
    **Text Processing:**
@@ -784,7 +789,9 @@ pdfmd document.pdf -v --no-color
 
 ```
 usage: pdfmd [-h] [-o OUTPUT] [--ocr {off,auto,tesseract,ocrmypdf}]
-             [--lang LANG] [--export-images] [--page-breaks] [--preview-only]
+             [--lang LANG] [--export-images] [--ocr-images]
+             [--image-dpi IMAGE_DPI] [--page-breaks] [--no-index]
+             [--no-manifest] [--strict] [--preview-only]
              [--no-progress] [-q] [-v] [--stats] [--no-color] [--version]
              INPUT_PDF [INPUT_PDF ...]
 
@@ -816,10 +823,21 @@ options:
                         Combine with '+' for multiple: 'eng+fra'.
                         Only used when --ocr is not 'off'.
   
-  --export-images       Export images to _assets/ folder next to output file,
-                        with Markdown image references appended to document.
+  --export-images       Export positioned image occurrences to _assets/ and
+                        insert references in document flow.
+
+  --ocr-images          Run local Tesseract OCR on relevant embedded images.
+
+  --image-dpi IMAGE_DPI
+                        DPI used to render image occurrences (default: 200).
   
-  --page-breaks         Insert '---' horizontal rule between pages in output.
+  --page-breaks         Insert stable PDF-page anchors for citation.
+
+  --no-index            Do not create the compact .index.md navigation map.
+
+  --no-manifest         Do not create the .pdfmd.json provenance manifest.
+
+  --strict              Fail when a page has an unresolved fidelity warning.
   
   --preview-only        Only process first 3 pages (useful for quick inspection
                         of large documents or testing settings).
@@ -904,11 +922,13 @@ pdfmd *.pdf -o converted/
 pdfmd slides.pdf --export-images
 # Creates:
 #   slides.md
+#   slides.index.md
+#   slides.pdfmd.json
 #   slides_assets/
 #     ├── img_001_01.png
 #     ├── img_001_02.png
 #     └── ...
-# Images referenced at end of slides.md
+# Image occurrences are referenced near their original positions in slides.md
 ```
 
 #### CLI Error Handling
@@ -1173,7 +1193,7 @@ In the GUI, batch conversion processes files sequentially but with scaled progre
 
 **Scanned PDF Detection:**
 
-The `auto` mode analyses the first 3 pages for:
+The `auto` mode analyses every page independently for:
 - Text density (< 50 chars/page = likely scanned)
 - Large images covering >30% of page area
 - Combined low text + high image coverage triggers OCR

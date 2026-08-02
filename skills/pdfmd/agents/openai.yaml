@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF fiel para Markdown"
+  short_description: "Converte PDF com paginação e proveniência"
+  default_prompt: "Use $pdfmd para converter este PDF localmente e ler apenas as páginas relevantes sem perder a proveniência."

@@ -42,6 +42,7 @@ Acionar assim que o gatilho aparecer, sem perguntar:
 | extrato bancário | `validador-extrato-pdf-excel` |
 | prazo, intimação, DJEN | `pesquisa-djen` |
 | jurisprudência favorável p/ sustentar peça, "o que os tribunais decidem sobre X" | `radar-jurisprudencia` |
+| consumir/ingerir canal ou vídeos do YouTube, KB de canal | `consumir-canal-youtube` |
 | PDF sem `.md` irmão | `pdfmd` |
 | transcrição de áudio | `whisper-transcriber` |
 | relatório ou parecer | `relatorio` |

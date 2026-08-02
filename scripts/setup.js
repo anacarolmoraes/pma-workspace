@@ -280,15 +280,16 @@ function gravarAmbiente() {
 }
 
 function descobrirBundles() {
-  // Ordem importa: o acervo atual é o arsenal-juridico. A pasta "bundles"
-  // é a estrutura antiga (cinco repositórios separados), mantida só como
-  // histórico — só serve de último recurso.
+  // O acervo é o arsenal-juridico, e só ele. A pasta "bundles" (estrutura antiga,
+  // um repositório por bundle) foi arquivada em 31/07/2026 e REMOVIDA daqui de
+  // propósito: a comparação mostrou que o arsenal a contém por inteiro, e que a
+  // cópia velha ainda carregava o nome de cliente e o dado de terceiro que a
+  // auditoria LGPD de 28/07 tinha removido. Fallback para ela reintroduziria o
+  // vazamento numa máquina nova, em silêncio.
   const candidatos = [
     path.resolve(RAIZ, '..', 'arsenal-juridico'),
     WIN ? 'D:/GITHUB/arsenal-juridico' : null,
     path.join(os.homedir(), 'arsenal-juridico'),
-    path.resolve(RAIZ, '..', 'bundles'),
-    WIN ? 'D:/GITHUB/bundles' : null,
   ].filter(Boolean);
 
   for (const p of candidatos) if (existe(p)) return p;

@@ -10,17 +10,18 @@ Key behaviours:
 - Applies heading promotion via font size and optional CAPS heuristics.
 - Normalizes bullets and numbered lists to proper Markdown formats.
 - Repairs hyphenation and unwraps hard line breaks into paragraphs.
-- Optionally inserts `---` page break markers between pages.
+- Inserts stable PDF-page anchors for citation and selective reading.
 - Defragments short orphan lines into their preceding paragraphs.
 """
 
 from __future__ import annotations
 
 import re
+import html
 from statistics import median
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple, Any
 
-from .models import Block, Line, PageText, Options
+from .models import Block, Line, PageText, Options, TableRegion, ImagePlacement, BBox
 from .utils import normalize_punctuation, linkify_urls, escape_markdown
 from .transform import is_all_caps_line, is_mostly_caps
 
@@ -283,6 +284,12 @@ def _render_table_block(block: Block) -> List[str]:
     if not grid:
         return []
 
+    return _render_table_rows(grid, header_detected=True)
+
+
+def _render_table_rows(grid: List[List[str]], header_detected: bool) -> List[str]:
+    """Render a geometric or heuristic table without inventing a header row."""
+
     # Ensure all rows have the same number of columns.
     n_cols = max((len(row) for row in grid), default=0)
     if n_cols == 0:
@@ -294,6 +301,17 @@ def _render_table_block(block: Block) -> List[str]:
         if len(row) < n_cols:
             row = row + [""] * (n_cols - len(row))
         norm_rows.append(row)
+
+    if not header_detected:
+        lines = ["<table>", "  <tbody>"]
+        for row in norm_rows:
+            lines.append("    <tr>")
+            for cell in row:
+                value = html.escape(str(cell or "").strip()).replace("\n", "<br>")
+                lines.append(f"      <td>{value}</td>")
+            lines.append("    </tr>")
+        lines.extend(["  </tbody>", "</table>", ""])
+        return lines
 
     header = norm_rows[0]
     body = norm_rows[1:]
@@ -469,9 +487,6 @@ def _block_to_lines(
                 lines.append("")
                 continue
 
-            if _is_footer_noise(ln):
-                continue
-
             norm = _normalize_list_line(ln)
             lines.append(norm)
 
@@ -495,9 +510,6 @@ def _block_to_lines(
             lines.append("")
             continue
 
-        if _is_footer_noise(ln):
-            continue
-
         norm = _normalize_list_line(ln)
         lines.append(norm)
 
@@ -512,6 +524,149 @@ def _block_to_lines(
 # ---------------------------------------------------------------------------
 
 DefProgress = Optional[Callable[[int, int], None]]
+
+
+def _bbox_sort_key(bbox: Optional[BBox], fallback: int) -> Tuple[float, float, int]:
+    if bbox is None:
+        return (float(fallback), 0.0, fallback)
+    return (float(bbox[1]), float(bbox[0]), fallback)
+
+
+def _event_bbox(event: Tuple[Tuple[float, float, int], str, Any]) -> Optional[BBox]:
+    return getattr(event[2], "bbox", None)
+
+
+def _merged_intervals(intervals: List[Tuple[float, float]]) -> List[Tuple[float, float]]:
+    if not intervals:
+        return []
+    merged: List[Tuple[float, float]] = []
+    for start, end in sorted(intervals):
+        if not merged or start > merged[-1][1]:
+            merged.append((start, end))
+        else:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+    return merged
+
+
+def _largest_gap(intervals: List[Tuple[float, float]]) -> Optional[Tuple[float, float, float]]:
+    merged = _merged_intervals(intervals)
+    gaps = [
+        (merged[i][1], merged[i + 1][0], merged[i + 1][0] - merged[i][1])
+        for i in range(len(merged) - 1)
+    ]
+    return max(gaps, key=lambda gap: gap[2]) if gaps else None
+
+
+def _geometric_reading_order(
+    events: List[Tuple[Tuple[float, float, int], str, Any]],
+    page_width: float,
+    page_height: float,
+    depth: int = 0,
+) -> List[Tuple[Tuple[float, float, int], str, Any]]:
+    """Approximate XY-cut order while preserving a deterministic fallback."""
+    if len(events) <= 1 or depth >= 12:
+        return sorted(events, key=lambda event: event[0])
+
+    positioned = [event for event in events if _event_bbox(event) is not None]
+    unpositioned = [event for event in events if _event_bbox(event) is None]
+    if len(positioned) <= 1:
+        return sorted(events, key=lambda event: event[0])
+
+    x_gap = _largest_gap([(_event_bbox(e)[0], _event_bbox(e)[2]) for e in positioned])  # type: ignore[index]
+    y_gap = _largest_gap([(_event_bbox(e)[1], _event_bbox(e)[3]) for e in positioned])  # type: ignore[index]
+    x_score = (x_gap[2] / max(page_width, 1.0)) if x_gap else 0.0
+    y_score = (y_gap[2] / max(page_height, 1.0)) if y_gap else 0.0
+
+    if x_gap and x_score >= 0.03 and x_score >= y_score:
+        split = (x_gap[0] + x_gap[1]) / 2.0
+        left = [e for e in positioned if _event_bbox(e)[2] <= split]  # type: ignore[index]
+        right = [e for e in positioned if _event_bbox(e)[0] >= split]  # type: ignore[index]
+        if left and right and len(left) + len(right) == len(positioned):
+            ordered = _geometric_reading_order(left, page_width, page_height, depth + 1)
+            ordered.extend(_geometric_reading_order(right, page_width, page_height, depth + 1))
+            ordered.extend(sorted(unpositioned, key=lambda event: event[0]))
+            return ordered
+
+    if y_gap and y_score >= 0.01:
+        split = (y_gap[0] + y_gap[1]) / 2.0
+        top = [e for e in positioned if _event_bbox(e)[3] <= split]  # type: ignore[index]
+        bottom = [e for e in positioned if _event_bbox(e)[1] >= split]  # type: ignore[index]
+        if top and bottom and len(top) + len(bottom) == len(positioned):
+            ordered = _geometric_reading_order(top, page_width, page_height, depth + 1)
+            ordered.extend(_geometric_reading_order(bottom, page_width, page_height, depth + 1))
+            ordered.extend(sorted(unpositioned, key=lambda event: event[0]))
+            return ordered
+
+    return sorted(events, key=lambda event: event[0])
+
+
+def _intersection_ratio(inner: Optional[BBox], outer: BBox) -> float:
+    if inner is None:
+        return 0.0
+    x0 = max(inner[0], outer[0])
+    y0 = max(inner[1], outer[1])
+    x1 = min(inner[2], outer[2])
+    y1 = min(inner[3], outer[3])
+    intersection = max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    inner_area = max(0.0, inner[2] - inner[0]) * max(0.0, inner[3] - inner[1])
+    return intersection / inner_area if inner_area else 0.0
+
+
+def _render_image(image: ImagePlacement, page_number: int) -> List[str]:
+    alt = f"Imagem incorporada na página PDF {page_number}"
+    lines = [f"![{alt}]({image.relpath})", f"*Imagem incorporada — página PDF {page_number}.*", ""]
+    if image.ocr_text.strip():
+        confidence = (
+            f"; confiança média {image.confidence:.1f}%"
+            if image.confidence is not None
+            else ""
+        )
+        lines.append(f"> **OCR da imagem{confidence}:**")
+        lines.extend(f"> {line}" if line else ">" for line in image.ocr_text.strip().splitlines())
+        lines.append("")
+    return lines
+
+
+def _render_page_elements(page: PageText, body: float, options: Options) -> List[str]:
+    """Interleave text, geometric tables and image occurrences by page coordinates."""
+    events: List[Tuple[Tuple[float, float, int], str, Any]] = []
+    geometric_tables = list(getattr(page, "tables", []) or [])
+
+    for idx, block in enumerate(page.blocks):
+        if any(_intersection_ratio(block.bbox, table.bbox) >= 0.55 for table in geometric_tables):
+            continue
+        events.append((_bbox_sort_key(block.bbox, idx), "block", block))
+
+    base = len(events) + 1
+    for idx, table in enumerate(geometric_tables):
+        events.append((_bbox_sort_key(table.bbox, base + idx), "table", table))
+
+    base += len(geometric_tables)
+    for idx, image in enumerate(getattr(page, "images", []) or []):
+        events.append((_bbox_sort_key(image.bbox, base + idx), "image", image))
+
+    events = _geometric_reading_order(events, page.width, page.height)
+    lines: List[str] = []
+    page_number = page.page_number or 1
+    for _, kind, value in events:
+        if kind == "block":
+            if value.is_empty():
+                continue
+            lines.extend(
+                _block_to_lines(
+                    value,
+                    body_size=body,
+                    caps_to_headings=options.caps_to_headings,
+                    heading_size_ratio=options.heading_size_ratio,
+                )
+            )
+        elif kind == "table":
+            table: TableRegion = value
+            lines.append(f"<!-- pdfmd:table={table.element_id or ''}; page={page_number} -->")
+            lines.extend(_render_table_rows(table.rows, table.header_detected))
+        else:
+            lines.extend(_render_image(value, page_number))
+    return lines
 
 
 def render_document(
@@ -534,21 +689,17 @@ def render_document(
 
     for i, page in enumerate(pages):
         body = body_sizes[i] if body_sizes and i < len(body_sizes) else 11.0
-
-        for blk in page.blocks:
-            if blk.is_empty():
-                continue
+        page_number = page.page_number or (i + 1)
+        if options.insert_page_breaks or options.write_manifest or options.write_index:
             md_lines.extend(
-                _block_to_lines(
-                    blk,
-                    body_size=body,
-                    caps_to_headings=options.caps_to_headings,
-                    heading_size_ratio=options.heading_size_ratio,
-                )
+                [
+                    f'<a id="pdf-page-{page_number}"></a>',
+                    f"<!-- pdfmd:page={page_number}; method={page.extraction_method} -->",
+                    "",
+                ]
             )
 
-        if options.insert_page_breaks and i < total - 1:
-            md_lines.extend(["---", ""])  # page rule
+        md_lines.extend(_render_page_elements(page, body, options))
 
         if progress_cb:
             progress_cb(i + 1, total)
@@ -559,9 +710,6 @@ def render_document(
 
     if options.defragment_short:
         md = _defragment_orphans(md, max_len=options.orphan_max_len)
-
-    # Strip common footer artefacts like trailing "- - 1" or "- -" at end of lines
-    md = re.sub(r"\s*-+\s*-+\s*\d*\s*$", "", md, flags=re.MULTILINE)
 
     # Tighten spaces before punctuation
     md = re.sub(r"\s+([,.;:?!])", r"\1", md)

@@ -100,9 +100,21 @@
 - <https://github.com/anacarolmoraes/arsenal-juridico> (privado) — 276 arquivos
 
 **Consolidação do acervo:** os cinco repositórios que existiam (roteador + 4 bundles) viraram
-um só. A equipe baixa dois projetos, não seis. O `D:\GITHUB\bundles` original **não foi
-tocado** — segue no disco com os cinco históricos, como backup. O acervo em uso passa a ser
+um só. A equipe baixa dois projetos, não seis. O acervo em uso passa a ser
 `D:\GITHUB\arsenal-juridico`, e o `setup.js` procura por ele primeiro.
+
+> **Atualização de 31/07/2026 — a consolidação foi concluída.** Em 28/07 o `D:\GITHUB\bundles`
+> original ficou no disco como backup, e isso se revelou um erro: era a cópia que os
+> *working directories* montavam por padrão, ou seja, a que um agente lia primeiro. Como ela é
+> anterior à auditoria LGPD do mesmo dia, ainda continha nome real de cliente em 4 arquivos e
+> e-mail/telefone de advogado de terceiro em 7 `raw/` da cadeia golpe — a anonimização do
+> arsenal era, na prática, parcial.
+>
+> Comparação arquivo a arquivo antes de mexer: **nenhum arquivo existia só lá** (o arsenal é
+> superconjunto estrito) e as 11 divergências corriam todas a favor do arsenal. Movido para
+> `D:\GITHUB\_arquivo\bundles-obsoleto-2026-07-31\`, com histórico git intacto e `LEIA-ME`.
+> O fallback para ele foi removido do `descobrirBundles()` do `setup.js`, e o
+> `.claude/settings.local.json` passou a apontar para a raiz do arsenal.
 
 **Excluído do acervo na auditoria** (fica na máquina, não circula): 4 manuais/livros comerciais
 em `direito/pecas/raw` (Lei 9.610/98 — as teses derivadas permanecem). Menções a nome de cliente

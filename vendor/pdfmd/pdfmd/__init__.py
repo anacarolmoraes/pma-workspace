@@ -29,7 +29,7 @@ __all__ = ["Options", "pdf_to_markdown", "__version__"]
 
 # v1.6.0: OCR language selection, multi-file batch GUI, GUI redesign,
 #          colorspace fix for image export, init-order crash fix.
-__version__ = "1.6.0"
+__version__ = "1.7.0"
 
 
 def main() -> None:

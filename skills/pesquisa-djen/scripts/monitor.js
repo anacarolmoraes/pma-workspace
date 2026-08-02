@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { setTimeout: esperar } = require('timers/promises');
 const { calcularPrazo, feriadosLocais } = require('../lib/prazo-core.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
@@ -86,6 +87,10 @@ function carregarCatalogo() {
     const bruto = JSON.parse(fs.readFileSync(path.join(RAIZ, 'clientes', '_processos.json'), 'utf8'));
     const mapa = new Map();
     for (const [caso, procs] of Object.entries(bruto)) {
+      // Chave iniciada por `_` é metadado do gerador (_comentario, _gerado_em,
+      // _origem), não caso. Sem esta linha, o comentário do arquivo vira uma
+      // entrada do catálogo.
+      if (caso.startsWith('_')) continue;
       for (const p of [].concat(procs)) mapa.set(String(p).replace(/\D/g, ''), caso);
     }
     return mapa;
@@ -102,20 +107,80 @@ const d2s = (d) => d.toISOString().slice(0, 10);
 // Acrescentar `siglaTribunal` aqui faria a intimação de qualquer tribunal fora da
 // lista sumir sem aviso, e prazo perdido em silêncio é o pior modo de falha deste
 // sistema. `ufOab` NÃO é filtro de tribunal: identifica a seccional da inscrição.
-async function consultar(oab, inicio, fim) {
+//
+// Rede é o modo de falha mais comum aqui (DJEN fora do ar, DNS, TLS). Uma falha
+// aborta a execução inteira e NADA é gravado — `seen.json` e a fila só avançam
+// depois que todas as OABs respondem —, então a recuperação é sempre uma execução
+// nova e completa, sem risco de intimação ficar pelo caminho. Estas tentativas
+// curtas cobrem o soluço de rede; queda longa é coberta pela retentativa de 30 em
+// 30 min da tarefa agendada (ver monitor.ps1).
+const TENTATIVAS = 3;
+const ESPERA_MS = [5000, 15000];
+
+const ITENS_POR_PAGINA = 100;
+const PAUSA_PAGINA_MS = 300; // a API tem rate limit real; não atropelar
+const MAX_PAGINAS = 50; // 5.000 comunicações: inalcançável na prática, é trava de laço
+
+async function buscarPagina(oab, inicio, fim, pagina) {
   const q = new URLSearchParams({
     numeroOab: oab.numero,
     ufOab: oab.uf,
     dataDisponibilizacaoInicio: inicio,
     dataDisponibilizacaoFim: fim,
-    itensPorPagina: '100',
-    pagina: '1',
+    itensPorPagina: String(ITENS_POR_PAGINA),
+    pagina: String(pagina),
   });
-  const res = await fetch(`https://comunicaapi.pje.jus.br/api/v1/comunicacao?${q}`, {
-    headers: { Accept: 'application/json' },
-  });
-  if (!res.ok) throw new Error(`DJEN HTTP ${res.status} (OAB ${oab.numero}/${oab.uf})`);
-  return (await res.json()).items || [];
+  const url = `https://comunicaapi.pje.jus.br/api/v1/comunicacao?${q}`;
+
+  for (let tentativa = 1; ; tentativa++) {
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) {
+        const erro = new Error(`DJEN HTTP ${res.status} (OAB ${oab.numero}/${oab.uf}, página ${pagina})`);
+        // 5xx e 429 passam com o tempo; 4xx restante é requisição errada (OAB
+        // inválida, parâmetro fora do contrato) e repetir só atrasa o alarme.
+        erro.transitorio = res.status >= 500 || res.status === 429;
+        throw erro;
+      }
+      const data = await res.json();
+      // `count` é o total da BUSCA, não o tamanho da página (verificado contra a
+      // API: 58 comunicações devolvidas de 5 em 5 dão o mesmo conjunto de IDs que
+      // uma página de 100).
+      return { count: data.count ?? 0, items: data.items || [] };
+    } catch (e) {
+      // Falha de rede (`fetch failed`) não tem status: é transitória por padrão.
+      const transitorio = e.transitorio ?? true;
+      if (!transitorio || tentativa >= TENTATIVAS) throw e;
+      const espera = ESPERA_MS[tentativa - 1];
+      console.error(`Aviso: ${e.message} — tentativa ${tentativa}/${TENTATIVAS}, repetindo em ${espera / 1000}s.`);
+      await esperar(espera);
+    }
+  }
+}
+
+// ⚠️ REGRA DURA: consulta PAGINADA até esgotar. Pedir só a primeira página era um
+// teto silencioso — passando de ITENS_POR_PAGINA na janela, o excedente sumia sem
+// aviso, que é a mesma classe de falha que a regra da busca nacional existe para
+// impedir. Nada de `break` por comodidade: só para quando a página vem vazia ou
+// quando o acumulado alcança o `count` da própria API.
+async function consultar(oab, inicio, fim) {
+  const itens = [];
+
+  for (let pagina = 1; pagina <= MAX_PAGINAS; pagina++) {
+    const { count, items } = await buscarPagina(oab, inicio, fim, pagina);
+    itens.push(...items);
+
+    if (!items.length || itens.length >= count) return itens;
+    await esperar(PAUSA_PAGINA_MS);
+  }
+
+  // Inalcançável em operação normal. Se acontecer, a API mudou de contrato (ex.:
+  // passou a ignorar `pagina`) — e aí falhar alto é melhor do que truncar calado:
+  // vira retentativa, e o dead man's switch de 36 h avisa se não resolver.
+  throw new Error(
+    `DJEN: paginação passou de ${MAX_PAGINAS} páginas para a OAB ${oab.numero}/${oab.uf} ` +
+      `(${inicio}..${fim}) — contrato da API mudou; conferir antes de confiar na fila.`,
+  );
 }
 
 // ── Fila PENDENTES.md ──────────────────────────────────────────────────────

@@ -144,6 +144,8 @@ backups/
 _arquivo/
 .notebooklm/
 audio/
+consumir/
+PROJETOS_ANALISE/
 *.mp3
 *.wav
 *.m4a

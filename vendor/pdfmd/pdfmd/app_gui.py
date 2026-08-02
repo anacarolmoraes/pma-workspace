@@ -93,6 +93,7 @@ DEFAULT_OPTIONS = {
     "ocr_lang": "eng",
     "preview": False,
     "export_images": False,
+    "ocr_images": False,
     "page_breaks": False,
     "rm_edges": True,
     "caps_to_headings": True,
@@ -285,6 +286,7 @@ class PdfMdApp(tk.Tk):
         self.ocr_lang_var = tk.StringVar(value="eng")
         self.preview_var = tk.BooleanVar(value=False)
         self.export_images_var = tk.BooleanVar(value=False)
+        self.ocr_images_var = tk.BooleanVar(value=False)
         self.page_breaks_var = tk.BooleanVar(value=False)
         self.rm_edges_var = tk.BooleanVar(value=True)
         self.caps_to_headings_var = tk.BooleanVar(value=True)
@@ -441,8 +443,9 @@ class PdfMdApp(tk.Tk):
         out_toggles.pack(fill="x", pady=(0, 6))
 
         for text, var, pad in [
-            ("Export images",              self.export_images_var, (0, 24)),
-            ("Insert page breaks (\u2014\u2014\u2014)", self.page_breaks_var,   (0, 24)),
+            ("Export positioned images",   self.export_images_var, (0, 18)),
+            ("OCR embedded images",        self.ocr_images_var,    (0, 18)),
+            ("Insert page anchors",        self.page_breaks_var,   (0, 18)),
             ("Preview first 3 pages",      self.preview_var,       (0, 0)),
         ]:
             ttk.Checkbutton(out_toggles, text=text, variable=var).pack(
@@ -1025,6 +1028,7 @@ class PdfMdApp(tk.Tk):
             remove_headers_footers=self.rm_edges_var.get(),
             insert_page_breaks=self.page_breaks_var.get(),
             export_images=self.export_images_var.get(),
+            ocr_embedded_images=self.ocr_images_var.get(),
         )
 
         # Run pipeline on a background thread; pass password as ephemeral arg
@@ -1215,6 +1219,7 @@ class PdfMdApp(tk.Tk):
             "ocr_lang": self.ocr_lang_var.get().strip() or "eng",
             "preview": bool(self.preview_var.get()),
             "export_images": bool(self.export_images_var.get()),
+            "ocr_images": bool(self.ocr_images_var.get()),
             "page_breaks": bool(self.page_breaks_var.get()),
             "rm_edges": bool(self.rm_edges_var.get()),
             "caps_to_headings": bool(self.caps_to_headings_var.get()),
@@ -1231,6 +1236,7 @@ class PdfMdApp(tk.Tk):
         self.ocr_lang_var.set(str(o.get("ocr_lang", "eng")) or "eng")
         self.preview_var.set(bool(o["preview"]))
         self.export_images_var.set(bool(o["export_images"]))
+        self.ocr_images_var.set(bool(o["ocr_images"]))
         self.page_breaks_var.set(bool(o["page_breaks"]))
         self.rm_edges_var.set(bool(o["rm_edges"]))
         self.caps_to_headings_var.set(bool(o["caps_to_headings"]))

@@ -1,67 +1,106 @@
 ---
 name: pdfmd
-description: Use esta skill para converter arquivos PDF em Markdown utilizando a ferramenta pdfmd local. Esta skill é otimizada para documentos jurídicos brasileiros, preservando tabelas e estrutura. Use-a sempre que precisar transformar PDFs em texto estruturado (.md) para análise, peticionamento ou alimentação de bases de conhecimento.
+description: Converter PDFs locais em Markdown auditável, com preservação de estrutura, tabelas, imagens, OCR por página, âncoras citáveis, manifesto de proveniência e índice para leitura seletiva. Usar sempre que um PDF sem `.md` irmão precisar ser lido, analisado, citado por página ou incorporado ao fluxo jurídico, inclusive PDFs digitalizados, mistos, com formulários, prints ou tabelas.
 ---
 
-# PDF to Markdown (pdfmd) - Manual de Operação
+# PDF para Markdown fiel
 
-Esta skill gerencia a conversão de documentos PDF para Markdown de alta qualidade, operando localmente para garantir a privacidade dos dados do escritório.
+Converter localmente. Não enviar PDF, página ou imagem a serviço externo.
 
-## 🎯 Quando Acionar
-- O usuário solicita a conversão de um ou mais arquivos PDF para Markdown.
-- Você identifica a necessidade de extrair texto de um PDF digitalizado (OCR) ou com tabelas complexas.
-- Sempre que houver uma pasta com PDFs e for solicitado o processamento dos mesmos.
+## Garantias obrigatórias
 
-## 📜 Regras de Execução
+- Manter `documento.md` como representação canônica completa.
+- Gerar `documento.index.md` para navegação econômica.
+- Gerar `documento.pdfmd.json` com hash, páginas, métodos, tabelas, imagens e avisos.
+- Gerar imagens em `documento_assets/` e inseri-las na posição aproximada do fluxo.
+- Decidir OCR por página; não forçar OCR do documento inteiro por causa de uma página ruim.
+- Nunca apagar uma saída válida antes de a substituta passar nos portões.
+- Nunca considerar conversão íntegra apenas por tamanho do `.md`.
+- Não inventar título, legenda, conteúdo de imagem, célula ou ordem ausente na fonte.
 
-1. **Idioma:** Sempre utilize o idioma português (`--lang por`).
-2. **Localização:** Os arquivos `.md` devem ser gerados na mesma pasta do PDF original.
-3. **Idempotência e Qualidade (Verificação Prévia):** 
-   - Verifique se já existe um arquivo `.md` correspondente.
-   - Se o `.md` existir, verifique sua integridade (tamanho > 1KB e conteúdo legível).
-   - Se o arquivo estiver vazio, corrompido ou contiver apenas caracteres de controle (ex: `--- ---`), proceda com a re-conversão forçada.
-4. **Verificação de Integridade Pós-Conversão (MANDATÓRIO):**
-   - Após a execução com `--ocr auto`, verifique o arquivo gerado.
-   - Se o arquivo resultante for pequeno (< 1KB) ou parecer mal-formatado/vazio, **delete o arquivo** e execute novamente utilizando `--ocr tesseract`.
-   - Informe ao usuário: "A conversão automática falhou/foi insuficiente. Acionando OCR Tesseract para garantir integridade."
-5. **Processamento em Lote:** Se o usuário não especificar um arquivo, liste todos os PDFs da pasta e converta aqueles que faltam ou estão corrompidos.
-6. **Economia de Tokens:** 
-   - Use o comando CLI para delegar a tarefa.
-   - Informe o resultado final de forma concisa.
+Para integrar ou diagnosticar os artefatos, ler
+[`references/contrato-saida.md`](references/contrato-saida.md).
 
-## 💻 Comandos Técnicos
+## Converter uma pasta de caso
 
-O `pdfmd` vive dentro do ambiente `adv_env` (não tem mais ambiente próprio). O caminho do
-interpretador está em [`perfil/ambiente.json`](../../perfil/ambiente.json) → chave `python`,
-gerado pelo `scripts/setup.js`. **Nunca escrever o caminho na mão** — ele muda de máquina e
-entre Windows e macOS. Se o arquivo não existir, rodar `node scripts/setup.js`.
-
-`PYTHONUTF8=1` é obrigatório no Windows: sem ele o pdfmd quebra em acento.
-
-### Comando padrão (tentativa 1)
+Usar o wrapper. Ele percorre a pasta, valida o hash do PDF, exige manifesto íntegro,
+confere assets e preserva a saída anterior se a reconversão falhar.
 
 ```powershell
-# Windows
-$py = (Get-Content perfil\ambiente.json -Raw | ConvertFrom-Json).python
-$env:PYTHONUTF8 = '1'
-& $py -m pdfmd.cli "<caminho_do_pdf>" --ocr auto --lang por --page-breaks
+node skills\pdfmd\scripts\converter-caso.js clientes\<caso>
 ```
 
-```bash
-# macOS
-py=$(node -p "require('./perfil/ambiente.json').python")
-PYTHONUTF8=1 "$py" -m pdfmd.cli "<caminho_do_pdf>" --ocr auto --lang por --page-breaks
+Usar `--forcar` somente para regenerar todos os derivados:
+
+```powershell
+node skills\pdfmd\scripts\converter-caso.js clientes\<caso> --forcar
 ```
 
-### Comando de fallback (caso falhe ou seja imagem/digitalizado)
+## Converter um PDF isolado
 
-Mesmo comando, trocando `--ocr auto` por `--ocr tesseract`. Depende do programa Tesseract
-instalado no sistema — o `setup.js` avisa se estiver faltando.
+Usar o wrapper, que resolve o Python em `perfil/ambiente.json` e executa o motor canônico em
+`vendor/pdfmd`, sem colisão com cópias legadas:
 
-## 🛠️ Exemplo de Fluxo
+```powershell
+node skills\pdfmd\scripts\executar-pdfmd.js "<arquivo.pdf>" --ocr auto --lang por --page-breaks --export-images --ocr-images --strict
+```
 
-1. Listar os PDFs da pasta do caso
-2. Para cada PDF, verificar se o `.md` existe e é válido.
-3. Se inválido/ausente, rodar `pdfmd --ocr auto`.
-4. **Checar saída:** Se `.md` resultante < 1KB ou ilegível, rodar `pdfmd --ocr tesseract`.
-5. Reportar resultado final.
+O modo estrito falha diante de aviso não resolvido. Conferir visualmente a página indicada;
+não contornar com `--no-manifest`, `--no-index` ou remoção manual do aviso.
+
+## Ler gastando menos tokens
+
+Não abrir o Markdown inteiro por padrão.
+
+1. Ler primeiro `documento.index.md`.
+2. Identificar seção, página, tabela ou imagem relevante.
+3. Carregar somente o trecho exato com `ler-pdfmd.js`.
+4. Voltar ao PDF apenas para conferência visual de layout, assinatura, carimbo ou região
+   marcada como ambígua.
+
+```powershell
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --mapa
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --paginas 8-12,15
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --secao "Dos pedidos"
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --buscar "contratação" --contexto 2
+```
+
+Economizar tokens por seleção, não por resumo. Não criar versão resumida que possa substituir
+o texto canônico.
+
+## Citar páginas
+
+Usar sempre a página física do PDF registrada na âncora e no manifesto:
+
+```text
+NOME_DO_ARQUIVO.pdf, p. PDF 12
+```
+
+Se houver paginação impressa confiável, acrescentar sem substituir a página física:
+
+```text
+NOME_DO_ARQUIVO.pdf, p. PDF 12, fl. 87 impressa
+```
+
+Não citar apenas `p. 12`: em processos, a folha impressa e a posição no arquivo divergem.
+
+## Conferir fidelidade
+
+Antes de afirmar o conteúdo:
+
+- conferir no manifesto se todas as páginas foram registradas;
+- abrir assets das páginas com imagens probatórias;
+- conferir visualmente páginas com `warnings`;
+- tratar OCR de baixa confiança como transcrição provisória;
+- conferir tabelas ambíguas contra o recorte visual;
+- validar que o `source_sha256` corresponde ao PDF atual.
+
+Conversão com aviso não é conversão silenciosamente aceita: é pendência de conferência.
+
+## Regras de segurança
+
+- Manter `.md`, índice, manifesto e assets ao lado do PDF ou em sua pasta derivada.
+- Não mover documento C1 para bundle, skill ou repositório.
+- Não inserir Mermaid, resumo autoral ou interpretação no Markdown canônico.
+- Não remover cabeçalho, rodapé, imagem repetida ou página vazia sem registrar a ocorrência.
+- Usar somente o Python de `perfil/ambiente.json` e `PYTHONUTF8=1` no Windows.

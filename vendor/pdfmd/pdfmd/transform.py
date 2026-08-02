@@ -232,21 +232,42 @@ def remove_header_footer(
 
     for p in pages:
         new_blocks: List[Block] = []
+        nonblank_lines = [
+            ln
+            for blk in p.blocks
+            for ln in blk.lines
+            if _line_text(ln).strip()
+        ]
+        first_edge = set(id(ln) for ln in nonblank_lines[:2])
+        last_edge = set(id(ln) for ln in nonblank_lines[-2:])
+        suppressed = list(getattr(p, "suppressed_repeated", []) or [])
 
         for blk in p.blocks:
             new_lines: List[Line] = []
             for ln in blk.lines:
                 text = _line_text(ln)
                 norm = _normalized_text(text)
+                bbox = getattr(ln, "bbox", None)
+                in_top = bool(
+                    bbox and p.height > 0 and float(bbox[3]) <= p.height * 0.18
+                )
+                in_bottom = bool(
+                    bbox and p.height > 0 and float(bbox[1]) >= p.height * 0.82
+                )
+                top_candidate = in_top or (bbox is None and id(ln) in first_edge)
+                bottom_candidate = in_bottom or (bbox is None and id(ln) in last_edge)
 
                 # Strip header if it matches (or is very close).
-                if header and norm and _similarity(norm, header_norm) >= 0.95:
+                if top_candidate and header and norm and _similarity(norm, header_norm) >= 0.95:
+                    suppressed.append({"kind": "header", "text": text, "bbox": bbox})
                     continue
 
                 # Strip footer if it matches (or is noise).
-                if footer and norm and _similarity(norm, footer_norm) >= 0.95:
+                if bottom_candidate and footer and norm and _similarity(norm, footer_norm) >= 0.95:
+                    suppressed.append({"kind": "footer", "text": text, "bbox": bbox})
                     continue
-                if _is_footer_noise(text):
+                if bottom_candidate and _is_footer_noise(text):
+                    suppressed.append({"kind": "page_number", "text": text, "bbox": bbox})
                     continue
 
                 new_lines.append(ln)
@@ -254,7 +275,7 @@ def remove_header_footer(
             if new_lines:
                 new_blocks.append(replace(blk, lines=new_lines))
 
-        out_pages.append(replace(p, blocks=new_blocks))
+        out_pages.append(replace(p, blocks=new_blocks, suppressed_repeated=suppressed))
 
     return out_pages
 
@@ -484,10 +505,17 @@ def _annotate_tables_on_page(page: PageText, debug: bool = False) -> PageText:
     
     # Build a mapping of block_index -> TableDetection
     table_map = {det.block_index: det for det in detections}
+    consumed_by_prior = {
+        block_idx
+        for det in detections
+        for block_idx in range(det.block_index + 1, det.block_index + det.n_blocks)
+    }
     
     new_blocks: List[Block] = []
     
     for idx, blk in enumerate(page.blocks):
+        if idx in consumed_by_prior:
+            continue
         if idx in table_map:
             det = table_map[idx]
             

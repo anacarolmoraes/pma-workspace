@@ -46,7 +46,7 @@ except Exception:  # pragma: no cover - optional dependency
     Image = None  # type: ignore
     _HAS_PIL = False
 
-from .models import PageText, Options
+from .models import PageText, Options, TableRegion
 from .utils import log
 
 
@@ -152,22 +152,7 @@ def extract_pages(
         return _extract_native(pdf_path, options, progress_cb, pdf_password)
 
     if mode == "auto":
-        if _needs_ocr_probe(pdf_path, pdf_password):
-            log("[extract] Auto: scanned PDF detected.")
-            if _HAS_TESS and _HAS_PIL and _tesseract_available():
-                log("[extract] Using Tesseract OCR...")
-                return _extract_tesseract(pdf_path, options, progress_cb, pdf_password)
-            elif _which("ocrmypdf") and _tesseract_available():
-                log("[extract] Using OCRmyPDF...")
-                return _extract_ocrmypdf_then_native(pdf_path, options, progress_cb, pdf_password)
-            else:
-                log("[extract] WARNING: Scanned PDF detected but no OCR available!")
-                log("[extract] Install Tesseract from: https://github.com/UB-Mannheim/tesseract/wiki")
-                log("[extract] Then run: pip install pytesseract pillow")
-                log("[extract] Falling back to native extraction (may produce poor results).")
-                return _extract_native(pdf_path, options, progress_cb, pdf_password)
-        # Otherwise, native path
-        return _extract_native(pdf_path, options, progress_cb, pdf_password)
+        return _extract_auto_mixed(pdf_path, options, progress_cb, pdf_password)
 
     if mode == "tesseract":
         if not (_HAS_TESS and _HAS_PIL):
@@ -221,8 +206,7 @@ def _extract_native(
 
         for i in range(limit):
             page = doc.load_page(i)
-            info = page.get_text("dict")
-            out.append(PageText.from_pymupdf(info))
+            out.append(_extract_native_page(page, i + 1))
 
             if progress_cb:
                 progress_cb(i + 1, total)
@@ -260,26 +244,191 @@ def _extract_tesseract(
 
         for i in range(limit):
             page = doc.load_page(i)
-
-            # Render at higher DPI for better OCR
-            pix = page.get_pixmap(dpi=dpi)
-            if not hasattr(pix, "tobytes"):
-                raise RuntimeError("Unexpected: pixmap missing tobytes()")
-
-            png_bytes = pix.tobytes("png")
-            img = Image.open(io.BytesIO(png_bytes))
-
-            # Let pytesseract detect layout at word/line level
-            data = pytesseract.image_to_data(
-                img,
-                lang=options.ocr_lang or "eng",
-                output_type=pytesseract.Output.DICT,
-            )
-            out.append(PageText.from_tesseract_data(data))
+            out.append(_extract_tesseract_page(page, i + 1, options, dpi=dpi))
 
             if progress_cb:
                 progress_cb(i + 1, total)
 
+        return out
+    finally:
+        doc.close()
+
+
+def _extract_native_page(page, page_number: int) -> PageText:
+    """Extract one page while retaining geometry and table regions."""
+    info = page.get_text("dict", sort=False)
+    page_text = PageText.from_pymupdf(
+        info,
+        page_number=page_number,
+        rotation=int(getattr(page, "rotation", 0) or 0),
+    )
+    page_text.width = float(page.rect.width)
+    page_text.height = float(page.rect.height)
+    page_text.tables = _extract_tables_from_page(page, page_number)
+    try:
+        page_text.vector_drawings = len(page.get_drawings())
+    except Exception:
+        page_text.vector_drawings = 0
+    try:
+        page_text.annotations = len(list(page.annots() or []))
+    except Exception:
+        page_text.annotations = 0
+    try:
+        page_text.widgets = len(list(page.widgets() or []))
+    except Exception:
+        page_text.widgets = 0
+    if page_text.annotations:
+        page_text.warnings.append(
+            f"Página contém {page_text.annotations} anotação(ões) PDF; conferir visualmente."
+        )
+    return page_text
+
+
+def _extract_tables_from_page(page, page_number: int) -> List[TableRegion]:
+    """Use PyMuPDF's geometric table finder; failure is non-fatal and visible later."""
+    tables: List[TableRegion] = []
+    finder = getattr(page, "find_tables", None)
+    if finder is None:
+        return tables
+    try:
+        found = finder()
+    except Exception:
+        return tables
+
+    for idx, table in enumerate(getattr(found, "tables", []) or [], start=1):
+        try:
+            rows = [
+                [str(cell or "").strip() for cell in row]
+                for row in (table.extract() or [])
+            ]
+            rows = [row for row in rows if any(cell for cell in row)]
+            bbox = tuple(float(v) for v in table.bbox)
+            if not rows or len(bbox) != 4:
+                continue
+            header = getattr(table, "header", None)
+            names = list(getattr(header, "names", []) or []) if header else []
+            header_detected = bool(names and any(str(name or "").strip() for name in names))
+            tables.append(
+                TableRegion(
+                    bbox=bbox,  # type: ignore[arg-type]
+                    rows=rows,
+                    element_id=f"p{page_number:04d}-t{idx:03d}",
+                    header_detected=header_detected,
+                    source="pymupdf",
+                    confidence=1.0,
+                )
+            )
+        except Exception:
+            continue
+    return tables
+
+
+def _scaled_tesseract_data(data, image_width: int, image_height: int, page) -> dict:
+    """Scale Tesseract pixel coordinates back into PDF page coordinates."""
+    scaled = {key: list(values) for key, values in data.items()}
+    sx = float(page.rect.width) / max(image_width, 1)
+    sy = float(page.rect.height) / max(image_height, 1)
+    scaled["left"] = [float(v or 0) * sx for v in data.get("left", [])]
+    scaled["width"] = [float(v or 0) * sx for v in data.get("width", [])]
+    scaled["top"] = [float(v or 0) * sy for v in data.get("top", [])]
+    scaled["height"] = [float(v or 0) * sy for v in data.get("height", [])]
+    return scaled
+
+
+def _extract_tesseract_page(page, page_number: int, options: Options, dpi: int = 300) -> PageText:
+    pix = page.get_pixmap(dpi=dpi)
+    if not hasattr(pix, "tobytes"):
+        raise RuntimeError("Unexpected: pixmap missing tobytes()")
+    img = Image.open(io.BytesIO(pix.tobytes("png")))
+    data = pytesseract.image_to_data(
+        img,
+        lang=options.ocr_lang or "eng",
+        output_type=pytesseract.Output.DICT,
+    )
+    scaled = _scaled_tesseract_data(data, img.width, img.height, page)
+    page_text = PageText.from_tesseract_data(
+        scaled,
+        page_number=page_number,
+        width=float(page.rect.width),
+        height=float(page.rect.height),
+        rotation=int(getattr(page, "rotation", 0) or 0),
+    )
+    page_text.tables = _extract_tables_from_page(page, page_number)
+    try:
+        page_text.vector_drawings = len(page.get_drawings())
+    except Exception:
+        page_text.vector_drawings = 0
+    try:
+        page_text.annotations = len(list(page.annots() or []))
+    except Exception:
+        page_text.annotations = 0
+    try:
+        page_text.widgets = len(list(page.widgets() or []))
+    except Exception:
+        page_text.widgets = 0
+    if page_text.annotations:
+        page_text.warnings.append(
+            f"Página contém {page_text.annotations} anotação(ões) PDF; conferir visualmente."
+        )
+    return page_text
+
+
+def _page_image_coverage(page) -> float:
+    page_area = max(float(page.rect.width * page.rect.height), 1.0)
+    covered = 0.0
+    try:
+        for info in page.get_image_info(xrefs=True):
+            bbox = info.get("bbox")
+            if not bbox or len(bbox) != 4:
+                continue
+            covered += max(0.0, float(bbox[2] - bbox[0])) * max(0.0, float(bbox[3] - bbox[1]))
+    except Exception:
+        return 0.0
+    return min(covered / page_area, 1.0)
+
+
+def _page_needs_ocr(page, native: PageText) -> bool:
+    chars = sum(
+        len(span.text.strip())
+        for block in native.blocks
+        for line in block.lines
+        for span in line.spans
+    )
+    coverage = _page_image_coverage(page)
+    return chars == 0 or (chars < 50 and coverage > 0.10) or (chars < 300 and coverage > 0.50)
+
+
+def _extract_auto_mixed(
+    pdf_path: str,
+    options: Options,
+    progress_cb: DefProgress,
+    pdf_password: Optional[str] = None,
+) -> List[PageText]:
+    """Choose native extraction or OCR independently for every page."""
+    doc = _open_pdf_with_password(pdf_path, pdf_password)
+    try:
+        total = doc.page_count
+        if total == 0:
+            raise ValueError("PDF has no pages")
+        limit = total if not options.preview_only else min(3, total)
+        ocr_ready = bool(_HAS_TESS and _HAS_PIL and _tesseract_available())
+        out: List[PageText] = []
+
+        for i in range(limit):
+            page = doc.load_page(i)
+            native = _extract_native_page(page, i + 1)
+            if _page_needs_ocr(page, native):
+                if ocr_ready:
+                    log(f"[extract] Page {i + 1}: using Tesseract OCR.")
+                    extracted = _extract_tesseract_page(page, i + 1, options, dpi=300)
+                else:
+                    native.warnings.append("Página com baixa cobertura textual; OCR indisponível.")
+                    extracted = native
+            else:
+                extracted = native
+            out.append(extracted)
+            if progress_cb:
+                progress_cb(i + 1, total)
         return out
     finally:
         doc.close()
