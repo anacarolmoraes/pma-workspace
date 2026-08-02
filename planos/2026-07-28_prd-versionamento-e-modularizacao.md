@@ -1,7 +1,8 @@
 # PRD — Versionamento, modularização e replicação para a equipe
 
-> Status: **Fases 1, 2, 3 e 6 executadas em 28/07/2026.** Pendentes: 4 (migração do acervo),
-> 5 (triagem final de skills), 7 (publicação no GitHub) e 8 (marketing).
+> Status: **Fases 1, 2, 3, 6 e 7 executadas; 4 e 5 executadas em 02/08/2026** (na Fase 4
+> resta só o passo travado por portão: exclusão das pastas de tema após conferência da
+> titular, e a mudança dos casos encerrados para o Drive). Pendente: 8 (marketing).
 > Nenhuma skill saiu da máquina da titular — as exclusões são só de versionamento.
 >
 > **Decisão alterada na execução (Fase 1):** as pastas de tema **não** foram versionadas nem
@@ -60,17 +61,38 @@
    (nome, OAB, comarcas, áreas, tratamento) → gera `perfil/usuario.md`, atualiza
    `perfil/advogados.json`, configura git. Reaproveitável no white-label.
 
-## Fase 4 — Conteúdo: migração para bundles + casos para o Drive
+## Fase 4 — Conteúdo: migração para bundles + casos para o Drive  ✅ MIGRAÇÃO EXECUTADA em 02/08/2026
 
-1. Diff automatizado acervo local × bundles; migrar o que falta (certeza: `juros_abusivos`
-   14 arquivos, `direito_digital` 18; conferir emprestimo/golpes/imobiliario/cobranca).
-2. Promover peças vencedoras das pastas de caso a `casos_decididos/` do bundle (formato do
-   schema).
-3. Pastas de tema saem do workspace após conferência. Casos encerrados → Drive.
+1. ~~Diff automatizado acervo local × bundles; migrar o que falta.~~ **Feito** (commit
+   `b7ac8ee` do arsenal). Diff por hash MD5: 23 arquivos já eram idênticos aos do arsenal;
+   dos 432 sem par, o que era acervo migrou e o resto é caso (C1). Criados 2 bundles
+   semente — `direito/bancario/juros-abusivos/` (EAREsp 676.608/RS `vigente` com inteiro
+   teor; 3 acórdãos TJSP `em_teste`) e `direito/digital/plataformas/` (desmonetização;
+   3 cadeias; o roteador previa `lgpd` para esse acervo, mas o conteúdo real é litígio
+   criador × plataforma — decisão registrada no log do bundle). Complementos: REsp
+   2.222.059/SP no `golpes` (`vigente`, precedente-mestre da `analise-perfil`), AREsp
+   2.706.690/SP no `cobranca-honorarios`, Res. CMN 4.753/2019 no `emprestimo`, modelo de
+   levantamento de suspensão por IRDR promovido a playbook do `imobiliario` (v0.4.0, com
+   correção do typo Tema 557→577). **Regra aplicada:** documento de processo de terceiro
+   com dado pessoal foi depositado em `raw/` **fora do git** (`.gitignore` §2 +
+   `distribuicao.json`) até anonimização — circulam só as páginas derivadas. `lint-bundle`
+   manteve os 26 erros da linha de base (nenhum novo); `empacotar.py --verificar` ok.
+   Não migrados (registrado nos logs dos bundles): `EMENTA_*` redundantes, `estrategia1.md`
+   do empréstimo (já destilado), `.md` pré-anonimização do golpes (superados),
+   `recursos_gerais/` (vazio).
+2. Promover peças vencedoras das pastas de caso a `casos_decididos/` do bundle — **depende
+   do ritual 7.2 do schema** (entrevista de encerramento: desfecho, teses acatadas, placar).
+   Inventário de candidatas no relatório de conferência em `scratch/`. Fazer caso a caso
+   com a titular.
+3. Pastas de tema saem do workspace após conferência **da titular** (portão deste PRD) —
+   relatório de conferência pronto em `scratch/2026-08-02_fase4-relatorio-conferencia.md`.
+   Casos encerrados → Drive (decisão da titular sobre quais estão encerrados).
+   Os modelos de cumprimento de sentença já foram copiados para
+   `material_padrao_escritorio/` (casa canônica; SKILL.md do gerador atualizado).
 4. Fluxo alvo: peça gerada localmente → upload via `gws` para a pasta do cliente no Drive;
    equipe acessa por permissão de pasta (revogável, apagável — LGPD).
 
-## Fase 5 — Triagem de skills (versionamento; nada é apagado da máquina)
+## Fase 5 — Triagem de skills (versionamento; nada é apagado da máquina)  ✅ EXECUTADA em 02/08/2026
 
 - **Versionam (~27)**: tipografia-pma, peca-pma-builder, legal-orchestrator, legal-writer,
   legal-consistency-validator, pesquisa-djen, pdfmd, validador-extrato-pdf-excel,
@@ -84,9 +106,20 @@
   Scrapling-Skill, smart-browser-orchestrator, yt-search, pptx-generator,
   brand-voice-generator, remotion, academic-writer-br, artigo-jornalistico-persuasivo,
   linkedin-profile-optimizer.
-- **Pendente (titular decide)**: browser-use / agent-browser — versionar se o fluxo NotebookLM
-  depender delas.
+- ~~**Pendente (titular decide)**: browser-use / agent-browser~~ — **resolvido pelo próprio
+  critério do PRD**: grep no workspace inteiro mostrou que o fluxo NotebookLM (e nada mais
+  no motor) referencia essas skills fora das próprias pastas → **não versionam**
+  (`.gitignore` §7 + `git rm --cached` em 02/08/2026).
 - Skills de marketing migram para o repo da Fase 8 (hoje ficam sem backup — resolver lá).
+
+**Conferência da execução (02/08/2026):** o conjunto rastreado no git bate com as listas,
+com estes deltas deliberados: (a) a fusão `pre-peticionamento` + `-drive` prevista aqui foi
+**substituída por design de duas skills** — a `-drive` virou variante para corpus local
+sem NotebookLM (descrições cruzadas; ver memória `gatilho-fase-estrategica`) e **ambas
+versionam**; (b) skills criadas depois do PRD e versionadas: `onboarding-usuario` (Fase 3),
+`radar-jurisprudencia`, `consumir-canal-youtube`, `markdown-mermaid-writing`; (c)
+`skills/doc.md` (guia genérico Antigravity, terceiro) saiu do versionamento.
+`lint-skills`: 0 erros (avisos remanescentes são de skills fora do motor).
 
 ## Fase 6 — Documentação
 

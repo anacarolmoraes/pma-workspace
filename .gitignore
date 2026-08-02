@@ -134,6 +134,13 @@ skills/pdf/
 skills/xlsx/
 skills/Scrapling-Skill/
 skills/smart-browser-orchestrator/
+# Decisão da Fase 5 (02/08/2026): o fluxo NotebookLM não depende
+# delas (verificado por grep — nenhuma referência fora das próprias
+# pastas), então não entram no motor.
+skills/browser-use/
+skills/agent-browser/
+# Guia genérico de skills de terceiro (Antigravity) — não é do motor.
+skills/doc.md
 
 
 # ------------------------------------------------------------

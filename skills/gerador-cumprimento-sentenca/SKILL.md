@@ -24,8 +24,12 @@ dois insumos da pasta do caso:
     └── *.pdf                    ← extratos das parcelas pagas
 ```
 
-O modelo `CUMPR_SENTENCA_MODELO.docx` fica **um nível acima** da pasta do caso
-(ex.: `rescisao_contrato_imovel/cumprimento_sentenca/CUMPR_SENTENCA_MODELO.docx`).
+O modelo `CUMPR_SENTENCA_MODELO.docx` fica **um nível acima** da pasta do caso — o script
+o procura em `dirname(pasta_do_caso)`. A cópia canônica mora em
+`material_padrao_escritorio/CUMPR_SENTENCA_MODELO.docx` (junto com
+`CUMPR_SENTENCA_PLANILHA_UPLOAD.xlsx`): ao abrir um cumprimento novo, copie o modelo para
+o nível acima da pasta do caso. (As antigas cópias em `rescisao_contrato_imovel/` saem do
+workspace com a migração do acervo.)
 
 ---
 
