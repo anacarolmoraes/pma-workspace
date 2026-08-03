@@ -391,6 +391,7 @@ def _manifest_data(input_pdf: str, output_md: str, pages: List[PageText], md: st
                 ],
                 "suppressed_repeated": page.suppressed_repeated,
                 "warnings": page.warnings,
+                "review_required": bool(page.warnings),
             }
         )
     return {
@@ -411,52 +412,62 @@ def _manifest_data(input_pdf: str, output_md: str, pages: List[PageText], md: st
 
 def _build_index(output_md: str, pages: List[PageText], md: str, source_hash: str) -> str:
     md_name = Path(output_md).name
+    total_tables = sum(len(page.tables) for page in pages)
+    total_images = sum(len(page.images) for page in pages)
     lines = [
         f"# Mapa de {md_name}",
         "",
         f"<!-- pdfmd:index; source_sha256={source_hash} -->",
         "",
         f"- Páginas PDF: {len(pages)}",
-        f"- Caracteres no Markdown canônico: {len(md)}",
-        f"- Tokens estimados se lido integralmente: {max(1, len(md) // 4)}",
-        "",
-        "## Estrutura detectada",
-        "",
+        f"- Tokens estimados se lido integralmente: {max(1, (len(md) + 2) // 3)}",
     ]
+    if total_tables:
+        lines.append(f"- Tabelas: {total_tables}")
+    if total_images:
+        lines.append(f"- Imagens: {total_images}")
+    lines.extend(["", "## Estrutura detectada", ""])
+    md_lines = md.splitlines()
     current_page = 1
-    headings = 0
-    for line in md.splitlines():
+    candidates: List[Dict[str, Any]] = []
+    for position, line in enumerate(md_lines):
         page_match = re.match(r"<!-- pdfmd:page=(\d+);", line)
         if page_match:
             current_page = int(page_match.group(1))
             continue
         heading = re.match(r"^(#{1,4})\s+(.+?)\s*$", line)
-        if heading:
-            headings += 1
-            indent = "  " * (len(heading.group(1)) - 1)
-            lines.append(
-                f"{indent}- {heading.group(2)} — [p. PDF {current_page}]({md_name}#pdf-page-{current_page})"
-            )
+        if heading and len(heading.group(1)) <= 2:
+            candidates.append({"position": position, "level": len(heading.group(1)), "title": heading.group(2), "start": current_page})
+    for idx, item in enumerate(candidates):
+        end_position = len(md_lines)
+        for following in candidates[idx + 1:]:
+            if following["level"] <= item["level"]:
+                end_position = following["position"]
+                break
+        page_numbers = [int(match.group(1)) for line in md_lines[item["position"]:end_position] if (match := re.match(r"<!-- pdfmd:page=(\d+);", line))]
+        end_page = max([item["start"], *page_numbers])
+        token_cost = max(1, (len("\n".join(md_lines[item["position"]:end_position])) + 2) // 3)
+        interval = str(item["start"]) if end_page == item["start"] else f'{item["start"]}-{end_page}'
+        indent = "  " * (item["level"] - 1)
+        lines.append(f'{indent}- p. {interval} | {item["title"]} | {token_cost} tok')
+    headings = len(candidates)
     if headings == 0:
         lines.append("- Nenhum título estrutural detectado")
 
-    lines.extend(["", "## Inventário por página", ""])
+    lines.extend(["", "## Páginas que exigem conferência", ""])
     for page in pages:
         number = page.page_number or 1
-        flags: List[str] = []
-        if page.ocr_used:
-            flags.append("OCR")
-        if page.tables:
-            flags.append(f"{len(page.tables)} tabela(s)")
-        if page.images:
-            flags.append(f"{len(page.images)} imagem(ns)")
         if page.warnings:
-            flags.append("conferir")
-        suffix = "; " + "; ".join(flags) if flags else ""
-        lines.append(
-            f"- [p. PDF {number}]({md_name}#pdf-page-{number}) — {_page_character_count(page)} caracteres{suffix}"
-        )
+            lines.append(f"- p. {number} | {'; '.join(page.warnings)}")
+    if not any(page.warnings for page in pages):
+        lines.append("- Nenhuma")
     lines.append("")
+    while (len("\n".join(lines)) + 2) // 3 > 600 and headings > 0:
+        for i in range(len(lines) - 1, -1, -1):
+            if re.match(r"\s*- p\. [\d-]+ \| .* \| \d+ tok$", lines[i]):
+                lines.pop(i)
+                headings -= 1
+                break
     return "\n".join(lines)
 
 

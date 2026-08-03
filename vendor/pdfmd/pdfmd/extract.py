@@ -353,6 +353,26 @@ def _extract_tesseract_page(page, page_number: int, options: Options, dpi: int =
         height=float(page.rect.height),
         rotation=int(getattr(page, "rotation", 0) or 0),
     )
+    words = [span for block in page_text.blocks for line in block.lines for span in line.spans if span.text.strip()]
+    confidences = [span.confidence for span in words if span.confidence is not None]
+    mean_confidence = sum(confidences) / len(confidences) if confidences else None
+    fragments = [span for span in words if len(span.text.strip()) <= 2]
+    non_letters = [span for span in words if not any(ch.isalpha() for ch in span.text)]
+    if mean_confidence is not None and mean_confidence < 55.0:
+        page_text.warnings.append("ocr_low_confidence")
+    if words and (len(fragments) / len(words) > 0.65 or len(non_letters) / len(words) > 0.55):
+        page_text.warnings.append("ocr_suspected_garbage")
+    boxes = [block.bbox for block in page_text.blocks if block.bbox]
+    for i, first in enumerate(boxes):
+        for second in boxes[i + 1:]:
+            overlap = min(first[3], second[3]) - max(first[1], second[1])
+            separated = abs((first[0] + first[2]) / 2 - (second[0] + second[2]) / 2) > page_text.width * 0.35
+            crosses = first[2] > page_text.width * 0.55 or second[0] < page_text.width * 0.45
+            if overlap > 0 and separated and crosses:
+                page_text.warnings.append("reading_order_ambiguous")
+                break
+        if "reading_order_ambiguous" in page_text.warnings:
+            break
     page_text.tables = _extract_tables_from_page(page, page_number)
     try:
         page_text.vector_drawings = len(page.get_drawings())

@@ -185,7 +185,7 @@ class PageText:
         The data dict contains parallel lists for keys: level, page_num, block_num,
         par_num, line_num, word_num, left, top, width, height, conf, text.
 
-        We group by (block_num, line_num). We do not try to infer bold/italic.
+        We group by (block_num, par_num, line_num). We do not try to infer bold/italic.
         A crude font-size proxy uses the median of word heights in a line.
         """
         n = len(data.get("text", []))
@@ -193,28 +193,29 @@ class PageText:
             return PageText()
 
         # Group indices by (block_num, line_num)
-        groups: Dict[tuple[int, int], List[int]] = {}
+        groups: Dict[tuple[int, int, int], List[int]] = {}
         for i in range(n):
             txt = data["text"][i] or ""
             if not txt.strip():
                 continue
             bno = int(data.get("block_num", [0]*n)[i] or 0)
+            pno = int(data.get("par_num", [0]*n)[i] or 0)
             lno = int(data.get("line_num", [0]*n)[i] or 0)
-            groups.setdefault((bno, lno), []).append(i)
+            groups.setdefault((bno, pno, lno), []).append(i)
 
         # Sort groups by block, then line order (by top coordinate if present)
         def group_top(idx_list: List[int]) -> int:
             tops = [int(data.get("top", [0]*n)[i] or 0) for i in idx_list]
             return min(tops) if tops else 0
 
-        ordered_keys = sorted(groups.keys(), key=lambda k: (k[0], group_top(groups[k])))
+        ordered_keys = sorted(groups.keys(), key=lambda k: (k[0], k[1], group_top(groups[k])))
 
         blocks: List[Block] = []
-        cur_block_key: Optional[int] = None
+        cur_block_key: Optional[tuple[int, int]] = None
         cur_block_lines: List[Line] = []
 
-        for (bno, lno) in ordered_keys:
-            idxs = groups[(bno, lno)]
+        for (bno, pno, lno) in ordered_keys:
+            idxs = groups[(bno, pno, lno)]
             # estimate size by median of heights in this line
             heights = [int(data.get("height", [0]*n)[i] or 0) for i in idxs]
             size_est = float(median_safe(heights)) if heights else 0.0
@@ -247,9 +248,10 @@ class PageText:
             line_bbox = (min(xs0), min(ys0), max(xs1), max(ys1)) if xs0 else None
             line = Line(spans=spans, bbox=line_bbox)
 
+            block_key = (bno, pno)
             if cur_block_key is None:
-                cur_block_key = bno
-            if bno != cur_block_key:
+                cur_block_key = block_key
+            if block_key != cur_block_key:
                 # flush previous block
                 if cur_block_lines:
                     block_no = len(blocks) + 1
@@ -261,7 +263,7 @@ class PageText:
                         )
                     )
                 cur_block_lines = [line]
-                cur_block_key = bno
+                cur_block_key = block_key
             else:
                 cur_block_lines.append(line)
 
@@ -274,6 +276,19 @@ class PageText:
                     element_id=f"p{page_number:04d}-b{block_no:04d}" if page_number else None,
                 )
             )
+
+        if width > 0 and len(blocks) > 1:
+            wide = [b for b in blocks if b.bbox and (b.bbox[2] - b.bbox[0]) >= width * 0.65]
+            narrow = [b for b in blocks if b not in wide]
+            centers = sorted((b.bbox[0] + b.bbox[2]) / 2 for b in narrow if b.bbox)
+            largest_gap = max(((centers[i + 1] - centers[i], i) for i in range(len(centers) - 1)), default=(0, 0))
+            if largest_gap[0] >= width * 0.18:
+                split = (centers[largest_gap[1]] + centers[largest_gap[1] + 1]) / 2
+                left = sorted((b for b in narrow if b.bbox and (b.bbox[0] + b.bbox[2]) / 2 <= split), key=lambda b: (b.bbox[1], b.bbox[0]))
+                right = sorted((b for b in narrow if b.bbox and (b.bbox[0] + b.bbox[2]) / 2 > split), key=lambda b: (b.bbox[1], b.bbox[0]))
+                blocks = sorted(wide, key=lambda b: (b.bbox[1], b.bbox[0])) + left + right
+            else:
+                blocks = sorted(blocks, key=lambda b: (b.bbox[1] if b.bbox else 0, b.bbox[0] if b.bbox else 0))
 
         return PageText(
             blocks=blocks,

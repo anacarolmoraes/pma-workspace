@@ -37,6 +37,10 @@ Mapa derivado e descartável. Conter:
 
 O índice não substitui nem resume o conteúdo substantivo.
 
+O mapa pode ser hierárquico e omitir subtítulos para respeitar o teto de 600 tokens
+estimados. Seções omitidas continuam localizáveis por `--secao` e `--buscar`. Toda estimativa
+usa `ceil(caracteres / 3)`, é aproximada e não recebe margem adicional.
+
 ### `documento.pdfmd.json`
 
 Manifesto `pdfmd-manifest-v1`. Campos de topo:
@@ -76,3 +80,6 @@ autoriza apagar a ocorrência ou sua página.
 5. Aviso nunca pode ser convertido em sucesso silencioso.
 6. Página impressa nunca substitui `pdf_page`.
 7. Economia de tokens ocorre por leitura seletiva do canônico.
+8. O hook `block-md-integral` bloqueia leitura acidental do canônico com mais de 300 linhas e
+   manifesto irmão; leitura integral deliberada ocorre pelo leitor com `--completo`.
+9. A recuperação é literal e não corta parágrafo, lista ou tabela para caber no orçamento.

@@ -64,6 +64,13 @@ investigação. Não serve para: norma, definição, padrão de peça.
 
 ## Planos em andamento
 
+- [`planos/2026-08-02_prd-leitura-semantica-stj.md`](planos/2026-08-02_prd-leitura-semantica-stj.md)
+  — leitura semântica de julgados do STJ e consumo do RISTJ. **Executado em 02/08 (F1 a F7).**
+  Novidades que mudam o dia a dia: o `lint-citacoes` agora **bloqueia** citação cuja voz é de
+  outro julgado transcrito dentro do acórdão (usar `--voz-aviso` nas duas primeiras semanas);
+  o RISTJ (até a ER-53) está depositado em `direito/pecas/raw/ristj-er53.md` com recortes por
+  artigo; a `banca-revisora` ganhou checklist regimental que bloqueia protocolo. Pendências
+  são de conteúdo, não de código — ver "Estado da execução" no PRD.
 - [`planos/2026-07-28_prd-versionamento-e-modularizacao.md`](planos/2026-07-28_prd-versionamento-e-modularizacao.md)
   — repositório da equipe em 8 fases. **Fases 1 a 3 e 6 executadas** em 28/07 (histórico limpo,
   instalador multiplataforma, entrevista de primeiro uso, documentação). Pendentes: migração do

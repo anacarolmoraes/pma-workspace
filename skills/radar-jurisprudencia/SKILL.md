@@ -111,7 +111,16 @@ Você é triador de jurisprudência. Tese do cliente: "<tese>" (representamos <l
 ou de a decisão ter sido provida ou improvida.
 Para cada item abaixo (id + trecho), responda UMA linha: id | F, C ou I | motivo em até 15
 palavras. F=favorável, C=contrário, I=irrelevante/não dá para saber. Não use ferramentas.
+Item com "so_ementa": true traz apenas a ementa publicada — resumo oficial, não a razão de
+decidir. Pode ser F, mas exige leitura do inteiro teor antes de virar citação.
 ```
+
+O lote só carrega os candidatos marcados **`natureza: principal`**. Julgados repetidos do
+mesmo órgão com o mesmo conteúdo entram como `similar` e apontam para o principal — é o
+fluxo da Seção de Triagem de Acórdãos do STJ, e evita pagar triagem N vezes pela mesma tese.
+O `lotes.js` **informa quantos ficaram de fora** por similaridade; para triá-los (quando o
+que se procura é divergência dentro de um grupo aparentemente uniforme), usar
+`--incluir-similares`.
 
 Descartar os I. **Guardar os C** — decisão contrária recente no tribunal da peça é
 inteligência de graça (a triagem já pagou por ela) e vira a seção "radar de risco" do
@@ -164,10 +173,11 @@ Gravar `radar-jurisprudencia_<AAAA-MM-DD>.md` na pasta do caso, neste formato:
 
 ## Tese: <enunciado> (representamos <lado>)
 ### 1. <TRIBUNAL> — <processo> — <tipo>, disp. <data>
-- **Órgão:** <órgão> | **Classe:** <classe>
+- **Órgão:** <órgão> | **Classe:** <classe> | **Relator:** <relator, se identificado>
 - **Por que sustenta a tese:** <1–2 frases suas, não da decisão>
 - **Trecho-chave:** > "<citação literal do dispositivo/fundamento>"
 - **Status:** <semáforo do verificar.js> — inteiro teor NÃO conferido
+- **Similares:** <ids agrupados sob este principal, se houver — mesma tese, não conferem reforço independente>
 
 ## Radar de risco — entendimento contrário encontrado
 - <TRIBUNAL> — <processo> (<data>): <uma linha: o que decidiu contra a tese>

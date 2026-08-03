@@ -41,11 +41,18 @@ Independência real vem de **insumos diferentes**, não só de prompts diferente
 
 | # | Assento | Recebe | NÃO recebe | Pergunta-guia |
 |---|---|---|---|---|
-| 1 | **Assessor de gabinete** | Só a peça + tabelas de óbices/checklists do bundle da peça | Dossiê do caso | "Qual o caminho de menor esforço para NÃO conhecer?" (Súmulas 182/284/283/7/83; requisitos regimentais) |
+| 1 | **Assessor de gabinete** | Só a peça + tabelas de óbices/checklists do bundle da peça + [`references/checklist-regimental-stj.md`](references/checklist-regimental-stj.md) | Dossiê do caso | "Qual o caminho de menor esforço para NÃO conhecer?" (Súmulas 182/284/283/7/83; requisitos regimentais) |
 | 2 | **Advogado da parte contrária** | Peça + peças da parte adversa nos autos (decisão combatida, contrarrazões se houver) | Anotações estratégicas do escritório | "Escreva o esqueleto da resposta: onde ataco cada capítulo?" |
 | 3 | **Relator pragmático** | Peça + decisão combatida + equities do caso + perfil do órgão julgador (se existir no bundle temático) | — | "Como decisor com pilha de processos: nego tudo, dou parcial ou dou tudo? Qual pedido subsidiário eu aceitaria?" |
 | 4 | **Processualista formal** | Peça + páginas normativas do bundle (jurisprudencia/) | — | "Cada citação, prazo, alínea e remissão está letra por letra correta?" — orquestra a skill `legal-consistency-validator`, não a duplica |
 | 5 | **Estrategista do escritório** | TUDO: peça + dossiê + cronologia + objetivo real do cliente | — | "As teses são coerentes entre si? O que a peça sacrifica? Vitória aqui serve ao objetivo real (ex.: cassar já resolve)?" |
+
+O assento 1 devolve, **além do parecer**, o [checklist regimental](references/checklist-regimental-stj.md)
+preenchido item a item (`OK`/`FALHA`/`N/A`, com o artigo ao lado). Item falho nos blocos 1
+(cabimento), 3 (prazo) ou 4 (prova do dissídio) **bloqueia o protocolo**: são vícios que o
+gabinete resolve monocraticamente, sem a peça chegar ao colegiado. O checklist é ancorado nos
+recortes do RISTJ (até a ER-53) depositados no acervo — não na memória do modelo sobre o
+Regimento.
 
 Instrução comum a todos: **cada achado deve citar o trecho exato da peça e a fonte que o sustenta** (artigo, súmula, precedente com identificação, ou documento dos autos com localização). Achado sem citação será descartado. Sem elogios; achados e riscos apenas. 300–600 palavras por assento.
 
@@ -55,6 +62,7 @@ Instrução comum a todos: **cada achado deve citar o trecho exato da peça e a 
 2. **Rodada 1 — assentos em paralelo:** 5 subagentes simultâneos (modelo padrão: sonnet), cada um com seu pacote. Nunca sequencial.
 3. **Rodada 2 — revisão cruzada anônima:** anonimizar os 5 pareceres (A–E, ordem sorteada); revisor(es) independente(s) respondem: qual o achado mais grave? qual parecer tem o maior ponto cego? o que TODOS deixaram passar? (Economia: 1 revisor único é aceitável; rigor máximo: 5.)
 4. **Rodada 3 — parecer do chairman** (quem orquestra), estrutura fixa:
+   - **Checklist regimental** — a tabela do assento 1, completa. Vem primeiro por ser a única parte binária do parecer: falha em cabimento, prazo ou prova do dissídio torna o resto acadêmico.
    - **Achados CONFIRMADOS** — verificados contra a fonte citada; cada um com correção proposta. Bloqueiam o protocolo até resolvidos.
    - **Achados PLAUSÍVEIS** — não verificáveis de imediato; listar com o que falta conferir.
    - **Descartados** — achados sem evidência (listar em 1 linha cada; transparência do filtro).

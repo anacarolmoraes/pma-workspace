@@ -16,9 +16,16 @@
 //      frontmatter, de modo que a decisão fique REGISTRADA no documento.
 //
 // Uso:
+// Terceira camada, de 2026-08-02 (PRD leitura-semantica-stj, F2): VOZ. O acórdão
+// é polifônico e a checagem acima só perguntava se o texto EXISTE no arquivo —
+// não de quem ele é. Com o sidecar do `segmentar-acordao.py`, uma ementa que o
+// julgado apenas transcreveu deixa de valer como razão de decidir dele.
+//
+// Uso:
 //   node lint-citacoes.js peca.md              # relatório + veredito
 //   node lint-citacoes.js peca.md --json       # saída estruturada
 //   node lint-citacoes.js peca.md --só-aviso   # nunca falha (modo de rodagem inicial)
+//   node lint-citacoes.js peca.md --voz-aviso  # só a checagem de voz não bloqueia
 //
 // Saída: 0 = ok · 1 = citação divergente/ausente (BLOQUEIA) · 3 = exige aprovação
 'use strict';
@@ -230,11 +237,90 @@ function statusDaPagina(texto) {
   return m ? m[1].trim().replace(/['"]/g, '') : null;
 }
 
+// ── Voz: de quem é o texto dentro do acórdão ───────────────────────────────
+//
+// PRD 2026-08-02 F2. Um acórdão é polifônico: falam o relator, o tribunal de
+// origem (ementa transcrita no relatório) e outros precedentes (ementas coladas
+// no voto). Comparar a citação contra o ARQUIVO INTEIRO fazia um trecho de
+// ementa ALHEIA passar com 100% de sobreposição atribuído ao julgado que apenas
+// a citou — no REsp 2.035.848 há a ementa do TJTO e mais 6 ementas de terceiros.
+//
+// O sidecar vem do `segmentar-acordao.py`. Sem sidecar, ou com sidecar de outra
+// versão do arquivo, nada muda: o lint volta ao comportamento anterior.
+function lerEstrutura(arquivo, texto) {
+  let bruto;
+  try {
+    bruto = JSON.parse(fs.readFileSync(`${arquivo}.estrutura.json`, 'utf8'));
+  } catch {
+    return null;
+  }
+  if (!bruto || bruto.nao_segmentado) return null;
+
+  // Contrato do sidecar: os offsets são contados sobre o texto com quebra de
+  // linha normalizada (`\n`), porque é assim que o Python lê o arquivo. Este
+  // acervo tem arquivos em CRLF — sem normalizar aqui, a contagem diverge em
+  // uma unidade por linha e todas as faixas escorregam.
+  texto = texto.replace(/\r\n/g, '\n');
+
+  // Se o arquivo mudou depois de segmentado, as faixas apontam para o lugar
+  // errado — e faixa errada acusa divergência falsa. Na dúvida, desliga.
+  if (bruto.chars !== texto.length) return null;
+
+  const citados = (bruto.blocos_citados || []).map((b) => ({
+    precedente: b.precedente,
+    precedentes: b.precedentes || [],
+    origem: b.origem,
+    linha: b.linha_inicio,
+    norm: norm(texto.slice(b.inicio, b.fim)),
+  }));
+
+  // Voz própria = o que sobra depois de retirar toda transcrição alheia.
+  const remover = (ini, fim) => [ini, fim];
+  const faixas = (bruto.blocos_citados || []).map((b) => remover(b.inicio, b.fim));
+  const proprias = (bruto.secoes || [])
+    .filter((s) => s.nome !== 'capa' && s.nome !== 'relator')
+    .map((s) => {
+      let pedacos = [];
+      let cursor = s.inicio;
+      for (const [ini, fim] of faixas.filter((f) => f[1] > s.inicio && f[0] < s.fim)) {
+        if (ini > cursor) pedacos.push(texto.slice(cursor, ini));
+        cursor = Math.max(cursor, fim);
+      }
+      if (cursor < s.fim) pedacos.push(texto.slice(cursor, s.fim));
+      return { nome: s.nome, norm: norm(pedacos.join(' ')) };
+    })
+    .filter((s) => s.norm.length > 40);
+
+  return { proprias, citados, avisos: bruto.avisos || [] };
+}
+
+// Onde, dentro do documento, a citação encontra respaldo.
+function localizarVoz(corpo, estrutura) {
+  const pontuar = (lista) =>
+    lista.map((x) => ({ ...x, s: sobreposicao(corpo, x.norm) })).sort((a, b) => b.s - a.s)[0];
+
+  const propria = pontuar(estrutura.proprias) || { s: 0 };
+  const citada = pontuar(estrutura.citados) || { s: 0 };
+  return { propria, citada };
+}
+
+function rotuloDoBloco(b) {
+  if (b.precedente) return b.precedente;
+  if (b.origem === 'acordao-recorrido') return 'o acórdão recorrido (tribunal de origem)';
+  if (b.origem === 'precedente-multiplo') return b.precedentes.join(' / ');
+  return 'terceiro não identificado';
+}
+
 function main() {
   const args = process.argv.slice(2);
   const pecaPath = args.find((a) => !a.startsWith('--'));
   const jsonOut = args.includes('--json');
   const soAviso = args.includes('--só-aviso') || args.includes('--so-aviso');
+  // Rodagem inicial do portão de voz (PRD 2026-08-02, F2 + tabela de riscos):
+  // duas semanas em aviso antes de travar peça, para que um falso positivo não
+  // segure protocolo no prazo. Rebaixa SÓ a checagem de voz — as demais seguem
+  // bloqueando.
+  const vozAviso = args.includes('--voz-aviso');
 
   if (!pecaPath) {
     console.error('Uso: node lint-citacoes.js <peca.md> [--json] [--so-aviso]');
@@ -267,6 +353,7 @@ function main() {
         digitos: t.replace(/\D/g, ''),
         runs: new Set((t.match(/\d+/g) || []).concat((t.match(/\d[\d.]*\d/g) || []).map((x) => x.replace(/\D/g, '')))),
         status: statusDaPagina(t),
+        estrutura: lerEstrutura(f, t),
       };
     });
 
@@ -306,6 +393,44 @@ function main() {
     const rel = path.relative(RAIZ, melhor.d.arquivo) || melhor.d.arquivo;
     const pct = Math.round(melhor.s * 100);
 
+    // ── De quem é a voz ────────────────────────────────────────────────────
+    // Só corre quando a fonte tem sidecar de estrutura. A pergunta que o lint
+    // não sabia fazer: o texto existe no arquivo, mas é a ratio DESTE julgado
+    // ou uma ementa que ele apenas transcreveu?
+    if (melhor.s >= 0.5 && melhor.d.estrutura) {
+      const { propria, citada } = localizarVoz(c.corpo, melhor.d.estrutura);
+
+      if (citada.s >= 0.5 && citada.s > propria.s) {
+        const dono = rotuloDoBloco(citada);
+        resultados.push({
+          ...c,
+          veredito: 'VOZ_CITADA',
+          gravidade: vozAviso ? 'warning' : 'error',
+          fonteArquivo: rel,
+          detalhe:
+            `O trecho confere (${Math.round(citada.s * 100)}%) com um bloco TRANSCRITO dentro de ${rel} ` +
+            `(linha ${citada.linha}), não com o texto do próprio julgado. Pertence a ${dono}. ` +
+            `Citá-lo como razão de decidir de ${ids.map((i) => i.rotulo).join(', ')} atribui ao julgado ` +
+            `tese que ele apenas reproduziu — ou que rejeitou. Citar o precedente de origem, ou o trecho do voto.`,
+        });
+        continue;
+      }
+
+      if (propria.s >= 0.5 && propria.nome === 'relatorio') {
+        resultados.push({
+          ...c,
+          veredito: 'NO_RELATORIO',
+          gravidade: 'warning',
+          fonteArquivo: rel,
+          detalhe:
+            `Confere (${Math.round(propria.s * 100)}%) com o RELATÓRIO de ${rel}, não com o voto. ` +
+            `O relatório narra o que as partes e a instância de origem disseram — não é razão de decidir. ` +
+            `Conferir se a tese aparece também no voto antes de sustentar a peça nela.`,
+        });
+        continue;
+      }
+    }
+
     // Limiares calibrados para n-gramas contíguos: transcrição fiel (mesmo recortada)
     // fica perto de 1; texto alterado despenca para perto de 0. Não há meio-termo
     // amplo, então a faixa de "suspeita" é estreita de propósito.
@@ -328,7 +453,22 @@ function main() {
       continue;
     }
 
-    resultados.push({ ...c, veredito: 'VERIFICADA', gravidade: 'ok', fonteArquivo: rel, detalhe: `${pct}% do texto confere com ${rel}${st ? ` (status: ${st})` : ''}.` });
+    // A seção de origem sai de graça quando há sidecar, e documenta de onde a
+    // peça está tirando autoridade: ementa, voto ou dispositivo não são a
+    // mesma coisa na hora de sustentar uma tese.
+    let secao = null;
+    if (melhor.d.estrutura) {
+      const { propria } = localizarVoz(c.corpo, melhor.d.estrutura);
+      if (propria.s >= 0.5) secao = propria.nome;
+    }
+    resultados.push({
+      ...c,
+      veredito: 'VERIFICADA',
+      gravidade: 'ok',
+      fonteArquivo: rel,
+      secao,
+      detalhe: `${pct}% do texto confere com ${rel}${secao ? `, na seção ${secao.toUpperCase()}` : ''}${st ? ` (status: ${st})` : ''}.`,
+    });
   }
 
   // ── Relatório ────────────────────────────────────────────────────────────

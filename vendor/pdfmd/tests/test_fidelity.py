@@ -14,7 +14,7 @@ from PIL import Image
 
 from pdfmd.extract import extract_pages
 from pdfmd.models import Block, Line, Options, PageText, Span
-from pdfmd.pipeline import pdf_to_markdown
+from pdfmd.pipeline import pdf_to_markdown, _build_index
 from pdfmd.render import render_document
 from pdfmd.transform import remove_header_footer
 
@@ -26,6 +26,30 @@ def _png_bytes(color: tuple[int, int, int] = (220, 20, 20)) -> bytes:
 
 
 class FidelityTests(unittest.TestCase):
+    def test_tesseract_groups_paragraphs_and_orders_two_columns(self) -> None:
+        data = {key: [] for key in ("text", "block_num", "par_num", "line_num", "left", "top", "width", "height", "conf")}
+        rows = [
+            ("R1", 2, 1, 1, 350, 100),
+            ("L2", 1, 2, 1, 40, 180),
+            ("L1", 1, 1, 1, 40, 100),
+            ("R2", 2, 2, 1, 350, 180),
+        ]
+        for text, block, paragraph, line, left, top in rows:
+            for key, value in zip(data, (text, block, paragraph, line, left, top, 30, 20, 95)):
+                data[key].append(value)
+        page = PageText.from_tesseract_data(data, page_number=1, width=600, height=800)
+        ordered = [line.text() for block in page.blocks for line in block.lines]
+        self.assertEqual(ordered, ["L1", "L2", "R1", "R2"])
+
+    def test_compact_index_stays_under_600_estimated_tokens(self) -> None:
+        blocks = [Block(lines=[Line([Span(f"# Título estrutural {i}")])]) for i in range(150)]
+        page = PageText(page_number=1, blocks=blocks)
+        md = '<a id="pdf-page-1"></a>\n<!-- pdfmd:page=1; method=native -->\n' + '\n'.join(
+            f"# Título estrutural {i}" for i in range(150)
+        )
+        index = _build_index("amostra.md", [page], md, "abc")
+        self.assertLessEqual((len(index) + 2) // 3, 600)
+
     def test_native_model_retains_geometry(self) -> None:
         page = PageText.from_pymupdf(
             {

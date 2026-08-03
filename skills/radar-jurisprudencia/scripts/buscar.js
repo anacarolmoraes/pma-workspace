@@ -72,7 +72,29 @@ function limparHtml(html) {
     .trim();
 }
 
-const MARCA_DISPOSITIVO = /(ante o exposto|diante do exposto|isto posto|posto isto|posto isso|pelo exposto|ex positis|face ao exposto|do dispositivo)/i;
+// Conectivos que abrem o dispositivo, mais os fechos com que o STJ encerra o voto.
+// A lista antiga só conhecia a abertura e perdia o julgado que decide em "não
+// conheço do recurso" ou fecha em "é como voto" — forma corrente no Tribunal.
+// Acento é opcional em toda a lista: o texto vem de fontes diferentes (API do
+// DJEN, HTML limpo, OCR) e nem todas o preservam. Exigir acento fazia o
+// dispositivo passar despercebido em parte do acervo.
+const MARCA_DISPOSITIVO = /(ante o exposto|diante do exposto|isto posto|posto isto|posto isso|pelo exposto|ex positis|face ao exposto|em face do exposto|do exposto|do dispositivo|[ée] como voto|[ée] o voto|n[ãa]o conhe(?:[çc]o|cido) do recurso|nego provimento ao recurso|dou provimento ao recurso)/i;
+
+// Cabeçalho de ementa. Publicação do DJEN muitas vezes traz SÓ a ementa, sem
+// relatório nem dispositivo: aí o recorte por conectivo não acha nada e o texto
+// caía num slice cego de 2000 caracteres, que corta a ementa no meio.
+const MARCA_EMENTA = /\bementa\b\s*[:\-–]?/i;
+
+// Fim da ementa: onde começa o acórdão/relatório, ou a assinatura do julgamento.
+const FIM_EMENTA = /(ac[oó]rd[aã]o\b|relat[oó]rio\b|vistos,? relatados|a turma, por unanimidade|prosseguindo no julgamento)/i;
+
+// "Rel. Min. Fulano", "Relator Ministro Fulano", "Relatora Ministra Fulana".
+const MARCA_RELATOR = /\brel(?:\.|ator[a]?)\s*:?\s*min(?:\.|istr[oa])\s*:?\s*([A-ZÀ-Ú][\wÀ-ÿ.'-]*(?:\s+(?:de|da|do|dos|das|e)?\s*[A-ZÀ-Ú][\wÀ-ÿ.'-]*){0,4})/i;
+
+function extrairRelator(texto) {
+  const m = MARCA_RELATOR.exec(texto || '');
+  return m ? `Min. ${m[1].replace(/\s+/g, ' ').trim().replace(/[.,;]$/, '')}` : null;
+}
 
 // Só interessa o que decide algo: liminar, sentença, acórdão, voto, decisão.
 // Edital e mero expediente ("cite-se", "conclusos") não são jurisprudência.
@@ -90,8 +112,64 @@ function elegivel(item, texto) {
 function recortar(texto) {
   const abertura = texto.slice(0, 500);
   const m = MARCA_DISPOSITIVO.exec(texto);
-  if (!m || m.index < 500) return texto.slice(0, 2000);
-  return `${abertura} [...] ${texto.slice(m.index, m.index + 1500)}`;
+  if (m && m.index >= 500) return `${abertura} [...] ${texto.slice(m.index, m.index + 1500)}`;
+
+  // Sem dispositivo à vista: se há ementa, ela é a unidade a preservar. Cortar
+  // uma ementa ao meio entrega ao triador o cabeçalho de matéria sem o
+  // entendimento — que é justamente o que ele precisa julgar.
+  const e = MARCA_EMENTA.exec(texto);
+  if (e) {
+    const corpo = texto.slice(e.index);
+    const f = FIM_EMENTA.exec(corpo.slice(200));
+    const fim = f ? 200 + f.index : Math.min(corpo.length, 2500);
+    return corpo.slice(0, fim);
+  }
+  return texto.slice(0, 2000);
+}
+
+// Publicação que traz ementa e não traz dispositivo: sinaliza para a triagem que
+// o que está à mão é o resumo oficial, não a razão de decidir. O inteiro teor
+// continua obrigatório antes de citar (SKILL.md).
+function soEmenta(texto) {
+  return MARCA_EMENTA.test(texto) && !MARCA_DISPOSITIVO.test(texto);
+}
+
+// Triagem principal x similar, do fluxo da Secretaria de Jurisprudência do STJ
+// (Manual de Organização 2026, cap. 5): num lote de julgados repetidos, um é o
+// PRINCIPAL e recebe leitura de inteiro teor; os demais são SIMILARES e apontam
+// para ele. Sem isso, paga-se leitura profunda N vezes pela mesma tese.
+//
+// A assinatura é grosseira de propósito — órgão + as palavras mais fortes do
+// recorte. Errar para o lado de "principal" só custa uma leitura a mais;
+// agrupar demais esconderia julgado divergente.
+function assinatura(c) {
+  const base = semAcento(`${c.tribunal}|${c.orgao || ''}|${c.classe || ''}`);
+  const corpo = semAcento(c.trecho || '')
+    .replace(/[^a-z0-9 ]+/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 5)
+    .slice(0, 40)
+    .sort()
+    .join(' ');
+  return `${base}#${corpo}`;
+}
+
+function marcarPrincipalOuSimilar(candidatos) {
+  const grupos = new Map();
+  for (const c of candidatos) {
+    const k = assinatura(c);
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(c);
+  }
+  for (const grupo of grupos.values()) {
+    // O de maior score vira principal: é o que melhor casa com a tese buscada.
+    grupo.sort((a, b) => b.score - a.score);
+    grupo.forEach((c, i) => {
+      c.natureza = i === 0 ? 'principal' : 'similar';
+      if (i > 0) c.similar_a = grupo[0].id;
+    });
+  }
+  return candidatos;
 }
 
 const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -184,6 +262,11 @@ async function main() {
             chars: texto.length,
             score: pontuar(texto, vocabulario),
             trecho: recortar(texto),
+            // Relator não era capturado em lugar nenhum do pipeline — sem ele
+            // não se consulta "o que o Min. X decide sobre isto", que é metade
+            // do valor de um radar de jurisprudência.
+            relator: extrairRelator(texto),
+            so_ementa: soEmenta(texto),
             _texto: texto,
           });
           coletadosTribunal++;
@@ -199,8 +282,9 @@ async function main() {
     if (ti >= 1 && porProcesso.size >= alvo) break;
   }
 
-  const candidatos = [...porProcesso.values()]
-    .sort((x, y) => (y.score - x.score) || (y.data || '').localeCompare(x.data || ''));
+  const candidatos = marcarPrincipalOuSimilar(
+    [...porProcesso.values()].sort((x, y) => (y.score - x.score) || (y.data || '').localeCompare(x.data || '')),
+  );
   for (const c of candidatos) {
     fs.writeFileSync(path.join(saida, 'textos', `${c.id}.txt`), c._texto, 'utf8');
     delete c._texto;
@@ -214,6 +298,13 @@ async function main() {
   const porTribunal = {};
   for (const c of candidatos) porTribunal[c.tribunal] = (porTribunal[c.tribunal] || 0) + 1;
   console.log(`Candidatos: ${candidatos.length} ${JSON.stringify(porTribunal)}`);
+  const similares = candidatos.filter((c) => c.natureza === 'similar').length;
+  const comRelator = candidatos.filter((c) => c.relator).length;
+  const soEm = candidatos.filter((c) => c.so_ementa).length;
+  console.log(
+    `Triagem: ${candidatos.length - similares} principal(is), ${similares} similar(es) · ` +
+      `${comRelator} com relator identificado · ${soEm} publicação(ões) só-ementa.`,
+  );
   for (const q of consultas) {
     if (q.erro) console.log(`  ERRO ${q.tribunal} "${q.termo}": ${q.erro}`);
     else if (q.aviso) console.log(`  ${q.aviso}`);
@@ -227,4 +318,4 @@ if (require.main === module) {
   main().catch((e) => { console.error('ERRO:', e.message); process.exit(1); });
 }
 
-module.exports = { limparHtml, elegivel, recortar, pontuar };
+module.exports = { limparHtml, elegivel, recortar, pontuar, extrairRelator, soEmenta, marcarPrincipalOuSimilar };

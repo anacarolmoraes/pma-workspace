@@ -63,7 +63,14 @@ node skills\pdfmd\scripts\ler-pdfmd.js documento.md --mapa
 node skills\pdfmd\scripts\ler-pdfmd.js documento.md --paginas 8-12,15
 node skills\pdfmd\scripts\ler-pdfmd.js documento.md --secao "Dos pedidos"
 node skills\pdfmd\scripts\ler-pdfmd.js documento.md --buscar "contratação" --contexto 2
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --buscar "voz ativa" --max-tokens 800
+node skills\pdfmd\scripts\ler-pdfmd.js documento.md --avisos
 ```
+
+`--max-tokens N` usa a estimativa conservadora `ceil(caracteres / 3)` e nunca corta
+parágrafo, lista ou tabela. `--max-resultados N` limita ocorrências. `--completo` é o ato
+expresso para ignorar o orçamento e devolver integralmente o alvo selecionado. O hook
+`block-md-integral` impede `Read` acidental do canônico longo quando há manifesto irmão.
 
 Economizar tokens por seleção, não por resumo. Não criar versão resumida que possa substituir
 o texto canônico.
