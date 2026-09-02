@@ -64,6 +64,11 @@ investigação. Não serve para: norma, definição, padrão de peça.
 
 ## Planos em andamento
 
+- [`planos/2026-08-03_prd-saneamento-e-colheita-lcc.md`](planos/2026-08-03_prd-saneamento-e-colheita-lcc.md)
+  — saneamento operacional (fila DJEN, quarentena do `resp-stj-pipeline/`, higiene C1 no git,
+  faxina de skills) + colheita de 7 ideias do `legal-context-compiler-prd` (decisão: **não**
+  construir o app). **Rascunho aguardando aprovação da titular.** F1 (fila DJEN) e F2.1
+  (gitignore do `resp-stj-pipeline/`) são urgentes independentemente do resto.
 - [`planos/2026-08-02_prd-leitura-semantica-stj.md`](planos/2026-08-02_prd-leitura-semantica-stj.md)
   — leitura semântica de julgados do STJ e consumo do RISTJ. **Executado em 02/08 (F1 a F7).**
   Novidades que mudam o dia a dia: o `lint-citacoes` agora **bloqueia** citação cuja voz é de

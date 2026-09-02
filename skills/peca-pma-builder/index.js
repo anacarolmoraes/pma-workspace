@@ -201,6 +201,25 @@ function buildHeader(timbradoPath = DEFAULT_TIMBRADO) {
   });
 }
 
+// Rodapé neutro para peça sem timbre (semTimbre): apenas "Fl. X de Y",
+// sem filete laranja e sem linha de contatos.
+function buildFooterNeutro() {
+  return new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 80 },
+        children: [
+          new TextRun({ text: 'Fl. ', font: FONT, size: FOOTER_SIZE }),
+          new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: FOOTER_SIZE }),
+          new TextRun({ text: ' de ', font: FONT, size: FOOTER_SIZE }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], font: FONT, size: FOOTER_SIZE }),
+        ],
+      }),
+    ],
+  });
+}
+
 function buildFooter() {
   // Linha única centralizada com filete superior laranja:
   // contato | telefone | endereço | Fl. X de Y
@@ -232,11 +251,15 @@ function buildFooter() {
 //   creator: string (default: "PMA Advocacia")
 //   timbradoPath: imagem do cabeçalho (default: assets/timbrado.png da skill;
 //                 bannerPath é aceito como alias legado)
+//   semTimbre: true → sem cabeçalho institucional e rodapé neutro (só "Fl. X de Y").
+//              Decisão da titular por peça (frontmatter `timbre: nao` no md2docx);
+//              validarTimbrado e lint-docx NÃO se aplicam ao artefato gerado assim.
 async function buildDoc(opts) {
   const {
     titulo: docTitle, processo, conteudo, outPath,
     creator = 'PMA Advocacia',
     timbradoPath = opts.bannerPath || DEFAULT_TIMBRADO,
+    semTimbre = false,
   } = opts;
 
   if (!conteudo || !Array.isArray(conteudo)) {
@@ -260,8 +283,8 @@ async function buildDoc(opts) {
             },
           },
         },
-        headers: { default: buildHeader(timbradoPath) },
-        footers: { default: buildFooter() },
+        headers: semTimbre ? undefined : { default: buildHeader(timbradoPath) },
+        footers: { default: semTimbre ? buildFooterNeutro() : buildFooter() },
         children: conteudo,
       },
     ],
@@ -328,13 +351,46 @@ async function validarTimbrado(docxPath) {
   return { ok: problemas.length === 0, problemas };
 }
 
+// Confere que o CONTEÚDO da fonte chegou ao .docx gravado.
+// Motivo (2026-08-04): o `validarTimbrado` aprova o invólucro — margens, banner,
+// rodapé — e nada mais. Numa peça real o .docx entregue estava sem três linhas
+// do cabeçalho e a compilação reportou sucesso, porque ninguém comparava o texto
+// gravado com o texto de entrada. Amostra as âncoras (primeiro e último
+// parágrafo do corpo) em vez do texto inteiro: barato e suficiente para pegar
+// build truncado, build defasado e arquivo gravado pela metade.
+async function validarConteudo(docxPath, ancoras) {
+  let JSZip;
+  try {
+    JSZip = require(path.join(globalNodeModules, 'docx', 'node_modules', 'jszip'));
+  } catch (e1) {
+    try { JSZip = require(path.join(globalNodeModules, 'jszip')); }
+    catch (e2) { return { ok: true, faltando: [], aviso: 'jszip indisponível — validação de conteúdo pulada' }; }
+  }
+  const zip = await JSZip.loadAsync(fs.readFileSync(docxPath));
+  const nome = Object.keys(zip.files).find((f) => /^word\/document\.xml$/.test(f));
+  if (!nome) return { ok: false, faltando: ['word/document.xml ausente'] };
+
+  const norm = (s) => String(s)
+    .replace(/<[^>]*>/g, '')
+    .replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#160;|&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  const gravado = norm(await zip.files[nome].async('string'));
+
+  const faltando = ancoras
+    .map((a) => norm(a))
+    .filter((a) => a.length >= 12)
+    .filter((a) => !gravado.includes(a.slice(0, 60)));
+
+  return { ok: faltando.length === 0, faltando };
+}
+
 // ─── Export ──────────────────────────────────────────────────────────────────
 module.exports = {
   // helpers de parágrafo
   p, pMixed, pQuote, pCentered,
   titulo, subtitulo, endereco, quebra, pageBreak, assinatura,
   // builder
-  buildDoc, buildHeader, buildFooter, validarTimbrado,
+  buildDoc, buildHeader, buildFooter, validarTimbrado, validarConteudo,
   // constantes (úteis para casos especiais)
   FONT, SIZE_BODY, SIZE_QUOTE, SIZE_FOOTER, LINE, SPACE_AFTER, MARGIN_3CM,
   // re-exports do docx (caso o script precise de algo customizado)

@@ -1,6 +1,6 @@
 ---
 name: legal-orchestrator
-version: 4.1.0
+version: 4.2.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: redação argumentativa (legal-writer), 
   padronização tipográfica (tipografia-pma), validação adversarial (legal-consistency-validator) e 
@@ -31,6 +31,19 @@ Antes de iniciar qualquer estágio, confirme que você possui:
 | Valor da causa pretendido | Inconsistência de valores é o erro mais atacável |
 
 Se mais de dois desses itens estiverem ausentes, pare e solicite ao usuário antes de prosseguir.
+
+## Estágio 0 — Inventário das fontes do caso (SEMPRE EXECUTE, ANTES DE TUDO)
+
+Não redija com o que está à mão. Levante o que existe, **em dois lugares**, e só então decida se pode escrever.
+
+1. **Pasta local do caso** (`clientes/<caso>/`): listar tudo. PDF sem `.md` irmão vai para o `pdfmd` antes de qualquer leitura.
+2. **Drive do escritório**: buscar pelo nome do cliente **e** pelo número do processo. A pasta local costuma ter só a última peça recebida; contrato, extrato, termo de cessão e procuração costumam estar apenas no Drive.
+
+**Peças de resposta exigem a peça que respondem.** Para réplica/impugnação, são obrigatórios: a **inicial**, a **contestação** e os **documentos que sustentam os números** (contrato assinado e extrato de pagamento). Redigir uma réplica sem a inicial produz peça que contradiz o próprio pedido; redigir sem o contrato produz afirmação de fato errada.
+
+Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em PDF. A réplica foi redigida sem a inicial e sem o contrato, e afirmou que o cliente não pagara sinal — o contrato registrava R$ 1.339,96 no campo "sinal de negócio", e a inicial pedia justamente a devolução dele. Os dois documentos estavam no Drive desde 2018.
+
+**Portão:** se faltar a peça anterior ou o documento que sustenta os valores, **pare e peça** — não redija com placeholder, e não infira o número a partir do que a parte contrária afirma. Quando o tema tiver skill de apuração numérica (ex.: `ficha-rescisao-lote` para rescisão de lote), rodá-la aqui, antes do Estágio 1, e usar a ficha como fonte dos valores da peça.
 
 ---
 

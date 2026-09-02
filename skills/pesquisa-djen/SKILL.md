@@ -116,6 +116,21 @@ node scripts\migrar-fila-embargos.js --dry-run   # mostra o que faria
 node scripts\migrar-fila-embargos.js
 ```
 
+### Arquivar linhas tratadas
+
+A fila só cresce (o monitor nunca remove). Para tirar as linhas `TRATADA` de `PENDENTES.md`
+sem perder o histórico, mover para `monitor/ARQUIVO.md`:
+
+```powershell
+node scripts\arquivar-tratadas.js --dry-run   # mostra quanto moveria
+node scripts\arquivar-tratadas.js
+```
+
+Seguro para o dedup: quem impede o monitor de reprocessar uma intimação é `seen.json`
+(IDs já vistos), não a presença da linha em `PENDENTES.md` — arquivar não faz a
+intimação "voltar" na próxima execução. `ARQUIVO.md` é só apensado, não é lido por
+nenhum script de vigilância; existe para auditoria.
+
 ### De quem é o prazo (coluna `caso`)
 
 A fila avisa que um prazo vence; sem a coluna `caso` preenchida, não diz de quem. Quem a
@@ -140,6 +155,7 @@ Arquivos de estado em `monitor/`:
 | Arquivo | Papel |
 |---|---|
 | `PENDENTES.md` | **a fila** — intimações não tratadas, com prazo calculado |
+| `ARQUIVO.md` | linhas `TRATADA` retiradas da fila por `arquivar-tratadas.js` — histórico, não lido por script de vigilância |
 | `seen.json` | IDs já vistos (deduplicação; permite janela larga sem ruído) |
 | `last_ok.json` | **dead man's switch** — última execução bem-sucedida; o hook `SessionStart` avisa se passar de 36 h. É também o que decide se um tique de retentativa tem o que fazer |
 | `falhas.json` | falha **em aberto** (desde quando, quantas tentativas, último erro). Existe só enquanto o dia não recupera; apagado no primeiro sucesso |

@@ -12,7 +12,9 @@
 // timbrado do arquivo gerado (validarTimbrado do index.js).
 //
 // ── Dialeto (ver SKILL.md, seção "Autoria em Markdown") ──────────────────────
-// ---                       front-matter YAML-lite: titulo, processo, out
+// ---                       front-matter YAML-lite: titulo, processo, out,
+//                           timbre (`timbre: nao` → peça sem timbrado; lint-docx
+//                           e validação de timbrado dispensados, decisão registrada)
 // # I. Dos Fatos            → titulo('I.', 'Dos Fatos')
 // ## I.1. Cronologia        → subtitulo('I.1.', 'Cronologia')
 // > texto da citação        → pQuote (linhas contíguas viram um parágrafo;
@@ -36,7 +38,7 @@ const { spawnSync } = require('child_process');
 const PMA = require(path.join(__dirname, '..'));
 const {
   p, pMixed, pQuote, pCentered, titulo, subtitulo,
-  endereco, quebra, pageBreak, assinatura, buildDoc, validarTimbrado, docx,
+  endereco, quebra, pageBreak, assinatura, buildDoc, validarTimbrado, validarConteudo, docx,
 } = PMA;
 const { AlignmentType } = docx;
 
@@ -203,21 +205,29 @@ async function main() {
     ? args[outFlag + 1]
     : path.resolve(path.dirname(mdPath), meta.out || path.basename(mdPath).replace(/\.md$/i, '.docx'));
 
+  // `timbre: nao` no frontmatter → peça sem cabeçalho/rodapé institucionais
+  // (decisão da titular, registrada no documento — mesmo espírito do cita_em_teste).
+  const semTimbre = /^(n[aã]o|no|off|sem)$/i.test((meta.timbre || '').trim());
+
   const conteudo = compile(body);
   const saved = await buildDoc({
     titulo: meta.titulo || path.basename(mdPath, '.md'),
     processo: meta.processo || '',
     conteudo,
     outPath,
+    semTimbre,
   });
   console.log(`md2docx: ${conteudo.length} parágrafos → ${saved}`);
+  if (semTimbre) {
+    console.log('md2docx: timbre removido por decisão declarada no frontmatter (timbre: nao) — lint-docx e validação de timbrado não se aplicam a esta peça.');
+  }
 
   // Validação do ARTEFATO (PRD/lint-docx): confere fonte, margem, entrelinha,
   // cabeçalho, rodapé e banner no .docx pronto, contra perfil/marca.json.
   // Não substitui os lints de entrada — cobre o que eles não veem, que é o que
   // efetivamente sai para o juízo.
   const lintDocx = path.join(__dirname, '..', '..', '..', 'scripts', 'lint-docx.js');
-  if (fs.existsSync(lintDocx)) {
+  if (!semTimbre && fs.existsSync(lintDocx)) {
     const r = spawnSync(process.execPath, [lintDocx, saved], { encoding: 'utf8' });
     if (r.status !== 0) {
       console.error('\nmd2docx: o .docx GERADO está fora do padrão visual PMA:\n');
@@ -228,13 +238,44 @@ async function main() {
     }
   }
 
-  const v = await validarTimbrado(saved);
-  if (v.aviso) console.warn(`md2docx: AVISO — ${v.aviso}`);
-  else if (!v.ok) {
-    console.error('md2docx: TIMBRADO INVÁLIDO no .docx gerado:');
-    for (const prob of v.problemas) console.error(`  ✘ ${prob}`);
+  // O texto de entrada chegou ao arquivo gravado? Âncoras = primeiro e último
+  // parágrafo do corpo. Pega build truncado e .docx defasado, que o
+  // validarTimbrado não vê porque só olha o invólucro.
+  const textos = [];
+  let emBloco = false;
+  for (const l of body) {
+    const t = l.trim();
+    if (/^::(endereco|assinatura)\b/.test(t)) { emBloco = true; continue; }
+    if (emBloco) { if (t === '::') emBloco = false; continue; }
+    if (!t || /^(::|>|#)/.test(t)) continue;
+    textos.push(t.replace(/\*\*|\*/g, '').trim());
+  }
+  const ancoras = [textos[0], textos[textos.length - 1]].filter(Boolean);
+  const c = await validarConteudo(saved, ancoras);
+  if (c.aviso) console.warn(`md2docx: AVISO — ${c.aviso}`);
+  else if (!c.ok) {
+    console.error('md2docx: o .docx gravado NÃO contém todo o texto da fonte:');
+    for (const f of c.faltando) console.error(`  ✘ ausente: "${String(f).slice(0, 80)}…"`);
+    console.error('  Regerar; se persistir, conferir se outro processo está com o arquivo aberto.');
     process.exit(1);
-  } else console.log('md2docx: timbrado validado (cabeçalho, rodapé, distâncias).');
+  }
+
+  // Proveniência: peça nova entra pelo legal-orchestrator (redação → tipografia
+  // → validação adversarial → humanização). Compilar direto pelo builder pula
+  // três estágios — o aviso existe para que isso seja escolha, não descuido.
+  if (!meta.pipeline) {
+    console.warn('md2docx: AVISO — frontmatter sem "pipeline:". Peça nova deve passar pelo legal-orchestrator (legal-writer → tipografia-pma → legal-consistency-validator → humanizer-forense). Declare "pipeline: legal-orchestrator" quando o ciclo tiver sido cumprido.');
+  }
+
+  if (!semTimbre) {
+    const v = await validarTimbrado(saved);
+    if (v.aviso) console.warn(`md2docx: AVISO — ${v.aviso}`);
+    else if (!v.ok) {
+      console.error('md2docx: TIMBRADO INVÁLIDO no .docx gerado:');
+      for (const prob of v.problemas) console.error(`  ✘ ${prob}`);
+      process.exit(1);
+    } else console.log('md2docx: timbrado validado (cabeçalho, rodapé, distâncias).');
+  }
 }
 
 main().catch((e) => { console.error(e.message); process.exit(1); });

@@ -1,6 +1,6 @@
 ---
 name: peca-pma-builder
-version: 1.2.0
+version: 1.3.0
 description: |
   Biblioteca Node compartilhada para geração de peças jurídicas .docx no padrão PMA.
   Caminho preferido: escrever a peça em Markdown (dialeto PMA) e compilar com
@@ -45,6 +45,7 @@ layouts que o dialeto não cobre (tabelas, visual law) — para prosa corrida,
 titulo: Agravo em REsp — Fulano        ← metadados do .docx
 processo: 0000000-00.0000.8.27.2729
 out: ARESP_FULANO_FINAL.docx           ← saída (relativa ao .md)
+pipeline: legal-orchestrator           ← declara que o ciclo de redação foi cumprido
 ---
 
 ::endereco                             ← bloco de endereçamento (bold, esquerda)
@@ -86,6 +87,19 @@ valida o timbrado do arquivo gerado (`validarTimbrado`: extent da imagem,
 pgMar 708/708, rodapé institucional) e falha se houver regressão. Para
 `gerar_*.js` (API JS), rodar os lints manualmente e chamar `validarTimbrado`
 após o `buildDoc`.
+
+**Conferência de conteúdo (`validarConteudo`, desde 2026-08-04):** depois de
+gravar, o `md2docx` reabre o `.docx` e confere que o primeiro e o último
+parágrafo do corpo estão lá. O `validarTimbrado` aprova só o invólucro — numa
+peça real o arquivo entregue estava sem três linhas do cabeçalho e a compilação
+reportou sucesso, porque ninguém comparava o texto gravado com o de entrada.
+Se falhar, regerar; persistindo, conferir se o arquivo está aberto no Word.
+
+**Campo `pipeline:` no frontmatter.** Peça nova entra pelo `legal-orchestrator`
+(legal-writer → tipografia-pma → legal-consistency-validator → humanizer-forense).
+Compilar direto por aqui pula três estágios. Quando o `pipeline:` está ausente o
+`md2docx` **avisa** (não bloqueia): declarar `pipeline: legal-orchestrator`
+depois de cumprir o ciclo torna a passagem rastreável no próprio documento.
 
 ### Prosa humanizada — sem rótulos meta-textuais (decisão da usuária, 2026-07-16)
 
@@ -193,8 +207,13 @@ await buildDoc({
   outPath: 'caminho/arquivo.docx',          // obrigatório
   creator: 'PMA Advocacia',                 // opcional
   timbradoPath: 'caminho/imagem.png',       // opcional — default: assets/timbrado.png da skill
+  semTimbre: false,                         // opcional — true: sem header institucional, rodapé só "Fl. X de Y"
 });
 ```
+
+No md2docx, `semTimbre` é acionado pelo frontmatter da peça (`timbre: nao`) — decisão da
+titular registrada no documento; com ela, o lint-docx e o `validarTimbrado` são dispensados
+(a peça sai deliberadamente fora do padrão visual PMA). Os lints de conteúdo continuam valendo.
 
 O `buildDoc` aplica automaticamente:
 - A4 (11906 × 16838 twips)

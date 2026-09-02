@@ -1,6 +1,6 @@
 ---
 name: ficha-rescisao-lote
-version: 1.0.0
+version: 1.1.0
 description: |
   Apura os fatos numéricos de um caso de rescisão de compromisso de compra e
   venda de LOTE urbano (contrato + extrato de pagamento) e calcula, de forma
@@ -8,14 +8,20 @@ description: |
   a sugestão de valor da causa e o texto de pedido — eliminando os erros de
   aritmética e de leitura "no olhômetro". Emite uma FICHA_CASO.md que pré-preenche
   os placeholders do template TEMPLATE_INICIAL_RESCISAO_LOTE.md. Use sempre antes
-  de redigir a inicial de rescisão de lote, logo após converter os PDFs com pdfmd.
+  de redigir QUALQUER peça de rescisão de lote — inicial, réplica/impugnação à
+  contestação, contestação, apelação, contrarrazões ou cumprimento de sentença —
+  logo após converter os PDFs com pdfmd.
 ---
 
 # ficha-rescisao-lote — Ficha e calculadora da inicial de rescisão de lote
 
 ## Quando usar
 
-Sempre que for redigir uma **inicial de rescisão de compromisso de compra e venda de lote urbano** (Lei 6.766/79), logo após converter contrato e extrato com `pdfmd`. Substitui a apuração manual dos números — que num caso real de jul/2026 produziu erro de valor da causa e leitura equivocada de percentuais.
+Sempre que for redigir **qualquer peça de rescisão de compromisso de compra e venda de lote urbano** (Lei 6.766/79), logo após converter contrato e extrato com `pdfmd`. Substitui a apuração manual dos números — que num caso real de jul/2026 produziu erro de valor da causa e leitura equivocada de percentuais.
+
+**Não é só para a inicial** (correção de 2026-08-04). A versão 1.0 dizia "antes de redigir a inicial", e por isso a skill não foi acionada numa **réplica** do mesmo tema: a peça afirmou que o cliente não pagara sinal quando o contrato registrava R$ 1.339,96 no campo "sinal de negócio", e citou três números de cláusula diferentes lidos por OCR. Os dois erros são exatamente os que esta skill existe para impedir. Vale para inicial, réplica/impugnação à contestação, contestação, apelação, contrarrazões e cumprimento de sentença.
+
+Na peça de resposta, a ficha ganha uma coluna a mais: além dos números do próprio cliente, registrar **os números que a parte contrária afirma** (total pago, valor atualizado, IPTU, percentuais) e a divergência entre as duas colunas. A divergência costuma ser o melhor argumento da peça, e só aparece quando as duas contas estão lado a lado.
 
 ## Por que existe
 
