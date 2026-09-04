@@ -445,3 +445,7 @@ Esta skill não emite parecer sobre essas matérias — apenas sinaliza e encami
 ## REFERÊNCIAS DO NOTEBOOKLM
 
 Baseado em 33 fontes especializadas: petições reais tipografadas (PDFs), transcrições de workshops de tipografia jurídica, análises de peças processuais (iniciais, réplicas, contestações), guias de design de informação jurídica e material sobre contratos, procurações e convencimento judicial.
+
+---
+
+**Leitura complementar:** [`references/leitura-do-juiz.md`](references/leitura-do-juiz.md) — como o juiz lê e a ordem dos blocos (síntese na primeira página, tutela depois dos fatos).

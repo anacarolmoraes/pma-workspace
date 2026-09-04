@@ -65,7 +65,7 @@ Parágrafo que começa com sujeito novo sem ancoragem no parágrafo anterior é 
 
 ### Léxico de conectivos por função (padrão PMA)
 
-Conjunto verificado nas peças-ouro Bolívar e Alex. Varie dentro de cada função; não repita o mesmo conectivo em parágrafos consecutivos.
+Conjunto verificado nas peças-ouro A e B (golpe bancário, camada C1). Varie dentro de cada função; não repita o mesmo conectivo em parágrafos consecutivos.
 
 - **Retomada**: "essa", "esse cenário", "a partir daí", "no caso em apreço", "no caso em tela", "na hipótese dos autos".
 - **Consequência / decorrência**: "de modo que", "razão pela qual", "daí", "ao ponto de", "tanto que", "assim", "portanto".
@@ -126,7 +126,7 @@ Isso não é ementa. É raciocínio do modelo formatado como se fosse.
 ### Linguagem
 
 - Elimine: "destarte", "outrossim", "com fulcro", "restou comprovado", "posto que" como conjunção causal, "à luz" como muleta repetida, "no sentido de que" em excesso.
-- Prefira o léxico de conectivos da seção homônima acima, em particular "já que", "porquanto", "na medida em que", "de modo que", "ainda que", "razão pela qual", "ainda assim", "por sua vez", "de igual modo", "nesse contexto", "tampouco", "ao passo que", calibrados pelas peças-ouro Bolívar e Alex.
+- Prefira o léxico de conectivos da seção homônima acima, em particular "já que", "porquanto", "na medida em que", "de modo que", "ainda que", "razão pela qual", "ainda assim", "por sua vez", "de igual modo", "nesse contexto", "tampouco", "ao passo que", calibrados pelas peças-ouro A e B (golpe bancário, camada C1).
 - Nunca use "Pasma, Excelência!" ou equivalentes emotivos.
 - Nunca cite "dignidade da pessoa humana" como argumento principal. Use fatos concretos.
 - Não escreva "nos termos da tática de ancoragem" ou qualquer referência ao processo de redação dentro do texto final. O produto é a petição, não a explicação de como ela foi escrita.
@@ -183,7 +183,7 @@ Inconsistência numérica é o erro mais fácil de atacar na contestação e o m
 
 ## Encadeamento Canônico — Inicial PMA
 
-Quando a peça for **petição inicial em ação cível** no padrão PMA (domínio principal: golpes bancários e correlatos), siga, salvo motivo concreto para divergir, a ordem das peças-ouro Bolívar e Alex:
+Quando a peça for **petição inicial em ação cível** no padrão PMA (domínio principal: golpes bancários e correlatos), siga, salvo motivo concreto para divergir, a ordem das peças-ouro A e B (golpe bancário, camada C1):
 
 1. Endereçamento ao juízo (vara, comarca, estado), em negrito à esquerda.
 2. Qualificação completa do autor, em parágrafo único justificado, encerrada pelo verbo de propositura.

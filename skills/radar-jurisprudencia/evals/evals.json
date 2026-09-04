@@ -9,7 +9,7 @@
     },
     {
       "id": 2,
-      "prompt": "busca no djen decisões que ajudem na réplica do caso da pasta clientes/Irineu, de 01/03/2025 pra cá",
+      "prompt": "busca no djen decisões que ajudem na réplica do caso da pasta clientes/<caso>, de 01/03/2025 pra cá",
       "expected_output": "Skill lê os documentos do caso, extrai a(s) tese(s) defensiva(s) e o lado do cliente, enuncia as teses ao usuário, respeita o período pedido (2025-03-01 em diante) e produz o dossiê de 5 por tese. 'Favorável' avaliado pelo conteúdo (improcedência pode ser favorável à defesa).",
       "files": []
     },

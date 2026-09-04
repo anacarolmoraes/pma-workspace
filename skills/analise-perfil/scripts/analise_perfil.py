@@ -7,7 +7,7 @@ validador-extrato-pdf-excel), fixa o BASELINE de saídas do correntista
 (excluída a janela do golpe) e isola o CLUSTER fraudulento de um dia,
 com os múltiplos de divergência. Reproduzível: mesmo input -> mesmo output.
 
-Ambiente OBRIGATÓRIO: D:\\WORK\\advocacia\\adv_env\\Scripts\\python.exe
+Ambiente OBRIGATÓRIO: o Python de perfil/ambiente.json (adv_env), nunca o do sistema.
 
 Uso:
   python analise_perfil.py \

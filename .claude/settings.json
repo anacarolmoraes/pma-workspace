@@ -5,21 +5,33 @@
       {
         "matcher": "Read|Write|Edit|Grep|Glob|Bash|PowerShell|NotebookEdit",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/block-secrets.js",
-            "timeout": 10
-          }
+          { "type": "command", "command": "node hooks/block-secrets.js", "timeout": 10 }
         ]
       },
       {
         "matcher": "Read",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/block-md-integral.js",
-            "timeout": 10
-          }
+          { "type": "command", "command": "node hooks/block-md-integral.js", "timeout": 10 },
+          { "type": "command", "command": "node hooks/block-pdf.js", "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "node hooks/protect-gates.js", "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "node hooks/block-comandos.js", "timeout": 10 }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "node hooks/block-dado-caso.js", "timeout": 10 },
+          { "type": "command", "command": "node hooks/require-leitura.js", "timeout": 15 }
         ]
       }
     ],
@@ -27,11 +39,7 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/session-start.js",
-            "timeout": 10
-          }
+          { "type": "command", "command": "node hooks/session-start.js", "timeout": 10 }
         ]
       }
     ],
@@ -39,11 +47,15 @@
       {
         "matcher": "",
         "hooks": [
-          {
-            "type": "command",
-            "command": "node hooks/pre-compact.js",
-            "timeout": 15
-          }
+          { "type": "command", "command": "node hooks/pre-compact.js", "timeout": 15 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "node hooks/stop-peca-compilada.js", "timeout": 30 }
         ]
       }
     ]

@@ -14,45 +14,13 @@ if (process.env.CLAUDE_INVOKED_BY) process.exit(0);
 
 const fs = require('fs');
 const path = require('path');
+const { RAIZ, lerStdin, usosDeFerramenta, arquivosEscritos } = require('./lib/transcript');
 
-const RAIZ = path.resolve(__dirname, '..');
 const DESTINO = path.join(RAIZ, 'scratch', 'sessoes');
 const MAX_ARQUIVOS = 40;
 
 const iso = () => new Date().toISOString();
 const dia = () => iso().slice(0, 10);
-
-function arquivosTocados(transcriptPath) {
-  const tocados = [];
-  const vistos = new Set();
-  let bruto;
-  try {
-    bruto = fs.readFileSync(transcriptPath, 'utf8');
-  } catch {
-    return tocados;
-  }
-  for (const linha of bruto.split('\n')) {
-    if (!linha.trim()) continue;
-    let ev;
-    try {
-      ev = JSON.parse(linha);
-    } catch {
-      continue;
-    }
-    const blocos = ev?.message?.content;
-    if (!Array.isArray(blocos)) continue;
-    for (const b of blocos) {
-      if (b?.type !== 'tool_use') continue;
-      const nome = b.name || '';
-      if (!/^(Edit|Write|NotebookEdit)$/.test(nome)) continue;
-      const p = b.input?.file_path || b.input?.notebook_path;
-      if (!p || vistos.has(p)) continue;
-      vistos.add(p);
-      tocados.push({ ferramenta: nome, arquivo: path.relative(RAIZ, p) || p });
-    }
-  }
-  return tocados;
-}
 
 function main(bruto) {
   let entrada = {};
@@ -66,7 +34,12 @@ function main(bruto) {
   const transcript = entrada.transcript_path || '';
   const gatilho = entrada.trigger || 'auto';
 
-  const tocados = transcript ? arquivosTocados(transcript) : [];
+  const tocados = transcript
+    ? arquivosEscritos(usosDeFerramenta(transcript)).map((t) => ({
+        ferramenta: t.ferramenta,
+        arquivo: path.relative(RAIZ, t.arquivo) || t.arquivo,
+      }))
+    : [];
 
   const linhas = [
     `\n---\n`,
@@ -94,8 +67,4 @@ function main(bruto) {
   process.exit(0);
 }
 
-let buf = '';
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', (c) => (buf += c));
-process.stdin.on('end', () => main(buf));
-process.stdin.on('error', () => process.exit(0));
+lerStdin(main);

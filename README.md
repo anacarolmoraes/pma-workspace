@@ -205,7 +205,8 @@ O acervo de teses e jurisprudência fica no **outro** repositório, o `arsenal-j
 
 ## 9. Para quem quiser ir além
 
-- Fluxos técnicos e API do gerador de peças: [GUIA_TECNICO.md](GUIA_TECNICO.md)
+- Dialeto das peças e API do gerador de `.docx`: [skills/peca-pma-builder/SKILL.md](skills/peca-pma-builder/SKILL.md)
+- Registro das skills: [SKILLS.md](SKILLS.md)
 - Regras canônicas que a IA obedece: [AGENTS.md](AGENTS.md)
 - Definições jurídicas do escritório: [perfil/definicoes.md](perfil/definicoes.md)
 

@@ -4,7 +4,9 @@
   "private": true,
   "description": "Motor do workspace juridico da Paulo Moraes Advocacia",
   "scripts": {
-    "setup": "node scripts/setup.js"
+    "setup": "node scripts/setup.js",
+    "test": "node hooks/_teste-block-secrets.js && node hooks/_teste-block-md-integral.js && node hooks/_teste-portoes.js && node scripts/lint-skills.js --errors-only",
+    "registro": "node scripts/lint-skills.js --registro"
   },
   "dependencies": {
     "docx": "^9.6.1"

@@ -6,7 +6,7 @@ description: |
   numa peça. Fonte única: nenhuma skill deve repetir estas definições, apenas apontar
   para cá.
 status: vigente
-verificado_em: 2026-07-26
+verificado_em: 2026-09-04
 ---
 
 # Definições canônicas — Paulo Moraes Advocacia
@@ -148,5 +148,6 @@ gera página.
 ## Manutenção
 
 Alterar uma definição aqui é alterar o comportamento de todas as peças. Ao mudar:
-registrar a data em `verificado_em`, e conferir se alguma skill voltou a duplicar a regra
-(o `lint-contradicoes` do PRD F2.3 detecta).
+registrar a data em `verificado_em`, e conferir se alguma skill voltou a duplicar a regra:
+`grep -rn "valor da causa|entrelinha|OAB/TO" skills/*/SKILL.md`. (O `lint-contradicoes`
+previsto no PRD F2.3 não foi construído; até existir, a conferência é esse grep.)
