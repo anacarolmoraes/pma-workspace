@@ -160,21 +160,48 @@ Passa a:
 
 ## Bloco 3 — Saneamento do arsenal
 
-### F3.1 — Consertar `lint-bundle.py` *(faz tudo o mais valer)*
+### F3.1 — Consertar `lint-bundle.py` — **EXECUTADO em 02/09/2026** (commit `e33e25e`)
 
-Ensinar o lint a ler o grafo do frontmatter, não só os links do corpo:
+Feito. O lint montava o grafo do acervo **só** com link markdown no corpo (`RX_LINK`).
+Existiam três formas de aresta em uso, e ele lia uma:
 
-- `E5` e `W1` passam a considerar as listas YAML (`fundamentos:`, e os demais campos que
-  apontam para arquivo) como aresta legítima do grafo;
-- `E4` passa a aceitar o campo `raw:` já existente — a lógica está lá, mas convive com o
-  mesmo ponto cego.
+1. link markdown no corpo — `[texto](/jurisprudencia/x.md)`
+2. **campo de frontmatter** — `fundamentos:`, `raw:`, `playbook:`, `casos_origem:`,
+   `teses:`, `licoes:`, `teses_aplicadas:`, `superseded_by:` (273 referências no acervo)
+3. **caminho absoluto nu no corpo** — convenção do `atividades.md` e dos `index.md`
+   (`- **Workflow:** /workflows/x.md`), 317 arestas
 
-Efeito medido: **−17 erros e −268 avisos**, sem tocar em uma linha de conteúdo. O painel cai
-de 49/328 para **32 erros / 60 avisos**, e todos passam a ser verdadeiros.
+Achado extra, mesma família: o **W1 tratava arquivo de `raw/` como página órfã**, embora
+E1, E2 e E3 já o pulem — e o próprio comentário do módulo declare que `raw/` é camada de
+depósito, alvo do E4 e não sujeito dele. Eram 282 dos 336 avisos.
 
-**Teste de regressão obrigatório:** a tese `retencao-escalonada-regime-anterior-10-a-25-por-cento.md`
-deve deixar de acusar `E5`, e `sumula-543-stj.md` deve deixar de acusar `W1` — ela é citada
-por cinco páginas, incluindo duas teses.
+| código | antes | depois | |
+|---|---:|---:|---|
+| `E5-tese-sem-fundamento` | 17 | **0** | 17 de 17 eram falso positivo |
+| `W1-orfa` | 336 | **22** | 282 de `raw/`, 32 com aresta invisível |
+| `E2-link-quebrado` | 3 | **5** | 2 novos, **reais** |
+| E6 / W3 / E4 / E3 / E1 | 16/11/1/1/1 | 16/11/1/1/1 | preservados |
+| **total** | 39 erros, 347 avisos | **24 erros, 33 avisos** | |
+
+**Como se garantiu que não virou falso negativo.** Baseline salva antes de editar e
+diferença conferida item a item: sumiram exatamente 17 E5 e 314 W1, nada mais. Cada um dos
+17 E5 foi verificado como tendo `fundamentos:` válido apontando para acórdão/súmula/lei
+existente. Das 32 páginas curadas que deixaram de ser órfãs, amostra conferida por busca
+textual independente da lógica do lint — todas com aresta real de frontmatter. As 22 órfãs
+restantes foram reconferidas por fora: são legítimas (citadas só pelo `index.md`, que é
+justamente o que o W1 mede).
+
+A detecção é **por resolução, não por lista de campos**: um valor só vira aresta se apontar
+para arquivo existente. Campo novo entra no grafo sozinho, sem manutenção no lint, e um
+`title:` que por acaso contenha ".md" não cria aresta falsa. Caminho nu **só acrescenta**
+aresta e nunca gera E2 — prosa que menciona página ainda não escrita é plano, não link
+quebrado.
+
+**Os 2 E2 novos são achado de conteúdo:** as teses de `pecas/sucumbencia/` usam
+`/jurisprudencia/...` esperando a raiz do sub-bundle, mas `/` resolve na raiz do bundle
+(`pecas/`). São 4 páginas que não se enxergam — corrigir junto com F3.4.
+
+O painel agora é verdadeiro, então **F3.6 (ligar o portão) está destravado**.
 
 ### F3.2 — Depositar os 11 inteiros teores — **EXECUTADO em 29/08/2026 (10 de 11)**
 
@@ -368,8 +395,8 @@ O resto pode ser paralelizado.
 | Linhas com `caso` preenchido | 8 / 224 | **100%** |
 | Linhas com `responsavel` | 0 | **100%** |
 | Linhas do hook na abertura da sessão | ~20 | **≤ 8** |
-| Erros do `lint-bundle` | 49 (17 falsos) | **0 reais** |
-| Avisos do `lint-bundle` | 328 (268 falsos) | **≤ 60, todos verdadeiros** |
+| Erros do `lint-bundle` | ~~49~~ **24**, todos verdadeiros | **0** |
+| Avisos do `lint-bundle` | ~~328~~ **33**, todos verdadeiros | **≤ 60** ✅ |
 | Acórdãos `vigente` sem inteiro teor | ~~11~~ **1** | **0** |
 | Bundles com `atividades.md` | 7 / 43 | **≥ 15**, cobrindo os quentes |
 | Tamanho do `.git` do arsenal | 155 MB | **< 100 MB** |

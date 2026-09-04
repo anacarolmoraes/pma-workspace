@@ -14,6 +14,7 @@
 |---|---|---|
 | `PreToolUse` | [`hooks/block-secrets.js`](hooks/block-secrets.js) | bloqueia leitura de credencial (`.env`, `*.pem`, token do gws, `mcp_config.json`). **Não** bloqueia documento de cliente |
 | `SessionStart` | [`hooks/session-start.js`](hooks/session-start.js) | em máquina nova (sem `perfil/usuario.md` ou `perfil/ambiente.json`), manda configurar e cala o resto; caso contrário injeta a fila do DJEN e alerta se o monitor estiver parado há mais de 36 h |
+| `PreToolUse` (só `Read`) | [`hooks/block-md-integral.js`](hooks/block-md-integral.js) | bloqueia leitura integral do `.md` canônico longo de bundle `pdfmd` (>300 linhas com `.pdfmd.json` irmão); usar `node skills/pdfmd/scripts/ler-pdfmd.js <md> --mapa` |
 | `PreCompact` | [`hooks/pre-compact.js`](hooks/pre-compact.js) | grava o estado da sessão em `scratch/sessoes/` antes da compactação |
 
 Todo processo filho deve setar `CLAUDE_INVOKED_BY` — os hooks verificam e saem, para não
@@ -45,7 +46,7 @@ Acionar assim que o gatilho aparecer, sem perguntar:
 | consumir/ingerir canal ou vídeos do YouTube, KB de canal | `consumir-canal-youtube` |
 | PDF sem `.md` irmão | `pdfmd` |
 | transcrição de áudio | `whisper-transcriber` |
-| relatório ou parecer | `relatorio` |
+| relatório ou parecer | `relatorio` (comando em `.claude/commands/`, não em `skills/`) |
 
 Rodar `node scripts/lint-skills.js` depois de criar ou mover skill.
 
@@ -64,11 +65,18 @@ investigação. Não serve para: norma, definição, padrão de peça.
 
 ## Planos em andamento
 
+- [`planos/2026-08-29_prd-equipe-e-saneamento.md`](planos/2026-08-29_prd-equipe-e-saneamento.md)
+  — fila do DJEN em equipe, saneamento do arsenal e onboarding. Blocos 0, 3 e 4 aprovados;
+  o Bloco 2 (faxina do motor) ficou fora de escopo e segue pendente. **F3.1 executada em 02/09**:
+  o `lint-bundle` passou a ler as três formas de aresta do grafo e o painel caiu para 24 erros /
+  33 avisos, todos verdadeiros — o que destrava F3.6 (ligar o portão).
 - [`planos/2026-08-03_prd-saneamento-e-colheita-lcc.md`](planos/2026-08-03_prd-saneamento-e-colheita-lcc.md)
   — saneamento operacional (fila DJEN, quarentena do `resp-stj-pipeline/`, higiene C1 no git,
   faxina de skills) + colheita de 7 ideias do `legal-context-compiler-prd` (decisão: **não**
-  construir o app). **Rascunho aguardando aprovação da titular.** F1 (fila DJEN) e F2.1
-  (gitignore do `resp-stj-pipeline/`) são urgentes independentemente do resto.
+  construir o app). **Rascunho aguardando aprovação da titular.** F1 (fila DJEN) é urgente
+  independentemente do resto. F2 concluída em 03/09: `resp-stj-pipeline/` saiu do git e
+  mora em `_arquivo/2026-09/` (fora do git); F2.2/F2.3 (destino do caso, colheita de ideias) seguem
+  como portões da titular, ver `NOTAS.md` no arquivo.
 - [`planos/2026-08-02_prd-leitura-semantica-stj.md`](planos/2026-08-02_prd-leitura-semantica-stj.md)
   — leitura semântica de julgados do STJ e consumo do RISTJ. **Executado em 02/08 (F1 a F7).**
   Novidades que mudam o dia a dia: o `lint-citacoes` agora **bloqueia** citação cuja voz é de
@@ -77,12 +85,13 @@ investigação. Não serve para: norma, definição, padrão de peça.
   artigo; a `banca-revisora` ganhou checklist regimental que bloqueia protocolo. Pendências
   são de conteúdo, não de código — ver "Estado da execução" no PRD.
 - [`planos/2026-07-28_prd-versionamento-e-modularizacao.md`](planos/2026-07-28_prd-versionamento-e-modularizacao.md)
-  — repositório da equipe em 8 fases. **Fases 1 a 3 e 6 executadas** em 28/07 (histórico limpo,
-  instalador multiplataforma, entrevista de primeiro uso, documentação). Pendentes: migração do
-  acervo local para o `arsenal-juridico` (Fase 4), triagem final de skills (Fase 5), publicação
-  no GitHub (Fase 7) e repositório de marketing (Fase 8).
+  — repositório da equipe em 8 fases. **Fases 1 a 6 e 8 executadas** (28/07 e 02/08): histórico
+  limpo, instalador multiplataforma, entrevista de primeiro uso, documentação, acervo migrado ao
+  `arsenal-juridico`, triagem de skills e marketing em repo próprio (`pma-marketing`). Pendentes:
+  publicação no GitHub (Fase 7) e o portão da titular para apagar as pastas de tema locais.
 - [`planos/2026-07-26_prd-infra-agente.md`](planos/2026-07-26_prd-infra-agente.md) — camada de
-  verificação e infraestrutura. **Executado** em 26/07, exceto os 26 erros de conteúdo do
-  `lint-bundle` (teses sem fundamento rastreável, acórdãos `vigente` sem inteiro teor).
+  verificação e infraestrutura. **Executado** em 26/07, exceto os erros de conteúdo do
+  `lint-bundle` — **24** depois do conserto do medidor em 02/09, todos verdadeiros (acórdão
+  `vigente` sem inteiro teor, espelho inválido).
 - [`planos/2026-07-26_prd-motor-whitelabel.md`](planos/2026-07-26_prd-motor-whitelabel.md) —
   extração do motor como produto. **Adiado por decisão da titular**; depende do anterior.
