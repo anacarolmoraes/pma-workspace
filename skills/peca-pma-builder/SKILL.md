@@ -80,8 +80,9 @@ local: Palmas — TO, 13 de julho de 2026.
 ::
 ```
 
-**Portões automáticos:** o `md2docx.js` roda sozinho o `lint-remissoes.js` e o
-`lint-ia.js` (humanizer-forense) antes de compilar — se algum falhar, o .docx
+**Portões automáticos:** antes de compilar, o `md2docx.js` exige o rastro do
+pipeline (abaixo) e roda sozinho o `lint-remissoes.js`, o `lint-ia.js`
+(humanizer-forense) e o `lint-citacoes.js` — se algum falhar, o .docx
 NÃO é gerado (`--skip-lint` pula, só para emergências). Após compilar, ele
 valida o timbrado do arquivo gerado (`validarTimbrado`: extent da imagem,
 pgMar 708/708, rodapé institucional) e falha se houver regressão. Para
@@ -95,11 +96,19 @@ peça real o arquivo entregue estava sem três linhas do cabeçalho e a compila�
 reportou sucesso, porque ninguém comparava o texto gravado com o de entrada.
 Se falhar, regerar; persistindo, conferir se o arquivo está aberto no Word.
 
-**Campo `pipeline:` no frontmatter.** Peça nova entra pelo `legal-orchestrator`
-(legal-writer → tipografia-pma → legal-consistency-validator → humanizer-forense).
-Compilar direto por aqui pula três estágios. Quando o `pipeline:` está ausente o
-`md2docx` **avisa** (não bloqueia): declarar `pipeline: legal-orchestrator`
-depois de cumprir o ciclo torna a passagem rastreável no próprio documento.
+**Rastro do pipeline (portão, desde 2026-09-04).** Peça nova entra pelo
+`legal-orchestrator` (legal-writer → tipografia-pma → legal-consistency-validator
+→ humanizer-forense). Compilar direto por aqui pulava três estágios, e o aviso
+antigo não impedia nada. Agora o `md2docx` **bloqueia** (exit 1) se faltar:
+
+| Exigência | O que é |
+|---|---|
+| `pipeline:` no frontmatter | `pipeline: legal-orchestrator`, declarado depois de cumprido o ciclo |
+| `bundle:` no frontmatter | `bundle: direito/<tema>` do acervo — ou `bundle: nenhum` se a peça não tem matéria de acervo. O hook `require-leitura` exige que esse bundle tenha sido lido na sessão |
+| `<PECA>.validacao.md` | veredito gravado pelo `legal-consistency-validator` ao lado da peça, com `veredito:` no frontmatter, **mais novo** que o `.md` e diferente de `REPROVADO` |
+
+Peça editada depois do veredito = veredito velho: revalidar. O artefato prova que
+o veredito existe e é posterior à última edição — não que a validação foi boa.
 
 ### Prosa humanizada — sem rótulos meta-textuais (decisão da usuária, 2026-07-16)
 

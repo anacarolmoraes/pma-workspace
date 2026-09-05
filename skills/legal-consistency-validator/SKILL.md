@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.2.0
+version: 2.3.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -75,9 +75,10 @@ Procure ativamente:
 
 Para cada citação jurisprudencial, verifique:
 
-1. **Formato**: A ementa está entre aspas ou em bloco recuado com referência completa (tribunal, câmara, número, data)?
-2. **Autenticidade aparente**: O texto da ementa usa linguagem de tribunal (objetiva, em terceira pessoa, sem travessões em cadeia formatados como raciocínio LLM)?
-3. **Aplicabilidade**: A jurisprudência citada cobre especificamente o ponto argumentativo para o qual foi invocada, ou é uma citação genérica que não sustenta a conclusão?
+1. **Formato**: A ementa está em bloco recuado (`>`) com referência completa (tribunal, câmara, número, data)?
+2. **Fonte no acervo**: A transcrição tem página correspondente no bundle declarado em `bundle:` no frontmatter da peça? Citação sem página no acervo é CRÍTICO, salvo se a peça a apresenta como indireta e diz que o acervo não cobre o ponto. (O `lint-citacoes` confere a literalidade depois; aqui se confere que a fonte existe.)
+3. **Autenticidade aparente**: O texto da ementa usa linguagem de tribunal (objetiva, em terceira pessoa, sem travessões em cadeia formatados como raciocínio LLM)?
+4. **Aplicabilidade**: A jurisprudência citada cobre especificamente o ponto argumentativo para o qual foi invocada, ou é uma citação genérica que não sustenta a conclusão?
 
 **Sinal de alerta de ementa fabricada:**
 > *"padrão incompatível — dever violado — responsabilidade configurada — Súmula X"*
@@ -144,6 +145,29 @@ Toda fraqueza detectada deve receber uma classificação:
 
 ---
 
+## Registro do veredito (arquivo ao lado da peça)
+
+O veredito não fica só na conversa. Quando a peça é um `.md` em `clientes/`, gravar o output
+completo em `<PECA>.validacao.md`, na mesma pasta (para `INICIAL_RESCISAO.md`, o arquivo é
+`INICIAL_RESCISAO.validacao.md`), com este frontmatter:
+
+```markdown
+---
+peca: INICIAL_RESCISAO.md
+veredito: APROVADO | APROVADO COM RESSALVAS | REPROVADO
+validado_em: 2026-09-04T15:40
+---
+```
+
+Esse arquivo é o rastro que o `md2docx` confere antes de compilar: sem ele, com
+`veredito: REPROVADO`, ou com data de gravação anterior à última edição do `.md`, a peça não
+compila. Por isso, **cada nova rodada de validação sobrescreve o arquivo**, e qualquer edição
+da peça depois do veredito exige rodar o validator de novo. Não editar o arquivo à mão para
+mudar o veredito: quem muda o veredito é a peça corrigida.
+
+O arquivo não é peça (não leva `titulo:`/`processo:`/`pipeline:`), então não dispara os hooks
+de peça. Contém só o output abaixo; nunca dado pessoal além do que a própria peça já traz.
+
 ## Output — Schema Fixo
 
 Use este formato exato. O orchestrator depende desta estrutura para decidir se há loop de correção.
@@ -162,7 +186,7 @@ Use este formato exato. O orchestrator depende desta estrutura para decidir se h
 
 | # | Severidade | Localização | Problema | Correção Exata |
 |---|---|---|---|---|
-| 1 | CRÍTICO | Seção II.2, parágrafo 3 | Ementa com travessões fabricados | Substituir por citação indireta com referência completa |
+| 1 | CRÍTICO | Seção II.2, parágrafo 3 | Ementa com travessões fabricados | Substituir pela transcrição literal da página do bundle (`jurisprudencia/`), com fonte; se o acervo não cobre, remover e dizer que não cobre |
 | 2 | ALTO | Pedido E vs. FIRAC | Valor de danos morais divergente (R$ 20k vs. R$ 15k) | Equalizar para R$ 20k em toda a peça e ajustar valor da causa |
 
 ---

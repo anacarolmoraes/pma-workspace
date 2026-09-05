@@ -31,7 +31,9 @@ const pecaCompilada = path.join(caso, 'CONTESTACAO.md');
 const pecaSemDocx = path.join(caso, 'REPLICA.md');
 const pecaRascunho = path.join(caso, 'AGRAVO.md');
 const naoPeca = path.join(caso, 'NOTAS.md');
-const fm = (extra = '') => `---\ntitulo: X\nprocesso: 0000000-00.0000.8.27.2729\n${extra}---\n\n# I. Tese\n\nTexto.\n`;
+// `bundle: nenhum` porque o require-leitura passou a exigir o campo (2026-09-04);
+// aqui o que se testa é a leitura das definições, não o rastro do acervo.
+const fm = (extra = '') => `---\ntitulo: X\nprocesso: 0000000-00.0000.8.27.2729\nbundle: nenhum\n${extra}---\n\n# I. Tese\n\nTexto.\n`;
 fs.writeFileSync(pecaCompilada, fm());
 fs.writeFileSync(pecaSemDocx, fm());
 fs.writeFileSync(pecaRascunho, fm('rascunho: sim\n'));

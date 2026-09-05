@@ -1,10 +1,11 @@
 ---
 name: legal-orchestrator
-version: 4.2.0
+version: 4.3.0
 description: |
-  Orquestra o pipeline completo de geração de peças jurídicas: redação argumentativa (legal-writer), 
-  padronização tipográfica (tipografia-pma), validação adversarial (legal-consistency-validator) e 
-  humanização seletiva (humanizer em modo jurídico). Use sempre que o usuário pedir para criar, 
+  Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
+  acervo, redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
+  adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
+  seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
   elaborar, redigir ou revisar uma peça processual completa — inicial, contestação, recurso, 
   manifestação, agravo, embargos ou qualquer documento jurídico formal. Triggers: "faça a petição", 
   "elabore a inicial", "construa o recurso", "redija a contestação", "monte a peça".
@@ -29,8 +30,22 @@ Antes de iniciar qualquer estágio, confirme que você possui:
 | Pedidos finais | O texto inteiro serve aos pedidos — comece sabendo quais são |
 | Documentos disponíveis | Define o que pode ser citado como prova |
 | Valor da causa pretendido | Inconsistência de valores é o erro mais atacável |
+| Bundle da matéria | Nome da pasta em `<bundles>/direito/<tema>` que sustenta a tese; vai para o frontmatter da peça como `bundle:` |
 
 Se mais de dois desses itens estiverem ausentes, pare e solicite ao usuário antes de prosseguir.
+
+## Rastro obrigatório (o que o pipeline deixa gravado)
+
+Cada estágio deixa um rastro que o portão seguinte confere. Sem o rastro, o passo não aconteceu, por mais que o texto diga que sim.
+
+| Rastro | Quem grava | Quem confere |
+|---|---|---|
+| Leitura de `perfil/definicoes.md` e `perfil/usuario.md` | a sessão, antes da primeira gravação da peça | hook `require-leitura` |
+| `bundle: direito/<tema>` no frontmatter e leitura de ao menos um arquivo desse bundle | Estágio 0 | hook `require-leitura` |
+| `<PECA>.validacao.md` ao lado da peça, com `veredito:` no frontmatter | Estágio 3 (o validator grava) | `md2docx`, que recusa compilar sem veredito, com veredito REPROVADO ou com veredito mais antigo que a última edição do `.md` |
+| `pipeline: legal-orchestrator` no frontmatter | Estágio 7, depois de cumprido o ciclo | `md2docx` |
+
+Peça sem matéria de acervo (manifestação puramente processual, por exemplo) declara `bundle: nenhum`. A decisão fica no documento, não numa exceção do portão.
 
 ## Estágio 0 — Inventário das fontes do caso (SEMPRE EXECUTE, ANTES DE TUDO)
 
@@ -44,6 +59,10 @@ Não redija com o que está à mão. Levante o que existe, **em dois lugares**, 
 Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em PDF. A réplica foi redigida sem a inicial e sem o contrato, e afirmou que o cliente não pagara sinal — o contrato registrava R$ 1.339,96 no campo "sinal de negócio", e a inicial pedia justamente a devolução dele. Os dois documentos estavam no Drive desde 2018.
 
 **Portão:** se faltar a peça anterior ou o documento que sustenta os valores, **pare e peça** — não redija com placeholder, e não infira o número a partir do que a parte contrária afirma. Quando o tema tiver skill de apuração numérica (ex.: `ficha-rescisao-lote` para rescisão de lote), rodá-la aqui, antes do Estágio 1, e usar a ficha como fonte dos valores da peça.
+
+3. **Acervo (arsenal-juridico).** Abrir `<bundles>/index.md` (o roteador), escolher o bundle da matéria e ler, dentro dele, `index.md`, `jurisprudencia/`, `teses/`, `heuristicas/` e `casos_decididos/`; depois `direito/pecas/<tipo>/` para a técnica da peça. O caminho de `<bundles>` está em `perfil/ambiente.json`. O nome do bundle escolhido vai para o frontmatter da peça (`bundle: direito/<tema>`) antes da primeira gravação: o hook `require-leitura` bloqueia a gravação se o campo falta ou se nenhum arquivo daquele bundle foi lido na sessão.
+
+**Portão:** toda tese empregada tem página no bundle. Se o acervo não cobre o ponto, a peça diz que não cobre; não se cita precedente de memória (AGENTS.md, regra dura 3). Página `status: em_teste` não foi conferida contra a fonte oficial: citá-la exige `cita_em_teste: sim` no frontmatter ou a promoção da página a `vigente` depois da conferência.
 
 ---
 
@@ -88,10 +107,10 @@ Aplique a tipografia-pma ao texto produzido pelo Estágio 1.
 - A hierarquia dos argumentos (principal e subsidiários)
 
 **Ajuste:**
-- Titulação em algarismos romanos (I., I.1., etc.)
-- Pedidos em letras maiúsculas com parênteses (A), B), C))
-- Configuração de fonte e espaçamento conforme padrão do escritório
-- Citações em bloco com recuo de 3 cm, fonte menor, sem aspas e sem itálico
+- Titulação em algarismos romanos (I., I.1., etc.), escrita no dialeto PMA (`#` e `##`; ver `skills/peca-pma-builder/SKILL.md`)
+- Endereçamento, capítulo I, gratuidade, valor da causa e assinatura conforme `perfil/definicoes.md` (a skill aponta, não repete)
+- Citações em bloco (`>`), com a identificação completa do julgado colada à transcrição
+- Tipografia: não se configura aqui; o `md2docx` aplica `perfil/marca.json`
 
 **Critério de conclusão do Estágio 2:**
 A estrutura visual está aplicada e nenhum argumento foi fragmentado ou removido.
@@ -101,6 +120,8 @@ A estrutura visual está aplicada e nenhum argumento foi fragmentado ou removido
 ## Estágio 3 — Validação Adversarial (SEMPRE EXECUTE)
 
 Execute o legal-consistency-validator no texto resultante do Estágio 2.
+
+O validator grava o veredito em `<PECA>.validacao.md`, ao lado da peça (formato na seção "Registro do veredito" do validator). Esse arquivo é o rastro que o `md2docx` confere: sem ele, ou com ele mais antigo que a última edição do `.md`, a peça não compila. Toda edição da peça depois deste estágio exige nova validação, e portanto novo arquivo.
 
 **Leia o VEREDITO retornado pelo validator. Tome a decisão:**
 
@@ -144,12 +165,12 @@ Avalie: o texto, após a padronização tipográfica, perdeu ritmo e soa mecâni
 - Presença de enumeração `(a)/(b)/(c)` fora da seção de pedidos
 - O padrão de fecho `"Isso é [X]"` aparece mais de uma vez na mesma seção
 
-**Se SIM:** Acione o humanizer em **modo jurídico** (ver instruções abaixo).
-**Se NÃO:** Pule este estágio.
+**Se SIM:** Acione a skill **`humanizer-forense`** (a do escritório: protege transcrições, títulos-tese e BLUF, e traz o `lint-ia.js`). As instruções abaixo são o modo jurídico que ela aplica; valem como fallback se a skill não estiver no ambiente.
+**Se NÃO:** Pule este estágio. Mesmo assim o `lint-ia.js` roda no `md2docx` (Estágio 7): se reprovar, voltar aqui.
 
 ### Humanizer em Modo Jurídico
 
-O humanizer padrão foi projetado para texto geral. Se a skill humanizer não estiver disponível no ambiente, aplique diretamente as instruções abaixo — elas são autossuficientes. Para petições, aplique com estas restrições:
+O humanizer genérico foi projetado para texto geral. Para petições, aplique com estas restrições:
 
 **Ative:**
 - Variação de comprimento de sentença
@@ -181,7 +202,25 @@ Antes de entregar o output, confirme:
 - [ ] Nenhum placeholder, nota entre colchetes ou referência ao processo de escrita
 - [ ] Todos os réus têm fundamentação específica, não apenas menção genérica
 - [ ] A tutela de urgência, se pedida, descreve o perigo concreto (não apenas cita o art. 300)
-- [ ] Citações jurisprudenciais estão em formato indireto ou ementa real em bloco
+- [ ] Toda jurisprudência está **transcrita** em bloco, com fonte declarada e página correspondente no bundle (o `lint-citacoes` confere literalidade e voz do julgado). Citação indireta só para ponto que o acervo não cobre, e dita como tal
+- [ ] `<PECA>.validacao.md` é mais novo que a última edição da peça e não diz REPROVADO
+
+---
+
+## Estágio 7 — Compilação com portões (SEMPRE EXECUTE)
+
+O ciclo não termina em "pronto para gerar o .docx". Termina no `.docx` gerado e validado.
+
+1. Declarar `pipeline: legal-orchestrator` no frontmatter. Só agora: o campo afirma que os estágios 0 a 6 foram cumpridos.
+2. Compilar:
+
+```powershell
+node skills\peca-pma-builder\scripts\md2docx.js clientes\<caso>\PECA.md
+```
+
+O `md2docx` confere o veredito do Estágio 3, roda `lint-remissoes`, `lint-ia` e `lint-citacoes`, gera o `.docx` e valida timbrado e conteúdo. Exit 1 é erro a corrigir na peça; exit 3 é citação de página `em_teste`, decisão da titular (ver AGENTS.md §4). Depois de qualquer correção no `.md`, voltar ao Estágio 3.
+
+3. Não encerrar o turno com o `.docx` desatualizado: o hook `Stop` bloqueia, salvo `rascunho: sim` declarado no frontmatter.
 
 ---
 

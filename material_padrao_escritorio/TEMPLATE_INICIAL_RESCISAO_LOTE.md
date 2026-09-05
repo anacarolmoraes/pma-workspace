@@ -2,6 +2,7 @@
 titulo: Ação de Rescisão Contratual c/c Restituição de Valores — [[NOME DO AUTOR]]
 processo: a distribuir
 out: INICIAL_RESCISAO_[[SLUG]].docx
+bundle: direito/imobiliario
 ---
 
 <!--
@@ -21,7 +22,9 @@ CHECAGENS OBRIGATÓRIAS:
   • Números de cláusula: conferir no contrato ASSINADO (não confiar em OCR).
   • Base da retenção: 10-25% incidem sobre os VALORES PAGOS, não sobre o valor do contrato.
   • Valor da causa = valor do contrato (conferir no documento).
-  • Assinatura: quem efetivamente subscreve (ver escritorio.md).
+  • Assinatura: quem efetivamente subscreve (perfil/definicoes.md §4 e perfil/advogados.json).
+  • `bundle:` acima aponta o acervo que sustenta a peça; o hook require-leitura exige que ele
+    tenha sido lido nesta sessão. `pipeline: legal-orchestrator` só entra depois do ciclo cumprido.
 Remover este comentário antes de compilar.
 -->
 

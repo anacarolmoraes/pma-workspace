@@ -37,7 +37,7 @@ Ler, conforme o regime apurado na Etapa 2:
 - **Pós-2018:** `teses/cdc-prevalece-lei-distrato-contratos-pos-2018.md` + `jurisprudencia/resp-2106548-sp.md`.
 - **Pré-2018:** `teses/irretroatividade-lei-distrato-contratos-anteriores-2018.md` + Súmula 543 + Tema 577.
 - Sempre: `playbooks/playbook-peticao-inicial-rescisao-imovel.md`, teses de fruição, bis in idem, restituição imediata; `jurisprudencia/tjmt-ai-1017433-56-2019-iptu-tutela.md` (IPTU na tutela).
-PORTÃO: toda tese empregada deve ter fundamento no bundle; jurisprudência de fora, só por citação indireta e sinalizada.
+PORTÃO: toda tese empregada deve ter fundamento no bundle; jurisprudência de fora, só por citação indireta e sinalizada. O template já traz `bundle: direito/imobiliario` no frontmatter: o hook `require-leitura` só deixa gravar a peça depois que algum arquivo desse bundle foi lido na sessão.
 
 ### Etapa 5 — Redação (template + FICHA)
 Clonar `material_padrao_escritorio/TEMPLATE_INICIAL_RESCISAO_LOTE.md` para a pasta do caso e preencher com os números da `FICHA_CASO.md` e as cláusulas conferidas (conferidas **no contrato assinado**, nunca no OCR).

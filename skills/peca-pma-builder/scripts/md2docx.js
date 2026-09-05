@@ -6,10 +6,12 @@
 //
 // Uso: node scripts/md2docx.js caminho/da/peca.md [--out caminho/saida.docx] [--skip-lint]
 //
-// Portões automáticos (2026-07-16): antes de compilar, roda lint-remissoes.js
-// e o lint-ia.js do humanizer-forense — se algum falhar, NÃO gera o .docx
-// (--skip-lint pula, só para emergências). Depois de compilar, valida o
-// timbrado do arquivo gerado (validarTimbrado do index.js).
+// Portões automáticos: antes de compilar, exige o rastro do pipeline
+// (2026-09-04 — `pipeline:`, `bundle:` e <PECA>.validacao.md com veredito mais
+// novo que a peça) e roda lint-remissoes.js, o lint-ia.js do humanizer-forense
+// e lint-citacoes.js — se algum falhar, NÃO gera o .docx (--skip-lint pula,
+// só para emergências). Depois de compilar, valida o timbrado do arquivo
+// gerado (validarTimbrado do index.js).
 //
 // ── Dialeto (ver SKILL.md, seção "Autoria em Markdown") ──────────────────────
 // ---                       front-matter YAML-lite: titulo, processo, out,
@@ -41,6 +43,76 @@ const {
   endereco, quebra, pageBreak, assinatura, buildDoc, validarTimbrado, validarConteudo, docx,
 } = PMA;
 const { AlignmentType } = docx;
+
+// ── Rastro do pipeline (2026-09-04): a peça só compila com o ciclo gravado ──
+//
+// O `pipeline:` era aviso; virou portão. E o veredito do legal-consistency-
+// validator, que ficava só na conversa, agora precisa existir em disco:
+// <PECA>.validacao.md ao lado da peça, com `veredito:` no frontmatter, mais
+// novo que o .md (peça editada depois do veredito = veredito velho) e diferente
+// de REPROVADO. `bundle:` declara o acervo que sustenta a peça (ou `nenhum`).
+// --skip-lint pula tudo isto (é da titular, não do agente — hook bloqueia).
+function exigirRastro(mdPath, meta) {
+  const problemas = [];
+  const mtime = (p) => {
+    try {
+      return fs.statSync(p).mtimeMs;
+    } catch {
+      return null;
+    }
+  };
+  const frontmatter = (texto) => {
+    const m = {};
+    const ls = String(texto || '').split(/\r?\n/);
+    if ((ls[0] || '').trim() !== '---') return m;
+    for (let i = 1; i < ls.length; i++) {
+      if (ls[i].trim() === '---') break;
+      const k = ls[i].match(/^(\w+)\s*:\s*(.*)$/);
+      if (k) m[k[1]] = k[2].trim();
+    }
+    return m;
+  };
+
+  if (!meta.pipeline) {
+    problemas.push(
+      'frontmatter sem `pipeline:` — declare `pipeline: legal-orchestrator` depois de cumprir o ciclo ' +
+        '(legal-writer → tipografia-pma → legal-consistency-validator → humanizer-forense).',
+    );
+  }
+  if (!meta.bundle) {
+    problemas.push('frontmatter sem `bundle:` — `bundle: direito/<tema>` do acervo, ou `bundle: nenhum`.');
+  }
+
+  const val = mdPath.replace(/\.md$/i, '.validacao.md');
+  const nomeVal = path.basename(val);
+  const tVal = mtime(val);
+  if (tVal === null) {
+    problemas.push(`sem ${nomeVal} — rode o legal-consistency-validator sobre a peça; ele grava o veredito ao lado dela.`);
+  } else {
+    const tMd = mtime(mdPath);
+    if (tMd !== null && tVal < tMd - 1000) {
+      problemas.push(`${nomeVal} é anterior à última edição da peça — a peça mudou depois do veredito; revalide.`);
+    }
+    let texto = '';
+    try {
+      texto = fs.readFileSync(val, 'utf8');
+    } catch {
+      /* tratado abaixo como sem veredito */
+    }
+    const v = String(frontmatter(texto).veredito || '').trim().toUpperCase();
+    if (!v) problemas.push(`${nomeVal} sem \`veredito:\` no frontmatter (APROVADO | APROVADO COM RESSALVAS | REPROVADO).`);
+    else if (/REPROVADO/.test(v)) problemas.push(`veredito REPROVADO em ${nomeVal} — corrija as fraquezas CRÍTICO/ALTO e revalide.`);
+  }
+
+  if (!problemas.length) {
+    console.log('md2docx: rastro OK (pipeline, bundle, veredito do validator)');
+    return;
+  }
+  console.error('\nmd2docx: RASTRO DO PIPELINE INCOMPLETO — .docx não gerado.');
+  for (const p of problemas) console.error(`  ✘ ${p}`);
+  console.error('\nO ciclo é: legal-orchestrator (Estágios 0–6) → veredito gravado → pipeline: declarado → md2docx.\n');
+  process.exit(1);
+}
 
 // ── Portão de lints (roda antes de compilar; falha = não gera .docx) ────────
 //
@@ -194,12 +266,15 @@ async function main() {
   const mdPath = args.find((a) => !a.startsWith('--'));
   if (!mdPath) { console.error('Uso: node md2docx.js <peca.md> [--out saida.docx]'); process.exit(2); }
 
-  if (!args.includes('--skip-lint')) rodarLints(mdPath);
-  else console.warn('md2docx: AVISO — lints pulados por --skip-lint.');
-
-  const outFlag = args.indexOf('--out');
   const src = fs.readFileSync(mdPath, 'utf8').replace(/\r\n/g, '\n');
   const { meta, body } = parseFrontMatter(src.split('\n'));
+
+  if (!args.includes('--skip-lint')) {
+    exigirRastro(mdPath, meta);
+    rodarLints(mdPath);
+  } else console.warn('md2docx: AVISO — rastro e lints pulados por --skip-lint.');
+
+  const outFlag = args.indexOf('--out');
 
   const outPath = outFlag >= 0
     ? args[outFlag + 1]
@@ -258,13 +333,6 @@ async function main() {
     for (const f of c.faltando) console.error(`  ✘ ausente: "${String(f).slice(0, 80)}…"`);
     console.error('  Regerar; se persistir, conferir se outro processo está com o arquivo aberto.');
     process.exit(1);
-  }
-
-  // Proveniência: peça nova entra pelo legal-orchestrator (redação → tipografia
-  // → validação adversarial → humanização). Compilar direto pelo builder pula
-  // três estágios — o aviso existe para que isso seja escolha, não descuido.
-  if (!meta.pipeline) {
-    console.warn('md2docx: AVISO — frontmatter sem "pipeline:". Peça nova deve passar pelo legal-orchestrator (legal-writer → tipografia-pma → legal-consistency-validator → humanizer-forense). Declare "pipeline: legal-orchestrator" quando o ciclo tiver sido cumprido.');
   }
 
   if (!semTimbre) {

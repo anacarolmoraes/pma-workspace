@@ -63,10 +63,14 @@ custas) · **`perfil/usuario.md`** (quem assina, em que comarca; sem ele, aciona
 `jurisprudencia/`, `teses/`, `heuristicas/`, `casos_decididos/`) · **`direito/pecas/<tipo>/`**
 (técnica da peça) · **documentos do próprio caso**.
 
+A peça declara no frontmatter o bundle que a sustenta — `bundle: direito/<tema>`, ou
+`bundle: nenhum` quando não há matéria de acervo (manifestação puramente processual).
+
 Não centralizar jurisprudência, estratégias ou casos decididos: tese de "empréstimo não
 realizado" não se confunde com tese de "golpe bancário". O caso herda o contexto do tema-pai.
 
-*(No Claude Code, o hook `require-leitura` bloqueia a gravação da peça sem os dois primeiros.)*
+*(No Claude Code, o hook `require-leitura` bloqueia a gravação da peça sem os dois primeiros e
+sem que o bundle declarado em `bundle:` tenha sido lido na sessão.)*
 
 ---
 
@@ -79,7 +83,12 @@ compila com:
 node skills\peca-pma-builder\scripts\md2docx.js caminho\da\peca.md
 ```
 
-Antes de gerar o `.docx`, o `md2docx` roda três lints; nenhum é opcional:
+Antes de tudo, o `md2docx` exige o **rastro do pipeline**: `pipeline:` e `bundle:` no
+frontmatter e um `<PECA>.validacao.md` ao lado da peça — veredito do
+`legal-consistency-validator`, mais novo que a peça e diferente de `REPROVADO`. Faltando
+qualquer um, exit 1 e nenhum `.docx`.
+
+Depois, o `md2docx` roda três lints; nenhum é opcional:
 
 | Lint | Verifica | Falha |
 |---|---|---|

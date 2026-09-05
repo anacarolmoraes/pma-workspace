@@ -68,6 +68,8 @@ function arquivosEscritos(usos) {
   return saida;
 }
 
+const RX_VERBO_LEITURA = /\b(cat|type|get-content|sed|head|tail|less|more|ler-pdfmd)\b/;
+
 // Um arquivo conta como lido se houve Read dele, ou comando de shell que o
 // despeja (cat, type, Get-Content, sed -n, head, tail).
 function foiLido(usos, sufixo) {
@@ -79,7 +81,30 @@ function foiLido(usos, sufixo) {
     }
     if (/^(Bash|PowerShell)$/.test(u.nome)) {
       const cmd = norm(u.input.command).toLowerCase();
-      if (cmd.includes(alvo) && /\b(cat|type|get-content|sed|head|tail|less|more)\b/.test(cmd)) return true;
+      if (cmd.includes(alvo) && RX_VERBO_LEITURA.test(cmd)) return true;
+    }
+  }
+  return false;
+}
+
+// Alguma leitura DENTRO de um diretório (Read, despejo por shell, ou o
+// ler-pdfmd.js que o block-md-integral impõe para .md longo). Serve ao
+// require-leitura para exigir que o bundle declarado na peça foi aberto.
+// Aceita o caminho Windows (d:/x) e a forma msys do Git Bash (/d/x).
+function foiLidoDentro(usos, dir) {
+  const base = norm(dir).toLowerCase().replace(/\/+$/, '') + '/';
+  const variantes = [base];
+  const m = base.match(/^([a-z]):\/(.*)$/);
+  if (m) variantes.push(`/${m[1]}/${m[2]}`);
+  const dentro = (p) => {
+    const s = norm(p).toLowerCase();
+    return variantes.some((v) => s.startsWith(v));
+  };
+  for (const u of usos) {
+    if (u.nome === 'Read' && dentro(u.input.file_path)) return true;
+    if (/^(Bash|PowerShell)$/.test(u.nome)) {
+      const cmd = norm(u.input.command).toLowerCase();
+      if (RX_VERBO_LEITURA.test(cmd) && variantes.some((v) => cmd.includes(v))) return true;
     }
   }
   return false;
@@ -113,6 +138,7 @@ module.exports = {
   usosDeFerramenta,
   arquivosEscritos,
   foiLido,
+  foiLidoDentro,
   lerFrontmatter,
   ehPeca,
   simNao,
