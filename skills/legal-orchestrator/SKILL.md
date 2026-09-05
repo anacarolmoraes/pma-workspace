@@ -1,6 +1,6 @@
 ---
 name: legal-orchestrator
-version: 4.5.0
+version: 4.6.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
   acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
@@ -70,8 +70,8 @@ Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em 
 
 4. **Análise do caso** → `clientes/<caso>/ANALISE.md`. Uma por caso, não por peça: a análise feita para a inicial serve à réplica e à apelação; a cada peça nova, atualiza-se em vez de refazer. Não tem portão de aprovação; a estrutura da peça (Estágio 0.5) aponta para ela. Quatro seções:
 
-   1. **Cronologia.** Todo fato datado, em ordem, com a fonte (`Doc. N`, p. X). Partes e papel de cada uma. O problema jurídico em uma frase. O que ainda precisa ser esclarecido.
-   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
+   1. **Cronologia.** Todo fato datado, em ordem, com a fonte (`Doc. N`, p. X). Partes e papel de cada uma. O problema jurídico em uma frase. O que ainda precisa ser esclarecido. **Prescrição e decadência:** para cada pretensão, o termo inicial, o prazo, a norma e a data-limite; se houver causa de interrupção ou suspensão, a data e a prova. Pretensão prescrita não vira pedido.
+   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Antes de listar, três decisões que mudam a fundamentação inteira, cada uma com o fato que a sustenta: **regime** (CDC ou Código Civil), **responsabilidade** (contratual ou extracontratual; objetiva ou subjetiva) e **ônus da prova** (regra do art. 373 ou inversão, pelo §1º ou pelo art. 6º, VIII, do CDC). Se cabe tutela provisória, dizer qual (urgência, art. 300, ou evidência, art. 311) e qual fato concreto a justifica. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
    3. **Mapa probatório.** Para cada fato relevante, um de três estados: **comprovado** (documento nos autos, `Doc. N`), **frágil** (só declaração da parte, print sem metadado, documento de terceiro sem assinatura) ou **a produzir** (testemunha, perícia, ofício, exibição). Fato de tese sem prova comprovada ou a produzir é fato que a tese não pode afirmar.
    4. **Ataques previstos.** Os três melhores argumentos do advogado da parte contrária contra a tese escolhida, cada um com a prova que ele atacaria e a resposta disponível (ou a constatação de que não há resposta, o que muda a escolha da tese).
 
@@ -274,6 +274,7 @@ Antes de entregar o output, confirme:
 - [ ] Nenhum fato marcado *a produzir* na `ANALISE.md` é afirmado como provado; todos aparecem no protesto por provas com o meio nomeado
 - [ ] Toda jurisprudência está **transcrita** em bloco, com fonte declarada e página correspondente no bundle (o `lint-citacoes` confere literalidade e voz do julgado). Citação indireta só para ponto que o acervo não cobre, e dita como tal
 - [ ] `<PECA>.validacao.md` é mais novo que a última edição da peça e não diz REPROVADO
+- [ ] **Checklist de saída do tipo de peça**, em `<bundles>/direito/pecas/<tipo>/index.md` (petição inicial: requisitos do art. 319 I–VII, documentos do art. 320, encargos, requerimentos finais). A técnica da peça mora no acervo; o orchestrator só aponta
 
 ---
 

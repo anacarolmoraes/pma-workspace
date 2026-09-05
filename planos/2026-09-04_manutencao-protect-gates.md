@@ -38,3 +38,13 @@ Acrescentar em `hooks/_teste-portoes.js`, no bloco `protect-gates`, um caso que 
 ```
 
 Depois, `npm test`.
+
+## Na mesma sessão, portões novos a considerar
+
+- **Placeholder não compila.** Nada barra `[VERIFICAR]`, `[NOME]`, `[...]` no texto da peça; só o
+  checklist do Estágio 6 (prosa). Regex simples no `md2docx`, fora de citação em bloco.
+- **`lint-inicial`.** O checklist de saída da petição inicial
+  (`<bundles>/direito/pecas/peticao-inicial/index.md`, "Checklist de saída", 04/09/2026) é
+  conferível por lint quando `tipo: inicial`: endereçamento no padrão do §5, capítulo I "DA SÍNTESE
+  DA LIDE", seção de valor da causa, protesto por provas, manifestação sobre o art. 334, assinatura.
+  Hoje é prosa; vira portão quando o checklist tiver rodado em algumas peças sem mudar.
