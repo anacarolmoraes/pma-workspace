@@ -151,6 +151,9 @@ Julgamento (ficam aqui):
 5. **Camada C1 não sai do lugar.** Petição, decisão e extrato com nome, CPF ou número de
    processo de pessoa real ficam em `clientes/` ou no Drive do escritório (acesso revogável).
    Não entram em bundle, skill, repositório ou pacote distribuível — nem como exemplo.
+   **Pasta de caso de cliente nunca é fonte de ingestão** (regra da titular, 04/09/2026): ao
+   consumir um acervo para o arsenal, o que for caso de cliente fica de fora sem perguntar e
+   sem anonimizar; a única via para o acervo é a página de caso decidido escrita pela titular.
 6. **Documento de processo de terceiro só entra no acervo anonimizado** (critério de
    28/07/2026): saem nome de parte, beneficiário e advogado (viram `[AUTOR]`,
    `[BENEFICIÁRIO 1]`), CPF, RG, e-mail, telefone, CEP, endereço, agência e conta, e o PDF;
