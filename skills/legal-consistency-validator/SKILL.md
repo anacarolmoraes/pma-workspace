@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.5.0
+version: 2.8.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -61,6 +61,15 @@ Para cada argumento principal, verifique se o encadeamento está completo e expl
 - Fato marcado *a produzir* ou *frágil* no mapa probatório da `ANALISE.md` afirmado na peça como provado ou incontroverso: **CRÍTICO**
 - Fato *a produzir* ausente do protesto por provas, ou sem o meio de prova nomeado: **ALTO**
 - Ataque previsto na `ANALISE.md` que a estrutura mandou responder e a peça não responde: **ALTO**
+- **Argumento do adversário mencionado e não refutado no mesmo trecho** ("embora se possa argumentar que...", "ainda que se sustente...", "não se desconhece que..." sem que o período seguinte ataque a plausibilidade, o raciocínio ou a prova do argumento; ou tese contrária transcrita e respondida só com "os fundamentos expostos prevalecem"): **ALTO**. Reconhecer sem refutar é menos persuasivo do que omitir (heurística `direito/pecas/heuristicas/refutar-ou-omitir.md`). Correção: refutar com fato, documento ou norma, ou remover a menção; a estrutura decide qual.
+
+**Em contestação** (gabarito: `ANALISE.md`, seção 5, tabela de impugnação especificada, e o espelho no `<PECA>.estrutura.md`):
+- Alegação de fato da inicial sem impugnação precisa na peça, ou com negativa geral ("impugna-se todos os fatos"): **CRÍTICO** (presume-se verdadeira, art. 341, CPC). Conferir contra a inicial, não só contra a tabela: fato que a tabela esqueceu é a mesma falha.
+- Incompetência relativa ou convenção de arbitragem presentes nos documentos e não alegadas: **CRÍTICO** (precluem, art. 337, §§ 5º e 6º).
+- Inciso do art. 337 marcado "cabe" na estrutura e sem subseção: **ALTO**; prescrição ou decadência não examinadas: **ALTO**.
+- Fato impeditivo, modificativo ou extintivo alegado sem `Doc.` do réu nem meio de prova nomeado: **ALTO** (o ônus é do réu, art. 373, II).
+- Pedido da inicial sem resposta individual: **ALTO**.
+- Fato provado por documento do autor negado pela peça sem prova em contrário: **ALTO** (custa a credibilidade do conjunto).
 
 Sem estrutura aprovada em peça argumentativa livre, registre como fraqueza **MÉDIO** a ausência do Estágio 0.5 e siga com a análise completa.
 
@@ -102,7 +111,7 @@ Travessões em cadeia ligando conceitos abstratos não são ementas reais. São 
 
 ## Fase 5 — Teste Adversarial
 
-Assuma o papel do advogado dos réus. Responda:
+Assuma o papel do advogado da parte contrária: dos réus quando a peça é do autor, **do autor quando a peça é contestação** (aí as perguntas se invertem: qual fato o réu deixou incontroverso, qual fato novo ele alegou sem prova, qual preliminar é mérito travestido). Responda:
 
 - Qual é o argumento mais fácil de atacar?
 - Qual pedido tem o menor suporte probatório?
@@ -132,6 +141,10 @@ Verifique cada pedido:
 - O pedido é específico o suficiente para ser executado se deferido?
 - Existe pedido que excede o que foi provado ou argumentado?
 - A tutela de urgência está fundada em perigo concreto descrito (não apenas no artigo 300)?
+- **Documentos:** rodar `node skills/legal-consistency-validator/scripts/checar-docs.js <PECA>.md`. `Doc. N` citado e ausente do rol do frontmatter, item do rol nunca citado, ou arquivo ausente na pasta: **ALTO** (em contestação, a documental vai com a peça, art. 434). Peça que cita documentos sem `documentos:` no frontmatter: **ALTO**.
+- **Reconvenção, quando houver:** é inicial embutida. Sem valor da causa próprio (art. 292, regra de `perfil/definicoes.md`, § 1), sem causa de pedir distinta da defesa, sem pedido certo, ou sem tratar custas ou gratuidade: **CRÍTICO** (emenda ou indeferimento). Conexão do art. 343 não declarada com o fato que a mostra: **ALTO**.
+- **Lado (contestação):** `ANALISE.md` sem `lado:`, ou capítulo de ônus da prova contrário ao lado declarado (réu consumidor que enfrenta a inversão em vez de pedi-la; réu fornecedor que a pede): **ALTO**.
+- **Cadência de tabela na impugnação (contestação):** capítulo de impugnação com "o autor alega" ou "não procede" mais de uma vez, ou com parágrafos que são linhas da tabela reescritas em sequência: **MÉDIO**, com indicação dos parágrafos a fundir; o humanizer-forense corrige.
 
 ---
 

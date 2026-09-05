@@ -8,8 +8,10 @@
 //
 // Portões automáticos: antes de compilar, exige o rastro do pipeline
 // (2026-09-04 — `pipeline:`, `bundle:` e <PECA>.validacao.md com veredito mais
-// novo que a peça) e roda lint-remissoes.js, o lint-ia.js do humanizer-forense
-// e lint-citacoes.js — se algum falhar, NÃO gera o .docx (--skip-lint pula,
+// novo que a peça) e roda lint-remissoes.js, o lint-ia.js do humanizer-forense,
+// lint-placeholder.js (peça com [[slot]] ou [VERIFICAR] não compila),
+// lint-inicial.js (checklist mecânico do 319 quando `tipo: inicial`) e
+// lint-citacoes.js — se algum falhar, NÃO gera o .docx (--skip-lint pula,
 // só para emergências). Depois de compilar, valida o timbrado do arquivo
 // gerado (validarTimbrado do index.js).
 //
@@ -126,6 +128,8 @@ function rodarLints(mdPath) {
   const lints = [
     { nome: 'lint-remissoes', script: path.join(__dirname, 'lint-remissoes.js') },
     { nome: 'lint-ia', script: path.join(__dirname, '..', '..', 'humanizer-forense', 'scripts', 'lint-ia.js') },
+    { nome: 'lint-placeholder', script: path.join(__dirname, 'lint-placeholder.js') },
+    { nome: 'lint-inicial', script: path.join(__dirname, 'lint-inicial.js') },
     { nome: 'lint-citacoes', script: path.join(__dirname, 'lint-citacoes.js') },
   ];
   for (const l of lints) {
@@ -151,7 +155,7 @@ function rodarLints(mdPath) {
       process.exit(1);
     }
   }
-  console.log('md2docx: lints OK (remissões + anti-IA + citações)');
+  console.log('md2docx: lints OK (remissões + anti-IA + placeholder + inicial + citações)');
 }
 
 // ── Inline: **bold**, *italic*, ***bold+italic*** → runs de pMixed ───────────

@@ -3,6 +3,19 @@
 Changelog dos planos de evolução do sistema. Saiu do `CLAUDE.md` em 04/09/2026: é registro,
 não instrução, e não precisa ser carregado em toda sessão.
 
+- [`2026-09-04_prd-fluxo-peticao-inicial.md`](2026-09-04_prd-fluxo-peticao-inicial.md)
+  — fluxo próprio da petição inicial no acervo (playbook + workflow únicos, cinco heurísticas
+  transversais, três páginas que dependem de depósito de fonte pela titular, mineração dos
+  despachos de emenda na fila do DJEN, perfis de juízo). **F1, F2 e F3 executadas em 04–05/09**
+  (acervo: `direito/pecas/peticao-inicial/` com playbook, workflow, sete heurísticas, doze
+  páginas literais; fontes da F3 depositadas pela titular). **F5 executada em 05/09** em sessão
+  de manutenção: `lint-placeholder` e `lint-inicial` entraram no `md2docx`, `protect-gates`
+  deixou de contar `2>&1` como escrita, `definicoes.md` §1 ganhou dano moral (292, V) e
+  correção de ofício (292, §3º), template de rescisão de lote com `tipo: inicial`, teste em
+  `hooks/_teste-f5.js` no `npm test`. F4 pendente. O que
+  já saiu sem PRD em 04/09: `ANALISE.md` por caso e `<PECA>.estrutura.md` no orchestrator,
+  checklist de saída do 319/320 em `direito/pecas/peticao-inicial/`, três divergências de
+  técnica (valor da causa, autocomposição, posição da tutela) resolvidas nas skills.
 - [`2026-08-29_prd-equipe-e-saneamento.md`](2026-08-29_prd-equipe-e-saneamento.md)
   — fila do DJEN em equipe, saneamento do arsenal e onboarding. Blocos 0, 3 e 4 aprovados;
   o Bloco 2 (faxina do motor) ficou fora de escopo e segue pendente. **F3.1 executada em 02/09**:

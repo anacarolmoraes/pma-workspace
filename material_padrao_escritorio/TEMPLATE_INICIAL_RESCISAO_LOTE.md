@@ -1,6 +1,7 @@
 ---
 titulo: Ação de Rescisão Contratual c/c Restituição de Valores — [[NOME DO AUTOR]]
 processo: a distribuir
+tipo: inicial
 out: INICIAL_RESCISAO_[[SLUG]].docx
 bundle: direito/imobiliario
 ---
@@ -143,7 +144,7 @@ Diante do exposto, requer:
 
 **j)** a condenação da ré ao pagamento das custas e de honorários advocatícios de sucumbência.
 
-Protesta provar o alegado por todos os meios admitidos e manifesta interesse na audiência de conciliação do art. 334 do Código de Processo Civil. Requer que as intimações sejam feitas exclusivamente em nome da[[s]] advogada[[s]] subscritora[[s]], e opta pelo Juízo 100% Digital, caso a comarca o disponibilize.
+Protesta provar o alegado por todos os meios admitidos e [[manifesta interesse na / declara desinteresse pela — decisão da ANALISE.md, seção 2]] audiência de conciliação do art. 334 do Código de Processo Civil. Requer que as intimações sejam feitas exclusivamente em nome da[[s]] advogada[[s]] subscritora[[s]], e opta pelo Juízo 100% Digital, caso a comarca o disponibilize.
 
 Dá-se à causa o valor de **R$ [[valor do contrato]]**.
 

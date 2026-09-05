@@ -1,6 +1,6 @@
 ---
 name: legal-writer
-version: 3.4.0
+version: 3.5.0
 description: |
   Redige o texto jurídico inicial de peças processuais (iniciais, recursos, contestações, manifestações) 
   com raciocínio argumentativo contínuo, linguagem humana e precisão técnica. Use esta skill sempre que 
@@ -86,6 +86,14 @@ A abertura de cada parágrafo é a engrenagem entre o anterior e o seguinte. Fra
 Nunca use a estrutura `(a) argumento — desenvolvimento / (b) argumento — desenvolvimento / (c) argumento — desenvolvimento` em seções argumentativas. Enumerações com letras e travessões internos são para pedidos e itens processuais, não para argumentos.
 
 Argumento enumerado parece relatório ou checklist — não petição. Se o argumento tem três frentes, desenvolva cada uma em parágrafo próprio, com abertura conectada ao parágrafo anterior. O encadeamento entre os três parágrafos é o argumento.
+
+### Argumento do adversário: refutar ou omitir
+
+Nunca reconhecer o argumento contrário para em seguida mudar de assunto. As fórmulas "embora se possa argumentar que", "ainda que se sustente", "não se desconhece que", "conquanto a parte contrária alegue" só podem abrir um período se o período seguinte desmonta o que foi reconhecido: ataca a plausibilidade do argumento, o raciocínio ou a prova, com fato, documento ou norma. "Os fundamentos aqui expostos prevalecem" não desmonta nada. Se a refutação não existe, o argumento contrário não entra na peça; a decisão de não enfrentar está no `<PECA>.estrutura.md` e significa ausência, não menção de passagem. Ordem não é critério: refutar antes ou depois dos argumentos próprios não muda o efeito. Regra transversal do acervo: `direito/pecas/heuristicas/refutar-ou-omitir.md`.
+
+### Impugnação especificada em prosa (contestação)
+
+A tabela de impugnação da `ANALISE.md` é entrada, não modelo de parágrafo. O capítulo de impugnação não é a tabela reescrita: são três a cinco blocos temáticos em que a versão do réu conduz e a alegação do autor entra como contraste, pelo documento, pela data ou pela contradição interna dele. "O autor alega" e "não procede" aparecem no máximo uma vez cada no capítulo inteiro; a variação vem de abrir cada bloco por um ângulo diferente (o documento que o autor juntou e não prova, a data que não fecha, o que o próprio autor admite dois parágrafos depois). Contradição do autor com o próprio documento se mostra colocando os dois lado a lado, sem adjetivo. Cada fato impugnado continua identificável para o juiz conferir o art. 341, mas identificável pela narrativa, não por enumeração.
 
 ### Limite do Fecho "Isso é [X]"
 
@@ -177,7 +185,7 @@ Só depois mencione o dispositivo legal que ampara.
 
 Antes de finalizar, verifique:
 
-- O valor da causa = soma de todos os pedidos quantificados
+- O valor da causa segue o inciso do art. 292 aplicável ao objeto da ação, conforme `perfil/definicoes.md` §1 (soma dos pedidos é só a regra geral; rescisão de negócio é o valor do ato; dano moral é o valor pretendido). Não repetir a regra aqui: conferir lá
 - O valor de danos morais nos pedidos = o mesmo mencionado no FIRAC/resumo
 - Datas são consistentes em toda a peça
 - Nomes de partes e documentos são idênticos em todas as seções
@@ -188,6 +196,8 @@ Inconsistência numérica é o erro mais fácil de atacar na contestação e o m
 
 ## Encadeamento Canônico — Inicial PMA
 
+O esqueleto único da inicial, com as cinco variáveis declaradas (preliminares, posição da tutela, danos, competência, gratuidade), mora no acervo: `<bundles>/direito/pecas/peticao-inicial/playbooks/playbook-peticao-inicial.md`. O que segue é a **realização desse esqueleto** nas peças-ouro A e B (golpe bancário, camada C1), útil como referência de estilo e ordem; a arquitetura de cada peça vem do `<PECA>.estrutura.md` aprovado, não daqui.
+
 Quando a peça for **petição inicial em ação cível** no padrão PMA (domínio principal: golpes bancários e correlatos), siga, salvo motivo concreto para divergir, a ordem das peças-ouro A e B (golpe bancário, camada C1):
 
 1. Endereçamento ao juízo (vara, comarca, estado), em negrito à esquerda.
@@ -195,7 +205,7 @@ Quando a peça for **petição inicial em ação cível** no padrão PMA (domín
 3. Título da ação, centralizado, em caixa alta e negrito.
 4. "em face de" com a qualificação dos réus em parágrafo único.
 5. **I. SÍNTESE** — um parágrafo denso que abre pela vítima, narra o golpe em três a cinco articulações subordinadas, antecipa a tese (Súmula 479 do STJ, art. 14 do CDC) e enumera os pedidos centrais sem travessões nem ":".
-6. **II. DO DESINTERESSE NA AUTOCOMPOSIÇÃO** — dois períodos curtos, ancorados no art. 319, VII, do CPC.
+6. **II. DA AUTOCOMPOSIÇÃO** — dois períodos curtos, ancorados no art. 319, VII, do CPC. Interesse ou desinteresse (art. 334, § 5º) é decisão por caso, tomada na `ANALISE.md`, seção 2; nas peças-ouro de golpe bancário foi desinteresse, mas não é padrão fixo.
 7. **III. DA RELAÇÃO DE CONSUMO E DA INVERSÃO DO ÔNUS DA PROVA** — Súmula 297 do STJ, art. 6º, VIII, do CDC e, quando aplicável, art. 42, § 2º, da LGPD.
 8. **IV. DOS FATOS** — sequência de parágrafos médios, cada um ancorado no anterior por conectivo de cronologia ou consequência.
 9. **V. DA TUTELA PROVISÓRIA DE URGÊNCIA** — probabilidade do direito, perigo concreto mensurável (em reais, em meses, em impacto) e reversibilidade; a menção ao art. 300 do CPC vem apenas ao fim.
@@ -205,7 +215,7 @@ Quando a peça for **petição inicial em ação cível** no padrão PMA (domín
 13. **IX. DOS PEDIDOS**, lettered A) B) C) ... F.1) F.2) ..., precedidos de "Ante o exposto, requer:".
 14. Fecho **"Termos em que, pede deferimento."**, **"[Comarca]/[UF], data certificada pelo sistema."** e identificação da advogada com a OAB, centralizadas.
 
-A ordem é canônica, não decorativa. A Tutela vem depois dos Fatos (Módulo 3.3 da tipografia-pma) e o Direito vem depois da Tutela. Toda inversão dessa sequência exige justificativa concreta.
+A ordem é canônica, não decorativa. A posição da Tutela é a única variável: antes do Direito, logo depois dos Fatos (Módulo 3.3 da tipografia-pma), quando o perigo é o próprio destaque da peça; depois do Direito quando a probabilidade depende da tese desenvolvida. A escolha vem declarada no `<PECA>.estrutura.md` aprovado; o writer não a faz sozinho. Toda outra inversão exige justificativa concreta.
 
 Em peças que não sejam inicial cível de golpe bancário, use a peça-ouro mais próxima como referência empírica e adapte o encadeamento, mantendo a disciplina estilística — conectivos por função, dois-pontos parcimoniosos, sem travessão de encadeamento.
 

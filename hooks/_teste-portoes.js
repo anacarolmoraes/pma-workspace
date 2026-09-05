@@ -88,6 +88,7 @@ const casos = [
   ['protect-gates', P, 'Edit em peça de cliente', edit(pecaSemDocx)],
   ['protect-gates', P, 'Edit em SKILL.md comum', edit(naRaiz('skills', 'legal-writer', 'SKILL.md'))],
   ['protect-gates', P, 'cat de lint (leitura)', bash('cat skills/peca-pma-builder/scripts/md2docx.js')],
+  ['protect-gates', P, 'execução de lint com 2>&1', bash('node scripts/lint-skills.js 2>&1 | tail -5')],
   ['protect-gates', P, 'node rodando o md2docx', bash('node skills/peca-pma-builder/scripts/md2docx.js clientes/x/PECA.md')],
   ['protect-gates', P, 'Edit no teste do hook', edit(naRaiz('hooks', '_teste-block-secrets.js'))],
   ['protect-gates', P, 'manutenção liberada por env', edit(naRaiz('perfil', 'marca.json')), { PMA_MANUTENCAO: '1' }],

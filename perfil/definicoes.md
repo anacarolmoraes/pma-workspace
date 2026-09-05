@@ -29,11 +29,17 @@ A regra depende do **objeto da ação** — e é essa distinção que faltava, n
 | **Ação que tem por objeto existência, validade, cumprimento, modificação, resolução, resilição ou rescisão de negócio jurídico** | **Valor do ato** (ou o da parte controvertida) | art. 292, **II**, CPC |
 | Cobrança de dívida | Soma do principal, juros vencidos e multa | art. 292, I, CPC |
 | Prestações vencidas e vincendas | Soma de umas e outras (vincendas: 1 ano, se por tempo indeterminado) | art. 292, §§ 1º e 2º, CPC |
+| **Dano moral** (pedido indenizatório) | **Valor pretendido**, declarado na inicial e somado aos demais pedidos | art. 292, **V** e VI, CPC |
+| Correção pelo juízo | O juiz corrige de ofício o valor da causa quando não corresponde ao conteúdo patrimonial ou ao proveito econômico; a divergência vira custas complementares, não extinção | art. 292, § 3º, CPC |
 
 **Aplicação prática mais frequente:** na **inicial de rescisão de compromisso de compra e
 venda de lote**, o valor da causa é o **valor do contrato** — não o valor buscado a título
 de restituição. Cai no inciso II, porque o objeto da ação é a rescisão do negócio.
-Conferir o valor no próprio contrato, nunca no OCR.
+Conferir o valor no próprio contrato, nunca no OCR. Em golpe bancário e negativação, o valor
+da causa soma o dano material apurado e o dano moral **pedido** (292, V e VI); o dano moral
+pedido sai do método bifásico
+(`direito/pecas/peticao-inicial/heuristicas/quantificar-dano-moral-metodo-bifasico.md`), não
+do hábito.
 
 > Não há contradição entre "soma dos pedidos" e "valor do contrato": a primeira é a regra
 > geral, a segunda é a regra especial do inciso II. Ao auditar uma peça, verificar **qual

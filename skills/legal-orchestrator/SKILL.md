@@ -1,10 +1,10 @@
 ---
 name: legal-orchestrator
-version: 4.6.0
+version: 4.8.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
   acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
-  probatório, ataques previstos), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
+  probatório, ataques previstos e, em contestação, tabela de impugnação especificada do art. 341), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
   redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
   adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
   seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
@@ -71,13 +71,15 @@ Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em 
 4. **Análise do caso** → `clientes/<caso>/ANALISE.md`. Uma por caso, não por peça: a análise feita para a inicial serve à réplica e à apelação; a cada peça nova, atualiza-se em vez de refazer. Não tem portão de aprovação; a estrutura da peça (Estágio 0.5) aponta para ela. Quatro seções:
 
    1. **Cronologia.** Todo fato datado, em ordem, com a fonte (`Doc. N`, p. X). Partes e papel de cada uma. O problema jurídico em uma frase. O que ainda precisa ser esclarecido. **Prescrição e decadência:** para cada pretensão, o termo inicial, o prazo, a norma e a data-limite; se houver causa de interrupção ou suspensão, a data e a prova. Pretensão prescrita não vira pedido.
-   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Antes de listar, três decisões que mudam a fundamentação inteira, cada uma com o fato que a sustenta: **regime** (CDC ou Código Civil), **responsabilidade** (contratual ou extracontratual; objetiva ou subjetiva) e **ônus da prova** (regra do art. 373 ou inversão, pelo §1º ou pelo art. 6º, VIII, do CDC). Se cabe tutela provisória, dizer qual (urgência, art. 300, ou evidência, art. 311) e qual fato concreto a justifica. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
+   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Antes de listar, três decisões que mudam a fundamentação inteira, cada uma com o fato que a sustenta: **regime** (CDC ou Código Civil), **responsabilidade** (contratual ou extracontratual; objetiva ou subjetiva) e **ônus da prova** (regra do art. 373 ou inversão, pelo §1º ou pelo art. 6º, VIII, do CDC). Se cabe tutela provisória, dizer qual (urgência, art. 300, ou evidência, art. 311) e qual fato concreto a justifica. **Autocomposição** (art. 319, VII, c/c 334, § 5º): interesse ou desinteresse, decidido pelo réu e pelo histórico (banco e plataforma raramente transacionam na audiência; loteadora e particular às vezes sim); nenhum template ou peça-ouro fixa o padrão. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
    3. **Mapa probatório.** Para cada fato relevante, um de três estados: **comprovado** (documento nos autos, `Doc. N`), **frágil** (só declaração da parte, print sem metadado, documento de terceiro sem assinatura) ou **a produzir** (testemunha, perícia, ofício, exibição). Fato de tese sem prova comprovada ou a produzir é fato que a tese não pode afirmar.
    4. **Ataques previstos.** Os três melhores argumentos do advogado da parte contrária contra a tese escolhida, cada um com a prova que ele atacaria e a resposta disponível (ou a constatação de que não há resposta, o que muda a escolha da tese).
 
-   Frontmatter: `caso:`, `bundle:`, `atualizada:` (data). **Não** usar `tipo:`, `pipeline:` nem `titulo:` + `processo:`, que fazem os hooks tratarem o arquivo como peça.
+   5. **Impugnação especificada** (só quando a peça é contestação). Antes dela, o frontmatter da `ANALISE.md` declara **`lado: consumidor`** (padrão do escritório) **ou `lado: fornecedor`** (exceção, declarada pela titular no início): o lado decide quem pede e quem enfrenta a inversão do ônus e avisa que, para fornecedor, o acervo tende a não cobrir as defesas. A seção 3 mapeia os fatos da nossa tese; esta mapeia os fatos da **inicial do autor**, um a um, porque fato não impugnado precisamente presume-se verdadeiro (art. 341, CPC). Preencher a tabela da heurística `direito/pecas/contestacao/heuristicas/tabela-impugnacao-especificada.md` do acervo, Partes 0 a 3: primeiro o **roteiro de entrevista do réu gerado da inicial** (cada fato vira pergunta ao cliente com o documento esperado); depois, para cada fato alegado, por episódio e não por frase, a prova do autor e o estado dela, a **versão do réu**, a prova do réu (`Doc. N`) e a postura (nega, admite, admite com ressalva, fato novo); a **exposição por pedido** com resposta principal e subsidiária (compensação e dedução do já pago se pedem, não se presumem); a postura por documento do autor (art. 436); depois os treze incisos do art. 337 com "cabe" ou "não cabe e por quê" (incompetência relativa e convenção de arbitragem precluem se caladas), prescrição e decadência como prejudiciais, e as posturas acessórias (reconvenção, denunciação, chamamento, falsidade, exibição, gratuidade do réu) como decisão da titular. Fato novo sem `Doc.` do réu não se alega: o ônus dele é do réu (art. 373, II). Fluxo do procedimento comum: no Juizado Especial (Lei 9.099, arts. 30 e 31) parar e sinalizar. Se há tutela deferida contra o réu, o prazo do agravo (art. 1.003, § 5º) corre em paralelo e costuma vencer antes: anotar os dois e levar a decisão à titular.
 
-**Portão:** tese sem página no bundle não é candidata; fato "a produzir" não é afirmado como provado em nenhuma peça do caso.
+   Frontmatter: `caso:`, `bundle:`, `atualizada:` (data) e, em contestação, `lado:`. **Não** usar `tipo:`, `pipeline:` nem `titulo:` + `processo:`, que fazem os hooks tratarem o arquivo como peça.
+
+**Portão:** tese sem página no bundle não é candidata; fato "a produzir" não é afirmado como provado em nenhuma peça do caso. Em contestação, **nenhum fato da inicial sem linha na seção 5** e nenhum inciso do art. 337 sem decisão registrada.
 
 ---
 
@@ -87,13 +89,14 @@ Mexer em estrutura depois do texto é o retrabalho mais caro do pipeline: invali
 
 Com o inventário feito, o bundle lido e a `ANALISE.md` do caso escrita ou atualizada, apresente **só a estrutura**, sem redigir conteúdo, e grave em `<PECA>.estrutura.md` ao lado da peça:
 
-1. **Seções, na ordem em que aparecerão**, separando preliminares, mérito, tutela e pedidos.
+1. **Seções, na ordem em que aparecerão**, separando preliminares, mérito, tutela e pedidos. A posição da tutela é escolha declarada: antes do direito, logo após os fatos, quando o perigo é o destaque da peça; depois do direito quando a probabilidade depende da tese.
 2. **Em cada seção:** o fato que ela afirma, o estado dele no mapa probatório (**comprovado** com `Doc. N` · **frágil** · **a produzir**), a página do bundle que sustenta a tese e o `status` dessa página. Página `em_teste` aparece aqui, quando ainda é barato trocar a tese, e não como exit 3 do `md2docx`. Fato *frágil* é narrado com a cautela correspondente; fato *a produzir* vai para o protesto por provas (art. 319, VI, CPC), com o meio de prova nomeado.
 3. **Argumento em destaque** (o que abre a peça) e por quê. É a tese escolhida na `ANALISE.md`, seção 2.
 4. **Peso relativo** de cada parte, em porcentagem aproximada. Não se estima em páginas.
 5. **O que fica de fora**, com um de dois motivos: *não agrega* (dilui o destaque) ou *o acervo não cobre* (regra dura 3, aplicada antes de escrever).
 6. **Ataques respondidos:** para cada ataque previsto na `ANALISE.md`, seção 4, a seção da peça que o neutraliza, ou a decisão de não enfrentá-lo e por quê.
 7. **O que falta saber:** pergunta que a pasta e o Drive não respondem, ligada à seção que depende dela.
+8. **Em contestação, o espelho da tabela:** cada linha "nega", "admite com ressalva" e "fato novo" da `ANALISE.md`, seção 5, aponta a seção que a absorve; cada "cabe" do checklist do art. 337 vira subseção de preliminar, na ordem do Código; prescrição e decadência têm seção própria de prejudicial quando cabem; cada pedido da inicial tem a seção que o responde; reconvenção e demais posturas acessórias aparecem com a decisão da titular. Linha sem seção é fato que vai passar por incontroverso. A estrutura de referência é a do playbook `direito/pecas/contestacao/playbooks/playbook-contestacao.md`, com capítulos presentes só quando a tabela os aciona. No Claude Code, essas perguntas vão à titular por `AskUserQuestion`, **no máximo quatro**, junto com a apresentação da estrutura; se são mais de quatro, o inventário do Estágio 0 está incompleto, e é lá que se volta.
 
 Formato do arquivo:
 
@@ -120,6 +123,12 @@ analise: ANALISE.md
 
 ## Ataques respondidos
 - <ataque 1 da ANALISE.md>: seção <X> | não enfrentado porque <motivo>
+
+## Espelho da impugnação (só contestação)
+- fato <#> da inicial (<postura>): seção <X>
+- art. 337, <inciso> (cabe): seção <X> | não cabe porque <motivo>
+- pedido <letra> da inicial: seção <X>
+- reconvenção | denunciação | gratuidade do réu: sim, seção <X> | não, porque <motivo>
 
 ## Falta saber
 - <Seção X> depende de <pergunta>. <Onde procurar, se houver pista>
@@ -216,7 +225,7 @@ Execute se o Estágio 3 retornar REPROVADO (há fraqueza CRÍTICA ou ALTA) ou AP
 **O que sempre corrigir imediatamente (CRÍTICO automático):**
 - Metalinguagem vazada no texto (referências ao processo de redação)
 - Ementas com travessões em cadeia sem referência verificável
-- Inconsistência numérica entre valor da causa e soma dos pedidos
+- Inconsistência numérica: valor da causa fora da regra do art. 292 aplicável (`perfil/definicoes.md` §1), ou o mesmo valor escrito de dois jeitos na peça
 - Proposta de acordo inserida no corpo da petição inicial (deve ser reservada para audiência)
 
 ---
@@ -263,11 +272,15 @@ O texto jurídico pode e deve ser humano — mas é humanidade formal, não colo
 
 ## Estágio 6 — Verificação Final de Integridade
 
+**Documentos citados.** Toda peça que cita `Doc. N` declara o rol no frontmatter (`documentos:` com `n`, `descricao` e, quando houver, `arquivo`) e passa por `node skills/legal-consistency-validator/scripts/checar-docs.js <PECA>.md`: citado sem rol, rol sem citação ou arquivo ausente na pasta é erro a corrigir antes de compilar. `--rol` imprime o rol para o fim da peça. Em contestação isso não é capricho: a documental vai com a peça (art. 434) e o que faltou só entra depois nas hipóteses do art. 435.
+
+**Reconvenção, quando houver:** é inicial embutida; conferir causa de pedir própria, pedido certo, valor da causa pelo art. 292 (`perfil/definicoes.md`, § 1) e custas ou gratuidade (art. 319).
+
 Antes de entregar o output, confirme:
 
 - [ ] A peça segue o `<PECA>.estrutura.md` aprovado (seções, ordem, destaque); todo desvio foi reaprovado, não improvisado
 - [ ] Nenhuma contradição detectada entre seções
-- [ ] Valor da causa = soma dos pedidos quantificados
+- [ ] Valor da causa conforme o inciso do art. 292 aplicável ao objeto da ação (`perfil/definicoes.md` §1); os valores repetidos na peça são idênticos entre si
 - [ ] Nenhum placeholder, nota entre colchetes ou referência ao processo de escrita
 - [ ] Todos os réus têm fundamentação específica, não apenas menção genérica
 - [ ] A tutela de urgência, se pedida, descreve o perigo concreto (não apenas cita o art. 300)

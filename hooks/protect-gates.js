@@ -33,7 +33,7 @@ const PROTEGIDOS = [
 ];
 
 const RX_ESCRITA_SHELL =
-  /(\bsed\s+-i|(^|[^>])>{1,2}\s*["']?\S|\b(Set-Content|Out-File|Add-Content|tee)\b|\b(rm|del|Remove-Item|mv|move|Move-Item|cp|copy|Copy-Item)\b|\bgit\s+(checkout|restore|rm)\b)/i;
+  /(\bsed\s+-i|(^|[^>])>{1,2}(?!&)\s*["']?\S|\b(Set-Content|Out-File|Add-Content|tee)\b|\b(rm|del|Remove-Item|mv|move|Move-Item|cp|copy|Copy-Item)\b|\bgit\s+(checkout|restore|rm)\b)/i;
 
 function relativo(p) {
   const abs = path.resolve(RAIZ, String(p));

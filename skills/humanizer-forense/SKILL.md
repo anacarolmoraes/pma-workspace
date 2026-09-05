@@ -52,6 +52,7 @@ Camada de **superfície** sobre a heurística `estrutura-ai-first` (bundle D12):
 | Enumeração mecânica ("A primeira é… A segunda é… A terceira está…") | ≤ 3 | Variar a abertura de cada razão: "Comece-se por…", "Soma-se a isso…", "Há ainda…", "Por fim…" |
 | Frase truncada de efeito ("Existia.", "Não se amolda.") | ≤ 1 | Integrar ao período anterior; o corte seco é golpe de modelo |
 | Parágrafo inteiro em negrito como efeito dramático | 0 | Devolver a frase ao corpo do parágrafo; a ênfase vem do argumento |
+| Cadência de tabela na impugnação ("O autor alega X. Não procede, porque Y." em sequência; "o autor alega" ou "não procede" repetidos) | ≤ 1 cada por capítulo | Fundir as linhas em blocos temáticos com a versão do réu como fio; abrir cada bloco por ângulo diferente (documento, data, contradição interna do autor); manter cada fato identificável pela narrativa, não pela enumeração (playbook da contestação, capítulo V) |
 
 ## Falsos positivos do gênero forense (NÃO corrigir)
 
