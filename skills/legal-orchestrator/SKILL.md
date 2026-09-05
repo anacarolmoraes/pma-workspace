@@ -1,9 +1,10 @@
 ---
 name: legal-orchestrator
-version: 4.4.0
+version: 4.5.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
-  acervo, arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
+  acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
+  probatório, ataques previstos), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
   redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
   adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
   seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
@@ -26,7 +27,7 @@ Antes de iniciar qualquer estágio, confirme que você possui:
 |---|---|
 | Tipo de peça | Define estrutura, seções obrigatórias e tom |
 | Fatos do caso | Sem fatos, não há argumento — apenas formulário |
-| Tese principal | Define o que o pipeline inteiro deve defender |
+| Tese principal | Define o que o pipeline inteiro deve defender. Se a titular já a tem, entra aqui; se não, **é saída do Estágio 0** (teses candidatas na `ANALISE.md`), não pergunta ao usuário |
 | Réus e suas responsabilidades | Cada réu pode exigir fundamentação diferente |
 | Pedidos finais | O texto inteiro serve aos pedidos — comece sabendo quais são |
 | Documentos disponíveis | Define o que pode ser citado como prova |
@@ -43,6 +44,7 @@ Cada estágio deixa um rastro que o portão seguinte confere. Sem o rastro, o pa
 |---|---|---|
 | Leitura de `perfil/definicoes.md` e `perfil/usuario.md` | a sessão, antes da primeira gravação da peça | hook `require-leitura` |
 | `bundle: direito/<tema>` no frontmatter e leitura de ao menos um arquivo desse bundle | Estágio 0 | hook `require-leitura` |
+| `clientes/<caso>/ANALISE.md` (cronologia, teses candidatas, mapa probatório, ataques) | Estágio 0, item 4; atualizada a cada peça nova do mesmo caso | Estágio 0.5 (a estrutura aponta para ela) e Estágio 3 |
 | `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência) e Estágio 6. Sem hook por enquanto: entra no `md2docx` se, em uso, o estágio se mostrar pulado |
 | `<PECA>.validacao.md` ao lado da peça, com `veredito:` no frontmatter | Estágio 3 (o validator grava) | `md2docx`, que recusa compilar sem veredito, com veredito REPROVADO ou com veredito mais antigo que a última edição do `.md` |
 | `pipeline: legal-orchestrator` no frontmatter | Estágio 7, depois de cumprido o ciclo | `md2docx` |
@@ -66,20 +68,32 @@ Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em 
 
 **Portão:** toda tese empregada tem página no bundle. Se o acervo não cobre o ponto, a peça diz que não cobre; não se cita precedente de memória (AGENTS.md, regra dura 3). Página `status: em_teste` não foi conferida contra a fonte oficial: citá-la exige `cita_em_teste: sim` no frontmatter ou a promoção da página a `vigente` depois da conferência.
 
+4. **Análise do caso** → `clientes/<caso>/ANALISE.md`. Uma por caso, não por peça: a análise feita para a inicial serve à réplica e à apelação; a cada peça nova, atualiza-se em vez de refazer. Não tem portão de aprovação; a estrutura da peça (Estágio 0.5) aponta para ela. Quatro seções:
+
+   1. **Cronologia.** Todo fato datado, em ordem, com a fonte (`Doc. N`, p. X). Partes e papel de cada uma. O problema jurídico em uma frase. O que ainda precisa ser esclarecido.
+   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
+   3. **Mapa probatório.** Para cada fato relevante, um de três estados: **comprovado** (documento nos autos, `Doc. N`), **frágil** (só declaração da parte, print sem metadado, documento de terceiro sem assinatura) ou **a produzir** (testemunha, perícia, ofício, exibição). Fato de tese sem prova comprovada ou a produzir é fato que a tese não pode afirmar.
+   4. **Ataques previstos.** Os três melhores argumentos do advogado da parte contrária contra a tese escolhida, cada um com a prova que ele atacaria e a resposta disponível (ou a constatação de que não há resposta, o que muda a escolha da tese).
+
+   Frontmatter: `caso:`, `bundle:`, `atualizada:` (data). **Não** usar `tipo:`, `pipeline:` nem `titulo:` + `processo:`, que fazem os hooks tratarem o arquivo como peça.
+
+**Portão:** tese sem página no bundle não é candidata; fato "a produzir" não é afirmado como provado em nenhuma peça do caso.
+
 ---
 
 ## Estágio 0.5 — Arquitetura da peça (SEMPRE EXECUTE, ANTES DE QUALQUER PROSA)
 
 Mexer em estrutura depois do texto é o retrabalho mais caro do pipeline: invalida o `.validacao.md`, refaz humanização e recompila. Por isso a arquitetura se decide aqui, em quarenta linhas que a titular lê em dois minutos, e não em quinze páginas.
 
-Com o inventário feito e o bundle lido, apresente **só a estrutura**, sem redigir conteúdo, e grave em `<PECA>.estrutura.md` ao lado da peça:
+Com o inventário feito, o bundle lido e a `ANALISE.md` do caso escrita ou atualizada, apresente **só a estrutura**, sem redigir conteúdo, e grave em `<PECA>.estrutura.md` ao lado da peça:
 
 1. **Seções, na ordem em que aparecerão**, separando preliminares, mérito, tutela e pedidos.
-2. **Em cada seção:** o fato que ela afirma, o documento que o prova (`Doc. N`), a página do bundle que sustenta a tese e o `status` dessa página. Página `em_teste` aparece aqui, quando ainda é barato trocar a tese, e não como exit 3 do `md2docx`.
-3. **Argumento em destaque** (o que abre a peça) e por quê.
+2. **Em cada seção:** o fato que ela afirma, o estado dele no mapa probatório (**comprovado** com `Doc. N` · **frágil** · **a produzir**), a página do bundle que sustenta a tese e o `status` dessa página. Página `em_teste` aparece aqui, quando ainda é barato trocar a tese, e não como exit 3 do `md2docx`. Fato *frágil* é narrado com a cautela correspondente; fato *a produzir* vai para o protesto por provas (art. 319, VI, CPC), com o meio de prova nomeado.
+3. **Argumento em destaque** (o que abre a peça) e por quê. É a tese escolhida na `ANALISE.md`, seção 2.
 4. **Peso relativo** de cada parte, em porcentagem aproximada. Não se estima em páginas.
 5. **O que fica de fora**, com um de dois motivos: *não agrega* (dilui o destaque) ou *o acervo não cobre* (regra dura 3, aplicada antes de escrever).
-6. **O que falta saber:** pergunta que a pasta e o Drive não respondem, ligada à seção que depende dela.
+6. **Ataques respondidos:** para cada ataque previsto na `ANALISE.md`, seção 4, a seção da peça que o neutraliza, ou a decisão de não enfrentá-lo e por quê.
+7. **O que falta saber:** pergunta que a pasta e o Drive não respondem, ligada à seção que depende dela.
 
 Formato do arquivo:
 
@@ -88,17 +102,24 @@ Formato do arquivo:
 peca: contestacao.md
 aprovada: não
 bundle: direito/<tema>
+analise: ANALISE.md
 ---
 
 ## Destaque
 <argumento que abre a peça e por quê>
 
 ## Seções e peso
-1. <Seção> (N %) — Doc. N; <bundle>/<pasta>/<pagina>.md (vigente | em_teste)
+1. <Seção> (N %) — fato: <comprovado Doc. N | frágil | a produzir: testemunha>; <bundle>/<pasta>/<pagina>.md (vigente | em_teste)
 ...
+
+## Provas a produzir
+- <fato>: <meio de prova>, pedido na seção <X>
 
 ## Fora
 - <tese ou seção>: não agrega | acervo não cobre
+
+## Ataques respondidos
+- <ataque 1 da ANALISE.md>: seção <X> | não enfrentado porque <motivo>
 
 ## Falta saber
 - <Seção X> depende de <pergunta>. <Onde procurar, se houver pista>
@@ -250,6 +271,7 @@ Antes de entregar o output, confirme:
 - [ ] Nenhum placeholder, nota entre colchetes ou referência ao processo de escrita
 - [ ] Todos os réus têm fundamentação específica, não apenas menção genérica
 - [ ] A tutela de urgência, se pedida, descreve o perigo concreto (não apenas cita o art. 300)
+- [ ] Nenhum fato marcado *a produzir* na `ANALISE.md` é afirmado como provado; todos aparecem no protesto por provas com o meio nomeado
 - [ ] Toda jurisprudência está **transcrita** em bloco, com fonte declarada e página correspondente no bundle (o `lint-citacoes` confere literalidade e voz do julgado). Citação indireta só para ponto que o acervo não cobre, e dita como tal
 - [ ] `<PECA>.validacao.md` é mais novo que a última edição da peça e não diz REPROVADO
 

@@ -1,6 +1,6 @@
 ---
 name: legal-writer
-version: 3.3.0
+version: 3.4.0
 description: |
   Redige o texto jurídico inicial de peças processuais (iniciais, recursos, contestações, manifestações) 
   com raciocínio argumentativo contínuo, linguagem humana e precisão técnica. Use esta skill sempre que 
@@ -25,6 +25,8 @@ Antes de escrever qualquer linha, confirme que você tem:
 Se algum desses elementos estiver ausente, pergunte antes de escrever.
 
 A estrutura aprovada é vinculante: seções, ordem, argumento em destaque e o documento previsto para cada fato. Não crie seção, não reordene, não mude o destaque. Se ao escrever a estrutura se mostrar errada, pare e devolva ao orchestrator para reapresentação; não improvise a correção no texto.
+
+O estado de cada fato vem do mapa probatório da `ANALISE.md` do caso e dita o verbo: fato **comprovado** se afirma e cita o `Doc. N`; fato **frágil** se narra como o que é ("segundo relata o autor", "o print de fl. X indica") sem chamá-lo de incontroverso; fato **a produzir** se anuncia como o que será demonstrado, com o meio nomeado no protesto por provas. Placeholder (`[VERIFICAR]`, `[NOME]`, `[...]`) não substitui fato que falta: o que falta volta ao orchestrator como "falta saber".
 
 ---
 
