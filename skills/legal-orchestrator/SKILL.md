@@ -1,10 +1,11 @@
 ---
 name: legal-orchestrator
-version: 4.8.0
+version: 4.9.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
   acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
-  probatório, ataques previstos e, em contestação, tabela de impugnação especificada do art. 341), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
+  probatório, ataques previstos; em contestação, tabela de impugnação especificada do art. 341;
+  em réplica, mapa da contestação em cinco eixos com incontrovérsia, confissões e prazos paralelos), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
   redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
   adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
   seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
@@ -77,9 +78,11 @@ Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em 
 
    5. **Impugnação especificada** (só quando a peça é contestação). Antes dela, o frontmatter da `ANALISE.md` declara **`lado: consumidor`** (padrão do escritório) **ou `lado: fornecedor`** (exceção, declarada pela titular no início): o lado decide quem pede e quem enfrenta a inversão do ônus e avisa que, para fornecedor, o acervo tende a não cobrir as defesas. A seção 3 mapeia os fatos da nossa tese; esta mapeia os fatos da **inicial do autor**, um a um, porque fato não impugnado precisamente presume-se verdadeiro (art. 341, CPC). Preencher a tabela da heurística `direito/pecas/contestacao/heuristicas/tabela-impugnacao-especificada.md` do acervo, Partes 0 a 3: primeiro o **roteiro de entrevista do réu gerado da inicial** (cada fato vira pergunta ao cliente com o documento esperado); depois, para cada fato alegado, por episódio e não por frase, a prova do autor e o estado dela, a **versão do réu**, a prova do réu (`Doc. N`) e a postura (nega, admite, admite com ressalva, fato novo); a **exposição por pedido** com resposta principal e subsidiária (compensação e dedução do já pago se pedem, não se presumem); a postura por documento do autor (art. 436); depois os treze incisos do art. 337 com "cabe" ou "não cabe e por quê" (incompetência relativa e convenção de arbitragem precluem se caladas), prescrição e decadência como prejudiciais, e as posturas acessórias (reconvenção, denunciação, chamamento, falsidade, exibição, gratuidade do réu) como decisão da titular. Fato novo sem `Doc.` do réu não se alega: o ônus dele é do réu (art. 373, II). Fluxo do procedimento comum: no Juizado Especial (Lei 9.099, arts. 30 e 31) parar e sinalizar. Se há tutela deferida contra o réu, o prazo do agravo (art. 1.003, § 5º) corre em paralelo e costuma vencer antes: anotar os dois e levar a decisão à titular.
 
+   6. **Mapa da contestação** (só quando a peça é réplica). A seção 3 mapeia a prova da nossa tese; esta mapeia a **contestação e todos os anexos dela**, lidos inteiros, porque a defesa é ao mesmo tempo o que se responde e prova do autor. Preencher a tabela da heurística `direito/pecas/replica/heuristicas/tabela-alegacoes-resposta.md` do acervo, Partes 0 a 4: primeiro o **roteiro de entrevista do autor gerado da contestação** (cada fato novo ou documento do réu vira pergunta ao cliente com o documento esperado); depois cada alegação da contestação em um de **cinco eixos** (preliminar do art. 337, inclusive impugnação à gratuidade; fato impeditivo, modificativo ou extintivo do art. 350, com a anotação de se veio com `Doc.` do réu, art. 373, II; documento novo do art. 437, com postura do art. 436; **tese jurídica da defesa**, respondida pelo bundle temático ou declarada como lacuna; negativa pura, que não aciona resposta); o **espelho do art. 341**, fato da inicial por fato, com o que a contestação fez com ele (impugnado, negativa geral, admitido, silenciado), porque silenciado e negativa geral são incontroversos e cabe ao autor cobrar a fixação no saneamento (art. 357, II); as **confissões, documentos do réu contra ele e contradições internas** (arts. 389 a 395 e 408), com a cisão do art. 395 anotada quando o réu admitiu e acrescentou fato novo; e as **posturas acessórias com relógio próprio** (reconvenção, art. 343, § 1º, quinze dias para contestação à reconvenção, sem a qual a revelia é do autor; agravo do réu contra a tutela; arguição de falsidade, art. 430; pedido de julgamento antecipado; denunciação), cada uma anotada na `cronologia.md` ao lado do prazo da réplica, com a decisão da titular sobre peça conjunta ou separada. **Portão de cabimento:** só negativa pura e nada colhido nas Partes 2 a 4 é réplica dispensável, levada à titular como parecer curto; não se redige memorial antecipado. A regra de ouro do art. 329, II, veda fato constitutivo e pedido novos; argumento de direito novo contra a tese da defesa é permitido (art. 322, § 2º).
+
    Frontmatter: `caso:`, `bundle:`, `atualizada:` (data) e, em contestação, `lado:`. **Não** usar `tipo:`, `pipeline:` nem `titulo:` + `processo:`, que fazem os hooks tratarem o arquivo como peça.
 
-**Portão:** tese sem página no bundle não é candidata; fato "a produzir" não é afirmado como provado em nenhuma peça do caso. Em contestação, **nenhum fato da inicial sem linha na seção 5** e nenhum inciso do art. 337 sem decisão registrada.
+**Portão:** tese sem página no bundle não é candidata; fato "a produzir" não é afirmado como provado em nenhuma peça do caso. Em contestação, **nenhum fato da inicial sem linha na seção 5** e nenhum inciso do art. 337 sem decisão registrada. Em réplica, **nenhuma alegação da contestação sem eixo na seção 6**, nenhum fato da inicial sem resultado no espelho do art. 341 e nenhum anexo da contestação sem leitura integral.
 
 ---
 
@@ -97,6 +100,7 @@ Com o inventário feito, o bundle lido e a `ANALISE.md` do caso escrita ou atual
 6. **Ataques respondidos:** para cada ataque previsto na `ANALISE.md`, seção 4, a seção da peça que o neutraliza, ou a decisão de não enfrentá-lo e por quê.
 7. **O que falta saber:** pergunta que a pasta e o Drive não respondem, ligada à seção que depende dela.
 8. **Em contestação, o espelho da tabela:** cada linha "nega", "admite com ressalva" e "fato novo" da `ANALISE.md`, seção 5, aponta a seção que a absorve; cada "cabe" do checklist do art. 337 vira subseção de preliminar, na ordem do Código; prescrição e decadência têm seção própria de prejudicial quando cabem; cada pedido da inicial tem a seção que o responde; reconvenção e demais posturas acessórias aparecem com a decisão da titular. Linha sem seção é fato que vai passar por incontroverso. A estrutura de referência é a do playbook `direito/pecas/contestacao/playbooks/playbook-contestacao.md`, com capítulos presentes só quando a tabela os aciona. No Claude Code, essas perguntas vão à titular por `AskUserQuestion`, **no máximo quatro**, junto com a apresentação da estrutura; se são mais de quatro, o inventário do Estágio 0 está incompleto, e é lá que se volta.
+9. **Em réplica, o espelho da contestação:** cada linha dos eixos 1 a 4 da `ANALISE.md`, seção 6, aponta o capítulo que a absorve (preliminar e impugnação à gratuidade em subseção própria; fato novo, tese e documento em subseção própria); cada fato silenciado ou de negativa geral do espelho do art. 341 aponta o capítulo de incontrovérsia; cada confissão, documento do réu contra ele e contradição aponta o capítulo que a usa; cada postura acessória aponta um capítulo ou uma peça própria com prazo anotado. Linha sem capítulo é preliminar que vai passar por concordada, ou confissão que vai se perder. A ordem entre incontrovérsia, fato novo e tese é escolha declarada (a incontrovérsia antes quando esvazia o fato novo; o fato novo antes quando a confissão está dentro dele). A estrutura de referência é a do playbook `direito/pecas/replica/playbooks/playbook-replica.md`, sete capítulos, com II a VI presentes só quando a tabela os aciona. Mesmo limite de quatro perguntas à titular.
 
 Formato do arquivo:
 
@@ -130,13 +134,19 @@ analise: ANALISE.md
 - pedido <letra> da inicial: seção <X>
 - reconvenção | denunciação | gratuidade do réu: sim, seção <X> | não, porque <motivo>
 
+## Espelho da contestação (só réplica)
+- alegação <#> da contestação (<eixo>): seção <X> | sem resposta porque negativa pura
+- fato <#> da inicial (<silenciado | negativa geral>): capítulo de incontrovérsia, seção <X>
+- confissão | documento do réu | contradição <#> (fl. <N> da contestação): seção <X>
+- reconvenção | agravo do réu | falsidade | gratuidade impugnada: seção <X> | peça própria, prazo <data>
+
 ## Falta saber
 - <Seção X> depende de <pergunta>. <Onde procurar, se houver pista>
 ```
 
 **Portão humano.** Em peça argumentativa livre (contestação, réplica, apelação, agravo, REsp, embargos, manifestação de mérito), **pare e aguarde a aprovação da titular**. Ajuste pedido por ela é feito no arquivo, não na conversa; a versão com `aprovada: sim` e a data no frontmatter é a que o Estágio 1 recebe, e é vinculante: o legal-writer não cria seção, não reordena e não muda o destaque. Se durante a redação a estrutura se mostrar errada, voltar aqui e reapresentar; não improvisar.
 
-Em peça com template ou estrutura canônica (`inicial-rescisao-lote`, `apelacao-cirurgica`, cumprimento de sentença), a estrutura é o modelo: gravar o arquivo apontando o template, listar só os desvios e seguir sem parar. Desvio grande do modelo (seção nova, tese fora do template) volta a exigir aprovação.
+Em peça com template ou estrutura canônica (`inicial-rescisao-lote`, apelação pelo `direito/pecas/apelacao/workflows/apelacao.md` do arsenal, cumprimento de sentença), a estrutura é o modelo: gravar o arquivo apontando o template, listar só os desvios e seguir sem parar. Desvio grande do modelo (seção nova, tese fora do template) volta a exigir aprovação.
 
 Aprovação sem leitura é rastro falso, pior que nenhum. O arquivo existe para ser lido.
 
@@ -274,7 +284,7 @@ O texto jurídico pode e deve ser humano — mas é humanidade formal, não colo
 
 **Documentos citados.** Toda peça que cita `Doc. N` declara o rol no frontmatter (`documentos:` com `n`, `descricao` e, quando houver, `arquivo`) e passa por `node skills/legal-consistency-validator/scripts/checar-docs.js <PECA>.md`: citado sem rol, rol sem citação ou arquivo ausente na pasta é erro a corrigir antes de compilar. `--rol` imprime o rol para o fim da peça. Em contestação isso não é capricho: a documental vai com a peça (art. 434) e o que faltou só entra depois nas hipóteses do art. 435.
 
-**Reconvenção, quando houver:** é inicial embutida; conferir causa de pedir própria, pedido certo, valor da causa pelo art. 292 (`perfil/definicoes.md`, § 1) e custas ou gratuidade (art. 319).
+**Reconvenção, quando houver:** é inicial embutida; conferir causa de pedir própria, pedido certo, valor da causa pelo art. 292 (`perfil/definicoes.md`, § 1) e custas ou gratuidade (art. 319). Em réplica, o inverso: reconvenção do réu exige **contestação à reconvenção** em quinze dias (art. 343, § 1º), com os requisitos de contestação (tabela de impugnação especificada para os fatos da reconvenção), em capítulo próprio ou peça separada por decisão da titular; a réplica não a responde de passagem.
 
 Antes de entregar o output, confirme:
 
@@ -287,7 +297,7 @@ Antes de entregar o output, confirme:
 - [ ] Nenhum fato marcado *a produzir* na `ANALISE.md` é afirmado como provado; todos aparecem no protesto por provas com o meio nomeado
 - [ ] Toda jurisprudência está **transcrita** em bloco, com fonte declarada e página correspondente no bundle (o `lint-citacoes` confere literalidade e voz do julgado). Citação indireta só para ponto que o acervo não cobre, e dita como tal
 - [ ] `<PECA>.validacao.md` é mais novo que a última edição da peça e não diz REPROVADO
-- [ ] **Checklist de saída do tipo de peça**, em `<bundles>/direito/pecas/<tipo>/index.md` (petição inicial: requisitos do art. 319 I–VII, documentos do art. 320, encargos, requerimentos finais). A técnica da peça mora no acervo; o orchestrator só aponta
+- [ ] **Checklist de saída do tipo de peça**, em `<bundles>/direito/pecas/<tipo>/index.md` (petição inicial: requisitos do art. 319 I–VII, documentos do art. 320, encargos, requerimentos finais; réplica: preliminares respondidas, incontroversos listados com folha, confissões transcritas, posturas do art. 436, especificação de provas fato a fato, prazos paralelos na cronologia). A técnica da peça mora no acervo; o orchestrator só aponta
 
 ---
 

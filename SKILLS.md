@@ -10,10 +10,8 @@
 | [`Scrapling-Skill`](skills/Scrapling-Skill/SKILL.md) | local | Scrape web pages using Scrapling with anti-bot bypass (like Cloudflare Turnstile), stealth headless browsing, spiders framework, adaptive scraping, and JavaScript rendering. |
 | [`agent-browser`](skills/agent-browser/SKILL.md) | sim | Browser automation CLI for AI agents. |
 | [`analise-perfil`](skills/analise-perfil/SKILL.md) | sim | Gera relatório judicial de PERFIL DE CONSUMO em casos de fraude bancária, contrastando o padrão habitual do correntista (baseline real dos extratos) com o cluster de operações frau |
-| [`apelacao-cirurgica`](skills/apelacao-cirurgica/SKILL.md) | sim | Pipeline especializado para redação de Apelação Cível no padrão PMA: lê automaticamente jurisprudência STJ, estratégias e casos decididos do tema-pai, extrai trechos literais da se |
 | [`audio-converter`](skills/audio-converter/SKILL.md) | local | Converte áudio entre formatos (ogg, mp3, wav, m4a). |
 | [`banca-revisora`](skills/banca-revisora/SKILL.md) | sim | Banca simulada de revisão de peças processuais de alto valor: 5 assentos jurídicos (assessor de gabinete, advogado da parte contrária, relator pragmático, processualista, estrategi |
-| [`brainstorming`](skills/brainstorming/SKILL.md) | local | Socratic questioning protocol + user communication. |
 | [`browser-use`](skills/browser-use/SKILL.md) | sim | Automates browser interactions for web testing, form filling, screenshots, and data extraction. |
 | [`conselheiros`](skills/conselheiros/SKILL.md) | sim | Run any question, idea, or decision through a council of 5 AI advisors who independently analyze it, peer-review each other anonymously, and synthesize a final verdict. |
 | [`consumir-canal-youtube`](skills/consumir-canal-youtube/SKILL.md) | sim | Consome canal jurídico do YouTube e monta uma KB de canal (camada de consumo) em D:\GITHUB\kb-youtube\<canal>, com curadoria anti-repetição — um conceito = uma página sintetizando  |
@@ -24,7 +22,6 @@
 | [`ficha-rescisao-lote`](skills/ficha-rescisao-lote/SKILL.md) | sim | Apura os fatos numéricos de um caso de rescisão de compromisso de compra e venda de LOTE urbano (contrato + extrato de pagamento) e calcula, de forma determinística, os cenários de |
 | [`gerador-cumprimento-sentenca`](skills/gerador-cumprimento-sentenca/SKILL.md) | sim | Lê sentença, acórdão (apelação/monocrática) e acórdão em embargos de declaração da pasta do caso, extrai os trechos que fixam índice de correção, montante de devolução e percentual |
 | [`heic-converter`](skills/heic-converter/SKILL.md) | sim | Converte imagens HEIC/HEIF (formato padrão de prints e fotos de iPhone) em JPG legíveis e aptas a protocolo judicial, em lote e localmente. |
-| [`humanizer`](skills/humanizer/SKILL.md) | local | Remove signs of AI-generated writing from text. |
 | [`humanizer-forense`](skills/humanizer-forense/SKILL.md) | sim | Remove sinais de escrita de IA de peças processuais em português jurídico brasileiro, SEM tocar na estrutura AI-first invisível (BLUF, títulos-conclusão, transcrições). |
 | [`inicial-rescisao-lote`](skills/inicial-rescisao-lote/SKILL.md) | sim | Orquestra a produção completa da petição inicial de rescisão de compromisso de compra e venda de LOTE urbano (Lei 6.766/79), do dossiê ao .docx protocolável no padrão PMA. |
 | [`legal-consistency-validator`](skills/legal-consistency-validator/SKILL.md) | sim | Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos se |
@@ -33,7 +30,6 @@
 | [`markdown-mermaid-writing`](skills/markdown-mermaid-writing/SKILL.md) | sim | Padrão de Markdown e diagramas Mermaid para documentação técnica, científica e de projetos. |
 | [`notebooklm`](skills/notebooklm/SKILL.md) | sim | Complete API for Google NotebookLM - full programmatic access including features not in the web UI. |
 | [`onboarding-usuario`](skills/onboarding-usuario/SKILL.md) | sim | Entrevista de primeiro uso do workspace. |
-| [`orquestrador-loop`](skills/orquestrador-loop/SKILL.md) | sim | Motor de orquestração para pipelines repetidos do escritório (peças jurídicas, conversão PDF→MD em lote, relatórios de perfil, validação de extrato). |
 | [`pdf`](skills/pdf/SKILL.md) | local | Use this skill whenever the user wants to do anything with PDF files. |
 | [`pdfmd`](skills/pdfmd/SKILL.md) | sim | Converter PDFs locais em Markdown auditável, com preservação de estrutura, tabelas, imagens, OCR por página, âncoras citáveis, manifesto de proveniência e índice para leitura selet |
 | [`peca-pma-builder`](skills/peca-pma-builder/SKILL.md) | sim | Biblioteca Node compartilhada para geração de peças jurídicas .docx no padrão PMA. |

@@ -249,6 +249,6 @@ Não editar sem coordenar com a usuária.
 `docx` (npm global). Path padrão: `node_modules/ na raiz do projeto`. Pode ser sobrescrito via env var `NPM_GLOBAL_NODE_MODULES`.
 
 ## Limites (FORA DO ESCOPO)
-- **Não** redige conteúdo jurídico — isso é tarefa do `legal-writer`/`legal-orchestrator` ou de skill específica (`apelacao-cirurgica`).
+- **Não** redige conteúdo jurídico — isso é tarefa do `legal-writer`/`legal-orchestrator`.
 - **Não** valida consistência argumentativa — isso é `legal-consistency-validator`.
 - **Não** decide layout visual avançado (tabelas complexas, gráficos, visual law) — para isso, estender este builder ou usar a skill `docx` diretamente.

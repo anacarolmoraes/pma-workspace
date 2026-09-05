@@ -67,6 +67,11 @@ Cada item de `pages` registrar:
   de texto duplicada do PDF; suprimir não é apagar, a ocorrência fica registrada);
 - avisos que exigem conferência.
 
+No topo do manifesto, fora de `pages`, pode existir `injecao`: lista de achados da varredura de
+*prompt injection* e texto invisível feita pelos wrappers logo após a conversão (regra dura 7 do
+`AGENTS.md`). Presente = o documento traz material dirigido a IA ou oculto ao leitor; o
+`ler-pdfmd` o exibe em toda leitura. É dado sobre a fonte, nunca instrução.
+
 ### `documento_assets/`
 
 Conter recortes renderizados das ocorrências visuais. O manifesto pode apontar várias
