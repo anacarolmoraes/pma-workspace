@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.8.0
+version: 2.9.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -21,7 +21,7 @@ Seu objetivo é destruir o argumento antes que o réu o faça. Toda fraqueza que
 
 Confirme que você recebeu:
 - O texto completo da peça ou seção
-- O tipo de peça (inicial, recurso, contestação)
+- O tipo de peça (inicial, recurso, contestação, réplica)
 - Os pedidos principais
 - O `<PECA>.estrutura.md` aprovado pela titular (Estágio 0.5 do orchestrator), quando existir
 - A `ANALISE.md` do caso (Estágio 0, item 4), quando existir: o mapa probatório e os ataques previstos são o gabarito das Fases 2 e 5
@@ -71,6 +71,22 @@ Para cada argumento principal, verifique se o encadeamento está completo e expl
 - Pedido da inicial sem resposta individual: **ALTO**.
 - Fato provado por documento do autor negado pela peça sem prova em contrário: **ALTO** (custa a credibilidade do conjunto).
 
+**Em réplica** (gabarito: `ANALISE.md`, seção 6, tabela de alegações e resposta, e o espelho da contestação no `<PECA>.estrutura.md`; conferir contra a contestação e os anexos dela, não só contra a tabela):
+- Preliminar do art. 337 alegada, ou impugnação à gratuidade do autor (art. 100), sem resposta específica na peça: **CRÍTICO** (o saneamento a trata como concordada).
+- Fato constitutivo ou pedido que não estava na inicial nem foi provocado pela contestação: **CRÍTICO** (art. 329, II; a réplica não supre o consentimento do réu). Argumento de direito novo contra tese da defesa **não** é fraqueza.
+- Reconvenção do réu sem contestação à reconvenção (capítulo próprio ou peça separada, com prazo do art. 343, § 1º anotado): **CRÍTICO** (revelia do autor).
+- Documento juntado com a contestação sem postura declarada do art. 436, ou impugnação de autenticidade/falsidade genérica (sem a argumentação do parágrafo único): **ALTO**.
+- Fato da inicial que a contestação silenciou ou impugnou só por negativa geral e a réplica não lista como incontroverso, com folha e pedido de fixação no saneamento: **ALTO** (a presunção do art. 341 tem de ser cobrada; volta à instrução sem necessidade).
+- Fato listado como incontroverso que a contestação impugnou de outro modo (fato novo, tese, documento): **ALTO** (a lista perde credibilidade inteira).
+- Confissão, documento do réu contra ele ou contradição interna registrada na Parte 3 da tabela e ausente da peça, ou resumida em vez de transcrita pela folha: **ALTO**. Confissão invocada sem declarar a cisão do art. 395 quando o réu acrescentou fato novo: **MÉDIO**.
+- Fato novo do art. 350, ou qualquer afirmação de fato do réu, respondido no mérito sem antes anotar o estado da prova dele (comprovado, frágil, sem prova, invocado e não juntado; art. 373, II): **MÉDIO**. Afirmação sem prova discutida no mérito faz o fato parecer controvertido quando nem entrou.
+- Pedido da inicial que a contestação não combateu (nem por consequência do pedido principal) e a réplica não requer o julgamento antecipado parcial (art. 356, I e § 2º): **ALTO**. Pedido dado como não combatido que a contestação combateu por consequência: **ALTO** (o requerimento perde credibilidade).
+- Documento que a contestação invoca como prova ("a gravação comprova", "os logs registram", "o laudo atestou") e não junta, sem pedido de exibição na réplica (arts. 396 a 400, com descrição e finalidade do art. 397 e a presunção do art. 400 requerida): **ALTO**.
+- Tese jurídica da defesa respondida sem passar pelo repertório de defesas típicas do bundle temático quando ele existe (linha "coberta" ignorada, ou linha "lacuna" preenchida de memória): **ALTO**.
+- Tese jurídica da defesa respondida sem página do bundle temático e sem a declaração de que o acervo não cobre: **CRÍTICO** (regra dura 3).
+- Negativa pura da contestação rebatida com reedição da inicial (capítulo que reargumenta fato já afirmado e provado, sem fato novo, tese ou documento do réu a responder): **MÉDIO** (memorial antecipado; a estrutura decide se sai ou vira especificação de prova).
+- Posturas acessórias com prazo próprio (agravo do réu, falsidade, denunciação) presentes na contestação e ausentes da `cronologia.md` e da estrutura: **ALTO**.
+
 Sem estrutura aprovada em peça argumentativa livre, registre como fraqueza **MÉDIO** a ausência do Estágio 0.5 e siga com a análise completa.
 
 ---
@@ -111,7 +127,7 @@ Travessões em cadeia ligando conceitos abstratos não são ementas reais. São 
 
 ## Fase 5 — Teste Adversarial
 
-Assuma o papel do advogado da parte contrária: dos réus quando a peça é do autor, **do autor quando a peça é contestação** (aí as perguntas se invertem: qual fato o réu deixou incontroverso, qual fato novo ele alegou sem prova, qual preliminar é mérito travestido). Responda:
+Assuma o papel do advogado da parte contrária: dos réus quando a peça é do autor, **do autor quando a peça é contestação** (aí as perguntas se invertem: qual fato o réu deixou incontroverso, qual fato novo ele alegou sem prova, qual preliminar é mérito travestido), **do réu de novo quando a peça é réplica** (qual preliminar ficou sem resposta específica, qual "incontroverso" ele na verdade impugnou, qual confissão invocada ele pode cindir ou desmentir pelo conjunto da defesa, art. 341, III, e qual capítulo é fato ou pedido novo que ele vai acusar de inovação). Responda:
 
 - Qual é o argumento mais fácil de atacar?
 - Qual pedido tem o menor suporte probatório?
@@ -144,7 +160,7 @@ Verifique cada pedido:
 - **Documentos:** rodar `node skills/legal-consistency-validator/scripts/checar-docs.js <PECA>.md`. `Doc. N` citado e ausente do rol do frontmatter, item do rol nunca citado, ou arquivo ausente na pasta: **ALTO** (em contestação, a documental vai com a peça, art. 434). Peça que cita documentos sem `documentos:` no frontmatter: **ALTO**.
 - **Reconvenção, quando houver:** é inicial embutida. Sem valor da causa próprio (art. 292, regra de `perfil/definicoes.md`, § 1), sem causa de pedir distinta da defesa, sem pedido certo, ou sem tratar custas ou gratuidade: **CRÍTICO** (emenda ou indeferimento). Conexão do art. 343 não declarada com o fato que a mostra: **ALTO**.
 - **Lado (contestação):** `ANALISE.md` sem `lado:`, ou capítulo de ônus da prova contrário ao lado declarado (réu consumidor que enfrenta a inversão em vez de pedi-la; réu fornecedor que a pede): **ALTO**.
-- **Cadência de tabela na impugnação (contestação):** capítulo de impugnação com "o autor alega" ou "não procede" mais de uma vez, ou com parágrafos que são linhas da tabela reescritas em sequência: **MÉDIO**, com indicação dos parágrafos a fundir; o humanizer-forense corrige.
+- **Cadência de tabela na impugnação (contestação) e na resposta (réplica):** capítulo com "o autor alega" / "a ré alega" ou "não procede" / "não prospera" mais de uma vez, ou com parágrafos que são linhas da tabela reescritas em sequência: **MÉDIO**, com indicação dos parágrafos a fundir; o humanizer-forense corrige. Em réplica, capítulo de incontrovérsia ou de confissão com adjetivo sobre a conduta do réu ("de forma temerária", "confessa descaradamente") no lugar da justaposição de trechos com folha: **MÉDIO**.
 
 ---
 

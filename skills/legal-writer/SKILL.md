@@ -1,6 +1,6 @@
 ---
 name: legal-writer
-version: 3.5.0
+version: 3.6.0
 description: |
   Redige o texto jurídico inicial de peças processuais (iniciais, recursos, contestações, manifestações) 
   com raciocínio argumentativo contínuo, linguagem humana e precisão técnica. Use esta skill sempre que 
@@ -94,6 +94,10 @@ Nunca reconhecer o argumento contrário para em seguida mudar de assunto. As fó
 ### Impugnação especificada em prosa (contestação)
 
 A tabela de impugnação da `ANALISE.md` é entrada, não modelo de parágrafo. O capítulo de impugnação não é a tabela reescrita: são três a cinco blocos temáticos em que a versão do réu conduz e a alegação do autor entra como contraste, pelo documento, pela data ou pela contradição interna dele. "O autor alega" e "não procede" aparecem no máximo uma vez cada no capítulo inteiro; a variação vem de abrir cada bloco por um ângulo diferente (o documento que o autor juntou e não prova, a data que não fecha, o que o próprio autor admite dois parágrafos depois). Contradição do autor com o próprio documento se mostra colocando os dois lado a lado, sem adjetivo. Cada fato impugnado continua identificável para o juiz conferir o art. 341, mas identificável pela narrativa, não por enumeração.
+
+### Réplica em prosa: incontrovérsia, confissão e tese da defesa
+
+A tabela de alegações da `ANALISE.md` (seção 6) é entrada, não modelo de parágrafo, e a réplica tem três capítulos com voz própria. **Incontrovérsia:** o capítulo não argumenta, constata. Cada fato silenciado entra com o trecho da inicial e a folha, a constatação de que a contestação não o enfrentou (ou o enfrentou só por negativa geral, que o parágrafo único do art. 341 reserva a defensor, dativo e curador), e a norma; os fatos vão em bloco, em dois ou três parágrafos, não um por fato; o pedido de fixação no saneamento fecha o capítulo. **Confissão e documento do réu:** justaposição, sem adjetivo. O trecho da contestação ou do documento dela, transcrito pela folha, ao lado do fato da inicial que confirma; a norma (art. 391 ou 408) em uma frase; quando o réu admitiu e acrescentou fato novo, a cisão do art. 395 dita em prosa ("o que a ré admite está provado; o que acrescenta é dela provar"). "Confessa", "reconhece" e "admite" no máximo uma vez cada por capítulo; a força está no trecho, não no verbo. Contradição interna se mostra pondo os dois trechos lado a lado e deixando o juiz concluir. **Tese da defesa:** cada tese em subseção com título que já é a resposta (não "Da tese da ré sobre o regime aplicável", mas "O contrato de 2013 não se submete à Lei 13.786/2018"); a tese como a defesa a formulou em uma frase, a resposta do bundle temático com a transcrição e a fonte adjacente, a conclusão. "A ré alega" e "não prospera" no máximo uma vez cada na peça inteira; a variação vem de abrir cada subseção pela norma, pelo precedente ou pelo fato que desmonta a tese. Fato novo do réu se responde primeiro pelo ônus (veio com prova ou só com afirmação, art. 373, II) e só depois pelo mérito. Negativa pura não ganha capítulo: se a inicial já afirmou e provou, repetir é memorial antecipado.
 
 ### Limite do Fecho "Isso é [X]"
 
