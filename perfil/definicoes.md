@@ -6,7 +6,7 @@ description: |
   numa peça. Fonte única: nenhuma skill deve repetir estas definições, apenas apontar
   para cá.
 status: vigente
-verificado_em: 2026-09-04
+verificado_em: 2026-09-05
 ---
 
 # Definições canônicas — Paulo Moraes Advocacia
@@ -49,12 +49,31 @@ do hábito.
 
 ## 2. Gratuidade da justiça
 
-- **Pessoa natural:** a alegação na própria inicial **basta** (art. 99, § 3º, CPC —
-  presunção de veracidade). **Não** juntar declaração de hipossuficiência avulsa como
-  regra; pedido enxuto.
-- Quando houver documento de renda (DIRPF, holerite), anexar e citar.
-- Ancorar em **Tema 1.178/STJ**.
+A forma do pedido depende de **duas perguntas**, nesta ordem: a ação foi ajuizada antes ou
+depois da ata da **ADC 80/STF** (mérito de 03/09/2026; ata de 03 ou 04/09 — conferir no
+andamento), e o **salário** do cliente passa de **R$ 5.000,00**? (Regra de 05/09/2026.)
+
+- **Ação ajuizada antes da ata** (qualquer renda) e **ação nova com salário ≤ R$ 5.000,00:**
+  a alegação na própria inicial **basta** (art. 99, § 3º, CPC — presunção relativa de
+  veracidade). **Não** juntar declaração de hipossuficiência avulsa como regra; pedido enxuto.
+  Ancorar em **Tema 1.178/STJ**. Em ação antiga, se a contraparte invocar a ADC 80, responder
+  só com a modulação (efeitos *ex nunc*, processos ajuizados após a ata).
+- **Ação nova com salário acima de R$ 5.000,00:** não há presunção; o ônus é do cliente. O
+  pedido **nasce com a prova** (renda, comprometimento com documento, custo estimado do
+  processo) e pede, **subsidiariamente**, redução ou parcelamento (art. 98, §§ 5º e 6º) e a
+  intimação do art. 99, § 2º, se o juízo entender a prova insuficiente. Aqui a declaração de
+  hipossuficiência entra — como peça da instrução, não como fundamento. **Não** invocar o
+  § 3º nessa faixa. Roteiro completo:
+  `<bundles>/direito/pecas/gratuidade/heuristicas/pedido-de-gratuidade-pos-adc-80.md`.
+- Quando houver documento de renda (DIRPF, holerite), anexar e citar — em qualquer faixa.
+- O valor de R$ 5.000,00 é atualizado pela legislação do IR ou, na falta, pelo IPCA; conferir
+  o vigente em caso na fronteira. O acórdão da ADC 80 **não está publicado**: enquanto a
+  página `stf-adc-80-merito-2026.md` do acervo for `em_teste`, a peça não a transcreve.
+- Pedido superveniente (99, § 1º) ou em recurso (99, § 7º) segue o regime da **data do
+  ajuizamento**, não a do pedido.
 - Pessoa jurídica: presunção não se aplica — exige prova da impossibilidade.
+- Acórdão que indefere pela Lei 1.060/50 (arts. 2º ou 4º) aplica norma revogada pelo art.
+  1.072, III, do CPC — argumento autônomo em embargos e no REsp.
 
 ---
 

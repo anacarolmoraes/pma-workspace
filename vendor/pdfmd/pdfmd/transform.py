@@ -605,8 +605,10 @@ def transform_pages(
     # 3. Merge bullet only lines with following text lines for list detection.
     pages_t = merge_bullet_lines(pages_t)
 
-    # 4. Detect simple text tables and annotate blocks.
-    pages_t = annotate_tables(pages_t, debug=debug_tables)
+    # 4. Detect simple text tables and annotate blocks (skipped by --no-tables:
+    #    justified legal prose with double spaces reads as an ASCII table).
+    if getattr(options, "detect_tables", True):
+        pages_t = annotate_tables(pages_t, debug=debug_tables)
 
     # 5. Detect and annotate math equations and expressions.
     for page in pages_t:

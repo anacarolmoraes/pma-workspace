@@ -309,6 +309,32 @@ class FidelityTests(unittest.TestCase):
             )
             self.assertIn("p. PDF 2", search_result.stdout)
 
+    def test_duplicate_text_layer_is_suppressed_and_manifested(self) -> None:
+        # STF "Inteiro Teor" PDFs carry each page twice in the content stream:
+        # same text, same coordinates. Native extraction must keep one copy and
+        # register the other, without touching legitimate repetitions elsewhere.
+        from pdfmd.extract import _drop_duplicate_layer_blocks
+
+        def block(text: str, bbox: tuple[float, float, float, float]) -> Block:
+            return Block(lines=[Line(spans=[Span(text=text, size=11.0)], bbox=bbox)], bbox=bbox)
+
+        page = PageText(
+            blocks=[
+                block("Além disso, a agravante sustenta", (114.0, 99.0, 542.0, 155.0)),
+                block("Por fim, a manutenção", (114.0, 157.0, 542.0, 194.0)),
+                block("Além disso, a agravante sustenta", (114.2, 99.1, 541.9, 155.0)),  # same layer, ~same bbox
+                block("Por fim, a manutenção", (114.0, 157.0, 542.0, 194.0)),
+                block("Por fim, a manutenção", (114.0, 400.0, 542.0, 437.0)),  # same text, other place: keep
+            ],
+            page_number=1,
+        )
+        _drop_duplicate_layer_blocks(page)
+        self.assertEqual(
+            [b.lines[0].text() for b in page.blocks],
+            ["Além disso, a agravante sustenta", "Por fim, a manutenção", "Por fim, a manutenção"],
+        )
+        self.assertEqual([s["kind"] for s in page.suppressed_repeated], ["duplicate_layer"] * 2)
+
 
 if __name__ == "__main__":
     unittest.main()

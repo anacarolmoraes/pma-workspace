@@ -1,197 +1,172 @@
 ---
 name: pedido_justica_gratuita
-description: Analisa, avalia e elabora pedidos de benefício da assistência judiciária gratuita (justiça gratuita). Utilize esta skill sempre que o usuário precisar verificar se um pedido de justiça gratuita está tecnicamente sólido, fundamentado na legislação vigente (CPC Arts. 98-102), evitar indeferimentos com base no Tema 1178 do STJ, elaborar ou melhorar uma declaração de hipossuficiência, avaliar documentos de comprovação de necessidade, ou identificar lacunas e riscos no pedido. Inclui análise de renda, presunção de veracidade, elementos que afastam a presunção, e diagnóstico com recomendações baseadas nas três teses do Tema 1178 do STJ.
+description: Analisa, avalia e elabora pedidos de gratuidade da justiça (CPC, arts. 98 a 102) e a resposta à impugnação. Usar sempre que for preciso decidir a forma do pedido pela faixa de salário fixada na ADC 80/STF (R$ 5.000,00, para ações ajuizadas após 09/2026), conferir se um pedido está sólido, redigir ou revisar a demonstração de insuficiência de quem ganha acima da faixa, responder à impugnação do banco (art. 100), atacar indeferimento (agravo do art. 101, Tema 1.178/STJ) ou acórdão fundado na Lei 1.060/50 revogada. Diagnóstico com classificação de risco e lacunas documentais.
 ---
 
 # Skill: Pedido de Justiça Gratuita
 
 ## Propósito
 
-Esta skill garante que pedidos de benefício da assistência judiciária gratuita estejam tecnicamente sólidos, fundamentados na legislação vigente e com a documentação adequada para evitar indeferimentos.
+Garantir que o pedido de gratuidade da pessoa natural entre com a forma certa para o regime
+que o alcança, com a prova certa quando prova é exigida, e que a resposta à impugnação refute
+em vez de reconhecer.
 
-## Quando Usar
+**Fonte de verdade.** Esta skill não repete definição nem jurisprudência. Ela **aponta**:
 
-Utilize esta skill quando o usuário:
-- Precisa analisar um pedido de justiça gratuita já elaborado
-- Deseja elaborar uma declaração de hipossuficiência personalizada
-- Quer avaliar se seus documentos são suficientes para comprovar a necessidade
-- Precisa identificar lacunas e riscos de indeferimento (baseado em renda e patrimônio)
-- Solicita documentos complementares para fortalecer o pedido
-- Pergunta sobre requisitos legais para obter justiça gratuita
+- Forma canônica do pedido (onde fica, o que se junta, declaração avulsa ou não):
+  `perfil/definicoes.md` §2.
+- Texto de lei literal: [`references/legislacao.md`](references/legislacao.md) (CPC 98-102,
+  1.072, III; Tema 1.178; síntese da ADC 80).
+- Acervo: `<bundles>/direito/pecas/gratuidade/` (index, heurísticas, ADC 80 com vozes
+  separadas) e `<bundles>/direito/pecas/peticao-inicial/jurisprudencia/resp-1988687-rj-tema-1178-gratuidade.md`.
+  `<bundles>` vem de `perfil/ambiente.json`.
 
----
+## Quando usar
 
-## Protocolo de Análise (4 Etapas)
+- Redigir ou revisar o pedido de gratuidade em inicial, contestação, recurso ou petição
+  superveniente.
+- Decidir se o cliente precisa provar a insuficiência ou se a alegação basta.
+- Responder à impugnação (art. 100) ou impugnar a gratuidade da parte contrária.
+- Atacar indeferimento ou revogação (agravo do art. 101; embargos; REsp).
+- Montar a lista de documentos que o cliente deve trazer.
 
-Siga este protocolo rigoroso de análise técnica, fundamentado no Código de Processo Civil (Arts. 98 a 102) e nas teses obrigatórias do Tema 1178 do STJ.
+## Protocolo (5 passos)
 
-### PASSO 1: Triagem de Renda (Critério Suplementar)
+### Passo 0 — O regime: data do ajuizamento
 
-Embora o Tema 1178 proíba o indeferimento baseado apenas na renda, ela é o ponto de partida para definir a estratégia:
+A ADC 80/STF (mérito, 03/09/2026) só alcança processos **ajuizados a partir da publicação da
+ata** (03 ou 04/09/2026 — conferir no andamento). Registrar no relatório qual regime vale:
 
-| Faixa de Renda | Classificação | Foco da Análise |
-|----------------|---------------|------------------|
-| Até 3 salários mínimos | **Presunção Forte** | Garantir que a documentação básica (extratos/contracheque) esteja presente |
-| De 3 a 5 salários mínimos | **Análise de Equilíbrio** | Verificar se a renda líquida, após descontos de sobrevivência, justifica a gratuidade |
-| Acima de 5 salários mínimos | **Excepcionalidade** | Buscar fatos extraordinários (doenças, dívidas judiciais, muitos dependentes) para justificar |
+| Ajuizamento | Regime |
+|---|---|
+| Antes da ata | CPC 99, § 3º + Tema 1.178, sem faixa de salário. Se a contraparte invocar a ADC 80, responder só com a modulação. |
+| Depois da ata | Faixa de salário decide a forma (Passo 1). |
 
-### PASSO 2: Verificação da "Presunção de Veracidade" (Art. 99, §3º CPC)
+Pedido superveniente ou em recurso dentro de ação antiga segue o regime antigo: o marco é o
+ajuizamento, não o pedido.
 
-Analise a Declaração de Hipossuficiência em busca de três elementos:
+### Passo 1 — A faixa: salário passa de R$ 5.000,00?
 
-1. **Clareza**: Diz explicitamente que o declarante não pode pagar "sem prejuízo do sustento próprio ou da família"?
+Pergunta única do atendimento. Até R$ 5.000,00: **Forma A** (presunção relativa; alegação na
+própria peça, enxuta, art. 99, § 3º). Acima: **Forma B** (sem presunção; a peça nasce com a
+demonstração e o ônus é do cliente). Detalhe de cada forma na heurística do acervo
+`gratuidade/heuristicas/pedido-de-gratuidade-pos-adc-80.md`.
 
-2. **Abrangência**: Menciona que a gratuidade deve cobrir não só custas, mas honorários e despesas periciais?
+O valor é atualizado pela legislação do IR ou, na falta, pelo IPCA; conferir o vigente antes
+de classificar caso na fronteira. "Salário" é o termo das fontes secundárias — se o acórdão
+publicado disser "renda", somam-se aluguéis, pró-labore e benefícios.
 
-3. **Atualidade**: Os dados profissionais declarados batem com os documentos?
+### Passo 2 — Verificação do pedido (Forma A) ou da demonstração (Forma B)
 
-### PASSO 3: Identificação de "Elementos que Afastam a Presunção" (Tema 1178 - Tese 2)
+**Forma A**, conferir três coisas: a alegação diz que não pode pagar custas, despesas e
+honorários **sem prejuízo do sustento próprio ou da família**; não junta declaração avulsa
+sem razão (§2 do `definicoes.md`); se há documento de renda à mão, ele está anexado e o valor
+está dito.
 
-Este é o passo mais crítico. Aja como "advogado do diabo" para encontrar o que um juiz usaria para negar o pedido:
+**Forma B**, conferir a demonstração em quatro partes: renda (holerite ou DIRPF; autônomo:
+extratos de 3 meses + DIRPF); comprometimento com documento (aluguel ou financiamento,
+saúde, educação de dependentes, dívidas em curso); custo estimado do processo (custas,
+preparo, perícia); pedido subsidiário **sempre** (redução ou parcelamento, 98, §§ 5º e 6º, e
+intimação do 99, § 2º, se o juízo entender a prova insuficiente). Aqui a declaração de
+hipossuficiência entra — como peça da instrução, não como fundamento.
 
-- **Sinais de Riqueza**: Presença de veículos de alto valor, imóveis que não sejam a residência única ou investimentos vultosos
-- **Inconsistência Documental**: Exemplo: alguém que se diz desempregado, mas possui movimentações bancárias altas ou gastos com supérfluos incompatíveis
-- **Contexto da Causa**: Se o valor das custas é muito baixo em relação à renda, o risco de indeferimento aumenta
+### Passo 3 — O que derruba a presunção (advogado do diabo)
 
-### PASSO 4: Diagnóstico e Recomendações (O Desfecho)
+Procurar o que a contraparte usaria, sabendo que só vale **elemento nos autos** (99, § 2º):
 
-Após cruzar os dados, emita um Relatório de Análise estruturado:
+- Documento fiscal do próprio cliente com renda incompatível (é o que derrubou a gratuidade
+  no REsp 1.914.049/MT — a DIRPF juntada pela própria parte).
+- Imóvel além da residência, veículo de alto valor, participação societária com faturamento,
+  movimentação bancária incompatível com a alegação.
+- Valor do processo baixo diante da renda (custas de R$ 300 para quem recebe R$ 4.900).
+- Sinal externo sem documento (profissão, endereço, "advogada", "empresário") **não** é
+  elemento nos autos — mas o juízo pode intimar por ele; ter a resposta pronta.
 
-1. **Classificação de Risco**: (Baixo, Médio ou Alto)
-2. **Lacunas Críticas**: O que falta para o juiz não ter dúvidas (ex: falta o extrato do CNIS ou o comprovante de aluguel)
-3. **Ação Corretiva**: Sugestão de texto para complementar a petição ou lista de documentos adicionais
+### Passo 4 — Responder à impugnação, atacar o indeferimento
 
----
+**Impugnação do banco** (réplica): classificar cada argumento na tabela dos cinco do acervo
+(`gratuidade/heuristicas/repertorio-do-banco-contra-a-gratuidade.md`) e refutar cada um;
+nunca reconhecer sem refutar. Argumento sem elemento nos autos é respondido com o art. 99,
+§ 2º, e o art. 100, parágrafo único.
 
-## Aplicação do Tema 1178 do STJ
+**Indeferimento de plano por critério objetivo** (renda, profissão, valor do bem): agravo de
+instrumento (art. 101), **sem preparo** até o relator decidir (§ 1º). Transcrever a tese do
+Tema 1.178 (itens i e ii) e o item 7 da ementa do REsp 1.988.687/RJ. Em ação nova com salário
+acima de R$ 5.000,00, o agravo não invoca a presunção: sustenta que a prova foi feita e, se o
+juízo a achou insuficiente, que devia intimar (99, § 2º) — a ADC 80 tirou a presunção, não o
+dever de intimar.
 
-Analise o pedido sob a ótica das três teses fixadas pelo STJ:
+**Acórdão que cita a Lei 1.060/50** (art. 4º, art. 2º, p. ú.): norma revogada pelo art.
+1.072, III. Três frases, nesta ordem: o dispositivo está revogado; o regime é o do 99, §§ 2º
+e 3º; a consequência do regime vigente não foi aplicada.
 
-### Tese 1 - Proibição de critérios automáticos
-O juiz NÃO pode indeferir o pedido apenas porque o beneficiário ganha acima de "X" salários mínimos.
-
-### Tese 2 - Dever de fundamentação
-Se o juiz suspeitar da declaração, deve indicar exatamente quais documentos faltam ou o que está contraditório antes de indeferir.
-
-### Tese 3 - Critérios suplementares
-Parâmetros objetivos (como renda) só podem ser usados para complementar a análise, nunca como fundamento único.
-
----
-
-## Estrutura do Relatório de Análise
-
-Ao final da análise, apresente o resultado neste formato:
+### Passo 5 — Relatório
 
 ```markdown
-# Relatório de Análise - Justiça Gratuita
+# Relatório — Gratuidade da justiça
 
-## 1. Dados do Pedido
-- Renda mensal: R$ ______
-- Classificação: (Presunção Forte / Análise de Equilíbrio / Excepcionalidade)
-- Dependentes: ____
+## 1. Regime
+- Ajuizamento: __/__/____ → (antes | depois) da ata da ADC 80
+- Salário/renda: R$ ______ → Forma (A | B)
 
-## 2. Verificação da Declaração
-- Clareza: ✓/✗
-- Abrangência: ✓/✗
-- Atualidade: ✓/✗
+## 2. Pedido / demonstração
+- Forma A: alegação com "sem prejuízo do sustento": ✓/✗ · documento de renda anexado: ✓/✗
+- Forma B: renda ✓/✗ · comprometimento com documento ✓/✗ · custo do processo ✓/✗ · subsidiário (98 §§5º-6º; 99 §2º) ✓/✗
 
-## 3. Elementos que Afastam a Presunção
-- Sinais de Riqueza: [ ]
-- Inconsistência Documental: [ ]
-- Contexto da Causa: [ ]
+## 3. Elementos que derrubam a presunção (99, § 2º)
+- [ ] fiscal · [ ] patrimonial · [ ] bancário · [ ] proporção custas/renda · [ ] sinal externo sem documento
 
-## 4. Classificação de Risco
-- ( ) Baixo ( ) Médio ( ) Alto
+## 4. Risco: ( ) baixo ( ) médio ( ) alto
 
-## 5. Lacunas Críticas
-- [Lista de documentos faltantes]
-
-## 6. Ações Corretivas
-- [Sugestões de texto e documentos]
+## 5. Lacunas e ação corretiva
+- documentos faltantes; texto a inserir; pedido subsidiário a acrescentar
 ```
 
----
+## Documentos a pedir ao cliente
 
-## Minuta de Declaração de Hipossuficiência
+**Sempre:** documento de renda (holerite, DIRPF, extrato de benefício); RG e CPF.
 
-Quando solicitada a elaboração de uma declaração, utilize este modelo personalizado:
+**Forma B (acima de R$ 5.000,00), acrescentar:** DIRPF completa do último exercício; extratos
+bancários de 3 meses; comprovantes das despesas fixas (aluguel/financiamento, plano de saúde
+ou receitas e notas, mensalidades escolares, contratos de dívida em curso com saldo).
 
-**Modelo:**
+**Por situação:** desempregado — CNIS e rescisão; autônomo/informal — extratos de 3 meses e
+DIRPF; gastos com saúde — laudos, receitas, notas; dependentes — certidões e comprovante de
+matrícula; aluguel — contrato ou recibos.
+
+## Minuta de declaração de hipossuficiência (só quando a forma pedir)
+
 ```texto
 DECLARAÇÃO DE HIPOSSUFICIÊNCIA
 
-Eu, [NOME COMPLETO], CPF nº [XXX.XXX.XXX-XX], nascido em [DD/MM/AAAA], [NACIONALIDADE], [ESTADO CIVIL], atualmente [PROFISSÃO/CARGO], portador(a) da CTPS nº [SÉRIE], declarei, sob as penas da lei, que não possuo condições de arcar com as custas processuais e honorários advocatícios sem prejuízo do sustento próprio e de minha família.
+Eu, [NOME COMPLETO], CPF [XXX.XXX.XXX-XX], [NACIONALIDADE], [ESTADO CIVIL], [PROFISSÃO],
+residente em [ENDEREÇO], declaro, sob as penas da lei, que não tenho condições de pagar as
+custas, as despesas processuais e os honorários advocatícios sem prejuízo do sustento próprio
+e de minha família (CPC, art. 98).
 
-Declaro ainda que:
-- Minha renda mensal é de R$ _______, referente a [FONTE DE RENDA];
-- Possuo ______ dependente(s);
-- Meu patrimônio é composto por: [LISTAR BENS];
-- minhas despesas mensais são de aproximadamente R$ _______, relacionadas a: [ALUGUEL/TRANSPORTE/ALIMENTAÇÃO/SAÚDE/EDUCAÇÃO].
+Renda mensal: R$ ______ ([FONTE]). Dependentes: ____. Despesas fixas: R$ ______
+([ALUGUEL/FINANCIAMENTO, SAÚDE, EDUCAÇÃO, DÍVIDAS]), comprovadas pelos documentos anexos.
 
-Reconheço que a concessão do benefício da gratuidade judiciária compreende a isenção de custas processuais, honorários periciais e honorários advocatícios, nos termos do art. 98,§1º, do CPC.
-
-Por ser verdade, firmo a presente declaração.
+Estou ciente de que a gratuidade não afasta a responsabilidade pelas verbas de sucumbência,
+que ficam sob condição suspensiva de exigibilidade por cinco anos (CPC, art. 98, §§ 2º e 3º).
 
 [CIDADE], [DD] de [MÊS] de [ANO]
-
 ___________________________
 [NOME COMPLETO]
 ```
 
----
+## Exemplo
 
-## Checklist de Documentos
+Cliente recebe R$ 6.000,00 e gasta R$ 2.000,00 com tratamento de um dependente; ação nova,
+outubro de 2026. Regime: ADC 80, Forma B. A alegação sozinha cai sem intimação. A peça
+demonstra: renda R$ 6.000 (holerite), comprometimento R$ 2.000 saúde + R$ 1.800 aluguel +
+R$ 900 escola (documentos), sobra R$ 1.300 para três pessoas; custas estimadas R$ 1.200 e
+perícia provável; pede gratuidade integral e, subsidiariamente, parcelamento e a intimação
+do 99, § 2º. Declaração anexada como peça da instrução.
 
-### Documentos Obrigatórios
-- [ ] Declaração de hipossuficiência (assinada)
-- [ ] RG e CPF
-- [ ] Comprovante de renda (contracheque/extrato bancário/_declaração IR)
-- [ ] Carteira de Trabalho (páginas de identificação e registro)
+## Referências
 
-### Documentos Recomendados por Situação
-
-**Para desempregados:**
-- [ ] Extrato do CNIS (site: https://meu.inss.gov.br)
-- [ ] Rescisão de contrato de trabalho
-
-**Para trabalhadores informais:**
-- [ ] Declaração de próprio punho sobre income
-- [ ] Extratos bancários dos últimos 3 meses
-
-**Para quem alega gastos médicos:**
-- [ ] Receitas médicas
-- [ ] Notas fiscais de farmácia
-- [ ] Laudos médicos
-
-**Para quem tem filhos:**
-- [ ] Certidão de nascimento dos filhos
-- [ ] Comprovante de escolaridade
-
-**Para quem paga aluguel:**
-- [ ] Contrato de aluguel ou recibo
-
-**Para quem tem deudas:**
-- [ ] Certidões de déjitos
-- [ ] Contratos de dívida
-
----
-
-## Exemplo Prático de Análise
-
-**Cenário:** Usuário ganha R$ 6.000,00 (Renda Alta), mas gasta R$ 2.000,00 com tratamento de saúde de um dependente.
-
-**Análise:**
-1. A renda, isoladamente, causaria risco de indeferimento
-2. Recomendar que a declaração destaque o comprometimento da renda pela saúde
-3. Sugerir anexar notas fiscais da farmácia para criar a prova necessária exigida pela Tese 2 do Tema 1178
-
----
-
-## Referências Legais
-
-- **CPC, Art. 98**: Gratuidade judiciária para pessoas naturais e jurídicas
-- **CPC, Art. 99**: Pedido应由 parte e documentação
-- **CPC, Art. 100**: Consequências do indeferimento
-- **CPC, Art. 101**: Recursos
-- **CPC, Art. 102**: Extensão da gratuidade
-- **Tema 1178 STJ**: Proibição de critérios automáticos de indeferimento
+- [`references/legislacao.md`](references/legislacao.md) — CPC 98-102 e 1.072, III literais;
+  tese do Tema 1.178; síntese da ADC 80 (acórdão não publicado, `em_teste` no acervo).
+- Acervo: `<bundles>/direito/pecas/gratuidade/index.md`.
+- Regra canônica de forma: `perfil/definicoes.md` §2.

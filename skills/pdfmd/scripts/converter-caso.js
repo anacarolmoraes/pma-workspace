@@ -46,7 +46,15 @@ function pdfsSob(dir, saida = []) {
   return saida;
 }
 
-const AMBIENTE = { ...process.env, PYTHONUTF8: '1', CLAUDE_INVOKED_BY: 'converter-caso' };
+// OPENBLAS/OMP em 1 thread: sem isso o numpy do OCR morre com "Memory allocation
+// still failed after 10 retries" em máquina com pouca RAM.
+const AMBIENTE = {
+  ...process.env,
+  PYTHONUTF8: '1',
+  OPENBLAS_NUM_THREADS: '1',
+  OMP_NUM_THREADS: '1',
+  CLAUDE_INVOKED_BY: 'converter-caso',
+};
 
 function rodarPdfmd(py, pdf, modoOcr) {
   const r = spawnSync(

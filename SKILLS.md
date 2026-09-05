@@ -37,7 +37,7 @@
 | [`pdf`](skills/pdf/SKILL.md) | local | Use this skill whenever the user wants to do anything with PDF files. |
 | [`pdfmd`](skills/pdfmd/SKILL.md) | sim | Converter PDFs locais em Markdown auditável, com preservação de estrutura, tabelas, imagens, OCR por página, âncoras citáveis, manifesto de proveniência e índice para leitura selet |
 | [`peca-pma-builder`](skills/peca-pma-builder/SKILL.md) | sim | Biblioteca Node compartilhada para geração de peças jurídicas .docx no padrão PMA. |
-| [`pedido_justica_gratuita`](skills/pedido_justica_gratuita/SKILL.md) | sim | Analisa, avalia e elabora pedidos de benefício da assistência judiciária gratuita (justiça gratuita). |
+| [`pedido_justica_gratuita`](skills/pedido_justica_gratuita/SKILL.md) | sim | Analisa, avalia e elabora pedidos de gratuidade da justiça (CPC, arts. 98 a 102) e a resposta à impugnação. |
 | [`pesquisa-djen`](skills/pesquisa-djen/SKILL.md) | sim | Consulta pública de comunicações processuais (DJEN — Diário de Justiça Eletrônico Nacional, via API Comunica/PJe) e de metadados/movimentos de processos (API Pública DataJud/CNJ). |
 | [`pre-peticionamento`](skills/pre-peticionamento/SKILL.md) | sim | Executa investigação jurídica pré-peticionamento: lê um notebook NotebookLM já populado pelo advogado, gera perguntas estratégicas cirúrgicas (como advogado sênior), dispara via `n |
 | [`pre-peticionamento-drive`](skills/pre-peticionamento-drive/SKILL.md) | sim | Investigação jurídica pré-peticionamento sobre corpus LOCAL (provas baixadas do Drive + jurisprudência local), SEM NotebookLM. |

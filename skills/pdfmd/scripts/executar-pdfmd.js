@@ -39,7 +39,9 @@ const resultado = spawnSync(
   ['-m', 'pdfmd.cli', ...argumentos],
   {
     cwd: motor,
-    env: { ...process.env, PYTHONUTF8: '1' },
+    // OPENBLAS/OMP em 1 thread: sem isso o numpy do OCR morre com
+    // "Memory allocation still failed after 10 retries" em máquina com pouca RAM.
+    env: { ...process.env, PYTHONUTF8: '1', OPENBLAS_NUM_THREADS: '1', OMP_NUM_THREADS: '1' },
     encoding: 'utf8',
     stdio: 'inherit',
   },

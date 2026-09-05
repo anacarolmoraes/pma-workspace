@@ -48,6 +48,13 @@ node skills\pdfmd\scripts\executar-pdfmd.js "<arquivo.pdf>" --ocr auto --lang po
 O modo estrito falha diante de aviso não resolvido. Conferir visualmente a página indicada;
 não contornar com `--no-manifest`, `--no-index` ou remoção manual do aviso.
 
+**Acórdão do STF ou STJ (inteiro teor):** acrescentar `--no-tables`. A prosa justificada dessas
+decisões é lida como tabela pelo detector (uma palavra por célula), o que quebra a busca
+literal do `lint-citacoes`. O motor também suprime sozinho a **camada de texto duplicada** dos
+PDFs do STF (cada página vem duas vezes no fluxo): os blocos suprimidos ficam no manifesto
+como `suppressed_repeated` de `kind: duplicate_layer`. Sem isso, todo parágrafo saía em dobro
+(caso ADC 80, 05/09/2026).
+
 ## Ler gastando menos tokens
 
 Não abrir o Markdown inteiro por padrão.

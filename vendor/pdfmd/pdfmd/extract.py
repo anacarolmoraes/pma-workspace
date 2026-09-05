@@ -46,7 +46,7 @@ except Exception:  # pragma: no cover - optional dependency
     Image = None  # type: ignore
     _HAS_PIL = False
 
-from .models import PageText, Options, TableRegion
+from .models import Block, PageText, Options, TableRegion
 from .utils import log
 
 
@@ -206,7 +206,7 @@ def _extract_native(
 
         for i in range(limit):
             page = doc.load_page(i)
-            out.append(_extract_native_page(page, i + 1))
+            out.append(_extract_native_page(page, i + 1, options.detect_tables))
 
             if progress_cb:
                 progress_cb(i + 1, total)
@@ -254,7 +254,7 @@ def _extract_tesseract(
         doc.close()
 
 
-def _extract_native_page(page, page_number: int) -> PageText:
+def _extract_native_page(page, page_number: int, detect_tables: bool = True) -> PageText:
     """Extract one page while retaining geometry and table regions."""
     info = page.get_text("dict", sort=False)
     page_text = PageText.from_pymupdf(
@@ -264,7 +264,8 @@ def _extract_native_page(page, page_number: int) -> PageText:
     )
     page_text.width = float(page.rect.width)
     page_text.height = float(page.rect.height)
-    page_text.tables = _extract_tables_from_page(page, page_number)
+    _drop_duplicate_layer_blocks(page_text)
+    page_text.tables = _extract_tables_from_page(page, page_number) if detect_tables else []
     try:
         page_text.vector_drawings = len(page.get_drawings())
     except Exception:
@@ -282,6 +283,39 @@ def _extract_native_page(page, page_number: int) -> PageText:
             f"Página contém {page_text.annotations} anotação(ões) PDF; conferir visualmente."
         )
     return page_text
+
+
+def _drop_duplicate_layer_blocks(page_text: PageText, tolerance: float = 1.0) -> None:
+    """Suppress blocks that repeat an earlier block at the same position.
+
+    Some official PDFs (e.g. STF "Inteiro Teor" files) carry the page content
+    twice in the content stream: the same text, at the same coordinates. Native
+    extraction then yields every paragraph duplicated, which corrupts any
+    downstream literal matching. A block is a duplicate only when BOTH its text
+    and its bbox (within `tolerance` points) equal a block already kept on the
+    page — genuine repetitions elsewhere on the page are untouched.
+
+    Suppressed blocks are recorded in `suppressed_repeated` (kind
+    "duplicate_layer") so the manifest keeps the occurrence visible.
+    """
+    seen: set = set()
+    kept: List[Block] = []
+    for block in page_text.blocks:
+        text = "".join(line.text() for line in block.lines)
+        if not text.strip():
+            kept.append(block)
+            continue
+        bbox = block.bbox
+        key_bbox = tuple(round(float(v) / tolerance) for v in bbox) if bbox else None
+        key = (key_bbox, text)
+        if key in seen:
+            page_text.suppressed_repeated.append(
+                {"kind": "duplicate_layer", "text": text[:120], "bbox": bbox}
+            )
+            continue
+        seen.add(key)
+        kept.append(block)
+    page_text.blocks = kept
 
 
 def _extract_tables_from_page(page, page_number: int) -> List[TableRegion]:
@@ -436,7 +470,7 @@ def _extract_auto_mixed(
 
         for i in range(limit):
             page = doc.load_page(i)
-            native = _extract_native_page(page, i + 1)
+            native = _extract_native_page(page, i + 1, options.detect_tables)
             if _page_needs_ocr(page, native):
                 if ocr_ready:
                     log(f"[extract] Page {i + 1}: using Tesseract OCR.")

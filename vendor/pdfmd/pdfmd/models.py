@@ -315,6 +315,9 @@ class Options:
     heading_size_ratio: float = 1.15
     orphan_max_len: int = 45
     remove_headers_footers: bool = True
+    # Geometric table finder. Justified legal prose (STF/STJ inteiro teor) is
+    # often mistaken for a table; disable when the source has no real tables.
+    detect_tables: bool = True
 
     # Rendering / output
     insert_page_breaks: bool = False

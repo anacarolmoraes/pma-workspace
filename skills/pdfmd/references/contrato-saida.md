@@ -62,7 +62,9 @@ Cada item de `pages` registrar:
 - quantidade de caracteres e blocos;
 - tabelas com `bbox`, dimensões, origem e confiança;
 - imagens com `bbox`, asset, OCR e repetição;
-- elementos repetidos suprimidos da leitura corrente;
+- elementos repetidos suprimidos da leitura corrente (`suppressed_repeated`: `header`, `footer`,
+  `page_number` e `duplicate_layer` — bloco idêntico, no mesmo lugar da página, vindo de camada
+  de texto duplicada do PDF; suprimir não é apagar, a ocorrência fica registrada);
 - avisos que exigem conferência.
 
 ### `documento_assets/`

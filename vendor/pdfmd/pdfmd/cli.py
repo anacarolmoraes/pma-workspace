@@ -230,6 +230,15 @@ Security notes:
     )
 
     parser.add_argument(
+        "--no-tables",
+        action="store_true",
+        help=(
+            "Disable the geometric table finder. Use for justified legal prose "
+            "(court decisions) that the finder mistakes for tables."
+        ),
+    )
+
+    parser.add_argument(
         "--stats",
         action="store_true",
         help=(
@@ -274,6 +283,7 @@ def _make_options(args: argparse.Namespace) -> Options:
     opts.write_index = not bool(args.no_index)
     opts.write_manifest = not bool(args.no_manifest)
     opts.strict = bool(args.strict)
+    opts.detect_tables = not bool(getattr(args, "no_tables", False))
 
     # Transform heuristics remain at their defaults; they can be exposed later.
     return opts

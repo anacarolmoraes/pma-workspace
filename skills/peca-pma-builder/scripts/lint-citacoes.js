@@ -147,16 +147,23 @@ function extrairCitacoes(texto) {
 }
 
 // ── Identificadores dentro da atribuição ───────────────────────────────────
-const CLASSES_SUPERIOR = /\b(REsp|AREsp|AgInt|AgRg|EAREsp|EREsp|RE|ARE|ADI|ADPF|HC)\b/i;
+const CLASSES_SUPERIOR = /\b(REsp|AREsp|AgInt|AgRg|EAREsp|EREsp|RE|ARE|ADI|ADC|ADO|ADPF|Rcl|MS|HC)\b/i;
 
 function identificadores(fonte) {
   if (!fonte) return [];
   const ids = [];
 
   // Precedente de tribunal superior: REsp 2.222.059/SP, AREsp 600.663/RS…
-  for (const m of fonte.matchAll(/\b(REsp|AREsp|AgInt|AgRg|EAREsp|EREsp|RE|ARE|ADI|ADPF|HC)\b[^\d]{0,12}([\d.]{4,})/gi)) {
+  for (const m of fonte.matchAll(/\b(REsp|AREsp|AgInt|AgRg|EAREsp|EREsp|RE|ARE|ADI|ADC|ADO|ADPF|Rcl|MS|HC)\b[^\d]{0,12}([\d.]{2,})/gi)) {
     const digitos = m[2].replace(/\D/g, '');
-    if (digitos.length >= 4) ids.push({ tipo: 'precedente', rotulo: `${m[1].toUpperCase()} ${m[2]}`, buscas: variantesNumero(digitos), superior: true });
+    const classe = m[1].toUpperCase();
+    if (/^(ADI|ADC|ADO|ADPF)$/.test(classe)) {
+      // Controle concentrado tem número curto (ADC 80, ADI 15): casa por regex
+      // própria, como Súmula e Tema, para não colidir com dígitos soltos do acervo.
+      ids.push({ tipo: 'precedente', rotulo: `${classe} ${digitos}`, buscas: [`${classe.toLowerCase()} ${digitos}`], superior: true, regex: new RegExp(`\\b${classe}\\s*n?[.º°]*\\s*${digitos}\\b`, 'i') });
+    } else if (digitos.length >= 4) {
+      ids.push({ tipo: 'precedente', rotulo: `${classe} ${m[2]}`, buscas: variantesNumero(digitos), superior: true });
+    }
   }
   // Súmula
   for (const m of fonte.matchAll(/\bS[úu]mula\s*n?[.º°]*\s*(\d+)/gi)) {

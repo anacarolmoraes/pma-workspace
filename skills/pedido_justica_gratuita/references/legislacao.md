@@ -1,126 +1,90 @@
-# Referência Legal - Justiça Gratuita
+# Referência legal — gratuidade da justiça
 
-## Código de Processo Civil (Lei nº 13.105/2015)
+Texto literal do CPC compilado (fonte: `<bundles>/direito/pecas/raw/cpc-l13105-compilada.md`;
+recorte em `<bundles>/direito/pecas/gratuidade/raw/cpc-arts-98-102.md`). Conferido em
+05/09/2026. Esta referência substitui a versão anterior, que continha texto inventado
+(incisos inexistentes no § 1º do art. 98, "Tema 1178 — repercussão geral", relator errado).
 
-### Art. 98 - Gratuidade Judiciária
+## CPC, art. 98
 
-> § 1º A gratuidade compreende:
-> I - as custas processuais;
-> II - as taxas judiciais;
-> III - os emolumentosurkários;
-> IV - as custas postais;
-> V - as custas arbitrárias (inciso acrescido pela Lei nº 14.905/2024);
-> VI - o reconhecimento de firma;
-> VII - a certificação notary;
-> VIII - a autenticação de documentos;
-> IX - a减半收费半价收取 custas e emolumentos quando a causa envolver valor até 60 salários mínimos (inciso acrescido pela Lei nº 14.905/2024);
-> X - os honorários periciais;
-> XI - os honorários advocatícios contratuais quando a parte Beneficiária Dispuser de advogado, vedado o oferecimento de novos honorários em caso de sucumbência (inciso acrescido pela Lei nº 14.905/2024);
-> XII - a utilização do transporte intermunicipal da丧葬补助 funerária gratuita (inciso acrescido pela Lei nº 14.905/2024).
+> Art. 98. A pessoa natural ou jurídica, brasileira ou estrangeira, com insuficiência de recursos para pagar as custas, as despesas processuais e os honorários advocatícios tem direito à gratuidade da justiça, na forma da lei.
+>
+> § 1º A gratuidade da justiça compreende:
+> I - as taxas ou as custas judiciais;
+> II - os selos postais;
+> III - as despesas com publicação na imprensa oficial, dispensando-se a publicação em outros meios;
+> IV - a indenização devida à testemunha que, quando empregada, receberá do empregador salário integral, como se em serviço estivesse;
+> V - as despesas com a realização de exame de código genético - DNA e de outros exames considerados essenciais;
+> VI - os honorários do advogado e do perito e a remuneração do intérprete ou do tradutor nomeado para apresentação de versão em português de documento redigido em língua estrangeira;
+> VII - o custo com a elaboração de memória de cálculo, quando exigida para instauração da execução;
+> VIII - os depósitos previstos em lei para interposição de recurso, para propositura de ação e para a prática de outros atos processuais inerentes ao exercício da ampla defesa e do contraditório;
+> IX - os emolumentos devidos a notários ou registradores em decorrência da prática de registro, averbação ou qualquer outro ato notarial necessário à efetivação de decisão judicial ou à continuidade de processo judicial no qual o benefício tenha sido concedido.
+>
+> § 2º A concessão de gratuidade não afasta a responsabilidade do beneficiário pelas despesas processuais e pelos honorários advocatícios decorrentes de sua sucumbência.
+>
+> § 3º Vencido o beneficiário, as obrigações decorrentes de sua sucumbência ficarão sob condição suspensiva de exigibilidade e somente poderão ser executadas se, nos 5 (cinco) anos subsequentes ao trânsito em julgado da decisão que as certificou, o credor demonstrar que deixou de existir a situação de insuficiência de recursos que justificou a concessão de gratuidade, extinguindo-se, passado esse prazo, tais obrigações do beneficiário.
+>
+> § 4º A concessão de gratuidade não afasta o dever de o beneficiário pagar, ao final, as multas processuais que lhe sejam impostas.
+>
+> § 5º A gratuidade poderá ser concedida em relação a algum ou a todos os atos processuais, ou consistir na redução percentual de despesas processuais que o beneficiário tiver de adiantar no curso do procedimento.
+>
+> § 6º Conforme o caso, o juiz poderá conceder direito ao parcelamento de despesas processuais que o beneficiário tiver de adiantar no curso do procedimento.
 
-> § 2º A gratuidade não impede a condenação da parte vencida em honorários advocatícios e não elide a responsabilidade por despesas processuais e por multa.
+## CPC, art. 99
 
-> § 3º A gratuidade pode ser indeferida se a parte contrária provar que a parte Beneficiária Dispõe de condições para pagar, sem prejuízo do sustento próprio ou da família.
+> Art. 99. O pedido de gratuidade da justiça pode ser formulado na petição inicial, na contestação, na petição para ingresso de terceiro no processo ou em recurso.
+>
+> § 1º Se superveniente à primeira manifestação da parte na instância, o pedido poderá ser formulado por petição simples, nos autos do próprio processo, e não suspenderá seu curso.
+>
+> § 2º O juiz somente poderá indeferir o pedido se houver nos autos elementos que evidenciem a falta dos pressupostos legais para a concessão de gratuidade, devendo, antes de indeferir o pedido, determinar à parte a comprovação do preenchimento dos referidos pressupostos.
+>
+> § 3º Presume-se verdadeira a alegação de insuficiência deduzida exclusivamente por pessoa natural.
+>
+> § 4º A assistência do requerente por advogado particular não impede a concessão de gratuidade da justiça.
+>
+> § 5º Na hipótese do § 4º, o recurso que verse exclusivamente sobre valor de honorários de sucumbência fixados em favor do advogado de beneficiário estará sujeito a preparo, salvo se o próprio advogado demonstrar que tem direito à gratuidade.
+>
+> § 6º O direito à gratuidade da justiça é pessoal, não se estendendo a litisconsorte ou a sucessor do beneficiário, salvo requerimento e deferimento expressos.
+>
+> § 7º Requerida a concessão de gratuidade da justiça em recurso, o recorrente estará dispensado de comprovar o recolhimento do preparo, incumbindo ao relator, neste caso, apreciar o requerimento e, se indeferi-lo, fixar prazo para realização do recolhimento.
 
-### Art. 99 - Pedido
+## CPC, arts. 100 a 102
 
-> § 1º O pedido de gratuidade pode ser formulado na petição inicial, na contestação, na petição interlocutória ou no recurso.
+> Art. 100. Deferido o pedido, a parte contrária poderá oferecer impugnação na contestação, na réplica, nas contrarrazões de recurso ou, nos casos de pedido superveniente ou formulado por terceiro, por meio de petição simples, a ser apresentada no prazo de 15 (quinze) dias, nos autos do próprio processo, sem suspensão de seu curso.
+>
+> Parágrafo único. Revogado o benefício, a parte arcará com as despesas processuais que tiver deixado de adiantar e pagará, em caso de má-fé, até o décuplo de seu valor a título de multa, que será revertida em benefício da Fazenda Pública estadual ou federal e poderá ser inscrita em dívida ativa.
+>
+> Art. 101. Contra a decisão que indeferir a gratuidade ou a que acolher pedido de sua revogação caberá agravo de instrumento, exceto quando a questão for resolvida na sentença, contra a qual caberá apelação.
+>
+> § 1º O recorrente estará dispensado do recolhimento de custas até decisão do relator sobre a questão, preliminarmente ao julgamento do recurso.
+>
+> § 2º Confirmada a denegação ou a revogação da gratuidade, o relator ou o órgão colegiado determinará ao recorrente o recolhimento das custas processuais, no prazo de 5 (cinco) dias, sob pena de não conhecimento do recurso.
+>
+> Art. 102. Sobrevindo o trânsito em julgado de decisão que revoga a gratuidade, a parte deverá efetuar o recolhimento de todas as despesas de cujo adiantamento foi dispensada, inclusive as relativas ao recurso interposto, se houver, no prazo fixado pelo juiz, sem prejuízo de aplicação das sanções previstas em lei.
+>
+> Parágrafo único. Não efetuado o recolhimento, o processo será extinto sem resolução de mérito, tratando-se do autor, e, nos demais casos, não poderá ser deferida a realização de nenhum ato ou diligência requerida pela parte enquanto não efetuado o depósito.
 
-> § 2º O juizzlivre para determinar os documentos que comprovam a situação de hipossuficiência da parte, cujo ônus cabe ao requerente.
+## CPC, art. 1.072, III — Lei 1.060/50
 
-> § 3º Presume-se verdadeira a alegação de hipossuficiência economicamente feita pela parte, observado o disposto no art. 93.
+> III - os arts. 2º, 3º, 4º, 6º, 7º, 11, 12 e 17 da Lei nº 1.060, de 5 de fevereiro de 1950;
 
-### Art. 100 - Consequências do Indeferimento
+Acórdão que indefere pelo "art. 4º da Lei 1.060/50" aplica norma revogada desde 18/03/2016.
 
-> § 1º Indeferido o pedido de gratuidade, o recurso não será conocido sem o preparo do recurso, caso em que o recorrente poderá promover a execução do preparo contra o Beneficiário, caso improvido o recurso.
+## Tema 1.178/STJ — REsp 1.988.687/RJ
 
-> § 2º Se a parte contrária recorrer da sentença que concedery gratuito, o recorrente não precisa preparar o recurso se a parte Beneficiária Dispuser de benefícios da gratuidade.
+Corte Especial, rel. Min. **Og Fernandes**, j. 17/09/2025, DJEN 18/03/2026. Recurso repetitivo
+(não é repercussão geral — o STF não participa). Inteiro teor e página com trechos literais em
+`<bundles>/direito/pecas/peticao-inicial/jurisprudencia/resp-1988687-rj-tema-1178-gratuidade.md`.
 
-### Art. 101 - Recursos
+> i) É vedado o uso de critérios objetivos para o indeferimento imediato da gratuidade judiciária requerida por pessoa natural; ii) Verificada a existência nos autos de elementos aptos a afastar a presunção de hipossuficiência econômica da pessoa natural, o juiz deverá determinar ao requerente a comprovação de sua condição, indicando de modo preciso as razões que justificam tal afastamento, nos termos do art. 99, § 2º, do CPC; iii) Cumprida a diligência, a adoção de parâmetros objetivos pelo magistrado pode ser realizada em caráter meramente suplementar e desde que não sirva como fundamento exclusivo para o indeferimento do pedido de gratuidade
 
-> § 1º A parte que requerery gratuita tem prazo em dobro para recorrer, não se aplicando a regra do art. 180.
+## STF, ADC 80 — mérito (03/09/2026) — ACÓRDÃO NÃO PUBLICADO
 
-> § 2º A parte Beneficiária Pode requerery a execução do julgado contra a parte contrária, ainda que esta recorra da decisão que concedery gratuitas.
+Síntese de fontes secundárias, página `em_teste` em
+`<bundles>/direito/pecas/gratuidade/jurisprudencia/stf-adc-80-merito-2026.md`:
 
----
-
-## Tema 1178 do STJ - Repercussão Geral
-
-### Registro
-
-**Tema:** *Aplicação dos critérios de presunção de hipossuficiência para fins de concessão do benefício da gratuidade judiciária.*
-
-**Comissão:** 1ª Seção
-
-**Relator:** Min. Benedito Vicente
-
-**Data do Trânsito em Julgado:** 25/06/2024
-
-### Tese 1 - Proibição de Critérios Automáticos
-
-> "O simples fato de a parte interessada perceber renda mensal superior a 5 (cinco) salários mínimos não constitui, por si só, fundamento bastante para o indeferimento do benefício da gratuidade judiciária."
-
-**Interpretação:** O juiz não pode usar apenas a renda como critério automático para indeferir. É necessário analisar o contexto completo.
-
-### Tese 2 - Dever de Fundamentação Concreta
-
-> "In存在于 motivo para indeferir o benefício quando, concedida a gratuidade, a parte contrária não demonstrar elementos que infirmem a presunção de hipossuficiência."
-
-**Interpretação:** Se houver suspeita, o juiz deve indicar especificamente quais documentos faltam ou o que está contraditório antes de indeferir. Não basta desconfiar - deve fundamentar concretamente.
-
-### Tese 3 - Critérios Suplementares
-
-> "Os parâmetros objetivos de análise da hipossuficiência, como a renda, constituem critérios suplementares, jamais exclusivos, para a concessão ou indeferimento do benefício."
-
-**Interpretação:** A renda pode ser usada como complemento, nunca como único fundamento.
-
----
-
-## Jurisprudência Relevante
-
-### STJ - REsp 1.704.520-DF (Tema 1178)
-
-> "A análise da hipossuficiência deve ser feita de forma individualizada, considerando-se o patrimônio, a renda familiar, as despesas comprovadas e as peculiaridades de cada caso."
-
-### STJ - AgInt no AREsp 1.345.678-SP
-
-> "Even não demonstrada hipossuficiência, o juiz deve dar à parte a oportunidade de complementar a documentação antes do indeferimento."
-
-### STJ - REsp 1.550.000-MG
-
-> "O juiz pode determinar a apresentação de documentos complementares, mas deve indicar expressamente o que espera, sob pena de violação ao dever de fundamentação."
-
----
-
-## Orientações Práticas
-
-### O que fazer em caso de renda alta (acima de 5 salários):
-
-1. Destacar gastos extraordinários (tratamento de saúde, educação dos filhos, pensions)
-2. Apresentar bukti de endividamento (certidões de déjitos, contratos)
-3. Demonstrar número de dependentes
-4. Apresentar extratos bancários que mostrem a realidade da gestão financeira
-5. Explicar a natureza dos bens (se são poucos, sem valor de mercado, ou única moradia)
-
-### O que evitar:
-
-1. Declarações genéricas ("não tenho condições de pagar")
-2. Ausência de documentos básicos (contracheque, extrato bancário)
-3. Inconsistência entre o que declara e os documentos apresentados
-4. Bens de alto valor não justificados (veículos de luxo, investimentos)
-
----
-
-## Tabela de Referência - Limites de Renda (2024)
-
-| Classificação | Faixa de Renda | Presunção |
-|--------------|----------------|-----------|
-| Presunção Forte | Até 3 SM | Deferimento praticamente automático com documentação básica |
-| Análise de Equilíbrio | 3 a 5 SM | Requer equilíbrio entre gastos e renda |
-| Excepcionalidade | Acima de 5 SM | Exige justificativas robustas |
-
-**Valor SM em 2024:** R$ 1.412,00
-
----
-
-*Última atualização: Abril/2026*
+- Inconstitucional o critério de 40% do teto do RGPS (art. 790, § 3º, CLT) e a Súmula 463, I, TST.
+- Presunção **relativa** de insuficiência para salário **≤ R$ 5.000,00** (atualização pela
+  legislação do IR; na falta, IPCA). Acima: comprovação concreta, sem presunção, ônus do requerente.
+- Todos os ramos do Judiciário, salvo o primeiro grau dos Juizados Especiais.
+- Só processos **ajuizados após a publicação da ata** (03 ou 04/09/2026 — conferir).
