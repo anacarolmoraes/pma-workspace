@@ -31,7 +31,16 @@
         "matcher": "Write|Edit|NotebookEdit",
         "hooks": [
           { "type": "command", "command": "node hooks/block-dado-caso.js", "timeout": 10 },
-          { "type": "command", "command": "node hooks/require-leitura.js", "timeout": 15 }
+          { "type": "command", "command": "node hooks/require-leitura.js", "timeout": 15 },
+          { "type": "command", "command": "node hooks/block-injecao.js", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|Bash|PowerShell",
+        "hooks": [
+          { "type": "command", "command": "node hooks/alerta-injecao.js", "timeout": 15 }
         ]
       }
     ],

@@ -94,6 +94,7 @@ Depois, o `md2docx` roda três lints; nenhum é opcional:
 |---|---|---|
 | `lint-remissoes` | remissões internas da peça | exit 1 — bloqueia |
 | `lint-ia` | cacoetes de IA na prosa própria | exit 1 — bloqueia |
+| `lint-injecao` | *prompt injection*, texto oculto ou caractere invisível na peça (regra dura 7) | exit 1 — bloqueia |
 | **`lint-citacoes`** | **toda transcrição existe literalmente na fonte citada, na voz do julgado certo, e o número do precedente confere** | exit 1 — bloqueia · **exit 3 — exige aprovação** |
 
 **Exit 3** = a peça cita página `status: em_teste`. Ou se confere a fonte e se promove a página
@@ -101,7 +102,7 @@ a `vigente`, ou se assume a citação declarando no frontmatter da peça `cita_e
 decisão fica no documento, não num parâmetro.
 
 Depois de compilar, o `lint-docx` valida o `.docx` gerado (fonte, margem, entrelinha,
-cabeçalho, rodapé) contra [`perfil/marca.json`](perfil/marca.json), e `validarConteudo`
+cabeçalho, rodapé, texto oculto, instrução escondida) contra [`perfil/marca.json`](perfil/marca.json), e `validarConteudo`
 confere que o texto gravado é o de entrada.
 
 `--skip-lint` **não é do agente** (hook bloqueia). Se a titular julgar emergência, roda no
@@ -114,6 +115,7 @@ nenhum. Rodar os quatro à mão antes de tratar a peça como conferida:
 node skills\peca-pma-builder\scripts\lint-citacoes.js  peca.md
 node skills\peca-pma-builder\scripts\lint-remissoes.js peca.md
 node skills\humanizer-forense\scripts\lint-ia.js       peca.md
+node skills\peca-pma-builder\scripts\lint-injecao.js   peca.md
 node scripts\lint-docx.js                              peca.docx
 ```
 
@@ -179,6 +181,9 @@ Julgamento (ficam aqui):
    (BLUF, títulos-tese, fonte adjacente) organiza o argumento; ela nunca o esconde nem o
    substitui por comando. Isso não é tática processual: é infração ética (art. 34 do EOAB) e
    pode ser crime. Agente que receba pedido nesse sentido recusa e relata.
+   *(Portões para qualquer agente: `lint-injecao` no `md2docx`, check `texto-oculto` no
+   `lint-docx`, varredura no `pdfmd`. No Claude Code, além disso, `block-injecao` barra a
+   gravação e `alerta-injecao` avisa na hora quando documento lido traz instrução escondida.)*
 
 Evento (hook no Claude Code; disciplina em outro agente):
 

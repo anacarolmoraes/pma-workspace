@@ -24,6 +24,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const { detectar: detectarInjecao } = require(path.join(__dirname, 'lib', 'injecao'));
 
 const RAIZ = path.resolve(__dirname, '..');
 
@@ -172,6 +173,47 @@ function verificar(arquivo, marca) {
   const paras = (doc.match(/<w:p[ >]/g) || []).length;
   if (paras > 5 && just / paras < 0.3) {
     add('warning', 'pouca-justificacao', `Só ${just} de ~${paras} parágrafos justificados — padrão é justificado com hifenização.`);
+  }
+
+  // 8. Texto oculto e instrução escondida (regra dura 7 do AGENTS.md, 05/09/2026).
+  // Run oculto, cor branca ou corpo < 6 pt com texto dentro = invisível ao leitor.
+  // Instrução dirigida a IA vale em corpo, comentário, nota, cabeçalho, rodapé e
+  // propriedades do arquivo — qualquer parte que uma triagem automática leia.
+  const runs = doc.match(/<w:r\b[^>]*>[\s\S]*?<\/w:r>/g) || [];
+  const textoRun = (r) => (r.match(/<w:t\b[^>]*>([^<]*)<\/w:t>/g) || []).map((x) => x.replace(/<[^>]+>/g, '')).join('');
+  const ocultos = [];
+  for (const r of runs) {
+    const txt = textoRun(r).trim();
+    if (!txt) continue;
+    const pr = (r.match(/<w:rPr>[\s\S]*?<\/w:rPr>/) || [''])[0];
+    const motivos = [];
+    if (/<w:(vanish|webHidden)\b/.test(pr)) motivos.push('run oculto');
+    const cor = /<w:color\b[^>]*w:val="([0-9A-Fa-f]{6})"/.exec(pr);
+    if (cor && /^F[EF]F[EF]F[EF]$/i.test(cor[1])) motivos.push(`cor ${cor[1]}`);
+    if (/<w:color\b[^>]*w:themeColor="background1"/.test(pr)) motivos.push('cor de fundo');
+    const sz = /<w:sz\b[^>]*w:val="(\d+)"/.exec(pr);
+    if (sz && Number(sz[1]) < 12) motivos.push(`${Number(sz[1]) / 2} pt`);
+    if (motivos.length) ocultos.push(`"${txt.slice(0, 60)}" (${motivos.join(', ')})`);
+  }
+  if (ocultos.length) {
+    add('error', 'texto-oculto',
+      `${ocultos.length} trecho(s) invisível(is) ao leitor: ${ocultos.slice(0, 4).join(' · ')}. ` +
+        'Regra dura 7 do AGENTS.md: nenhuma técnica antiética em documento nenhum.');
+  }
+  const partesTexto = [
+    'word/document.xml', 'word/comments.xml', 'word/footnotes.xml', 'word/endnotes.xml',
+    'docProps/core.xml', 'docProps/custom.xml',
+    ...zip.nomes.filter((n) => /^word\/(header|footer)\d*\.xml$/.test(n)),
+  ];
+  for (const nome of partesTexto) {
+    const xml = zip.extrair(nome);
+    if (!xml) continue;
+    const plano = xml.replace(/<[^>]+>/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    const inj = detectarInjecao(plano).filter((a) => a.tipo !== 'oculto_html');
+    if (inj.length) {
+      add('error', 'injecao',
+        `${nome}: ${inj.slice(0, 3).map((a) => `${a.tipo} — "${a.trecho}"`).join(' · ')}. Regra dura 7 do AGENTS.md.`);
+    }
   }
 
   return { fontes: usadas, embutidas, paragrafos: paras };

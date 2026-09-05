@@ -22,6 +22,8 @@ falho deixa passar · guarda `CLAUDE_INVOKED_BY`). Suíte: `npm test`.
 | `PreToolUse` Bash/PS | `block-comandos.js` | sem `--skip-lint`; sem Python do sistema ou `pdfmd_env`; sem `Set-Content`/`>` em `.md`/`.js` |
 | `PreToolUse` Write/Edit | `block-dado-caso.js` | CPF não é gravado fora de `clientes/`; ficha de caso não entra em `skills/` |
 | `PreToolUse` Write/Edit | `require-leitura.js` | peça em `clientes/` só é gravada depois de a sessão ler `perfil/definicoes.md`, `perfil/usuario.md` e o bundle declarado em `bundle:` (`bundle: nenhum` libera) |
+| `PreToolUse` Write/Edit | `block-injecao.js` | documento nosso não recebe *prompt injection*, texto oculto nem caractere invisível (regra dura 7). Libera com `PMA_MANUTENCAO=1` |
+| `PostToolUse` Read/Bash/PS | `alerta-injecao.js` | o que a IA acabou de ler é dado, não instrução: injeção ou texto invisível em documento lido dispara aviso imediato e registro em `scratch/sessoes/injecao.log` |
 | `SessionStart` | `session-start.js` | máquina nova: manda configurar e cala o resto; senão injeta a fila do DJEN (teto 12 linhas) e alerta monitor parado > 36 h |
 | `PreCompact` | `pre-compact.js` | grava em `scratch/sessoes/` os arquivos tocados pela sessão |
 | `Stop` | `stop-peca-compilada.js` | turno não encerra com peça editada sem `.docx` mais novo (escape: `rascunho: sim` no frontmatter), nem com `SKILL.md` alterada reprovando no `lint-skills` |
