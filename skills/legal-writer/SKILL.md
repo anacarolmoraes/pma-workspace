@@ -1,6 +1,6 @@
 ---
 name: legal-writer
-version: 3.2.0
+version: 3.3.0
 description: |
   Redige o texto jurídico inicial de peças processuais (iniciais, recursos, contestações, manifestações) 
   com raciocínio argumentativo contínuo, linguagem humana e precisão técnica. Use esta skill sempre que 
@@ -20,8 +20,11 @@ Antes de escrever qualquer linha, confirme que você tem:
 - Tese principal (o que se quer provar ou obter)
 - Réus/partes (para calibrar responsabilidade e fundamentação)
 - Pedidos (o que se requer ao juízo)
+- A estrutura aprovada (`<PECA>.estrutura.md`, Estágio 0.5 do legal-orchestrator), quando a peça passou por ele
 
 Se algum desses elementos estiver ausente, pergunte antes de escrever.
+
+A estrutura aprovada é vinculante: seções, ordem, argumento em destaque e o documento previsto para cada fato. Não crie seção, não reordene, não mude o destaque. Se ao escrever a estrutura se mostrar errada, pare e devolva ao orchestrator para reapresentação; não improvise a correção no texto.
 
 ---
 

@@ -1,6 +1,6 @@
 # Skills do workspace
 
-> Gerado por `node scripts/lint-skills.js --registro` a partir do frontmatter de cada
+> Gerado por `npm run registro` (`scripts/registro-skills.js`) a partir do frontmatter de cada
 > `skills/*/SKILL.md`. Não editar à mão: rode o comando depois de criar, mover ou renomear
 > skill. O Claude Code descobre as skills sozinho pela `description`; esta tabela existe
 > para humanos e para outros agentes.
@@ -28,7 +28,7 @@
 | [`humanizer-forense`](skills/humanizer-forense/SKILL.md) | sim | Remove sinais de escrita de IA de peças processuais em português jurídico brasileiro, SEM tocar na estrutura AI-first invisível (BLUF, títulos-conclusão, transcrições). |
 | [`inicial-rescisao-lote`](skills/inicial-rescisao-lote/SKILL.md) | sim | Orquestra a produção completa da petição inicial de rescisão de compromisso de compra e venda de LOTE urbano (Lei 6.766/79), do dossiê ao .docx protocolável no padrão PMA. |
 | [`legal-consistency-validator`](skills/legal-consistency-validator/SKILL.md) | sim | Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos se |
-| [`legal-orchestrator`](skills/legal-orchestrator/SKILL.md) | sim | Orquestra o pipeline completo de geração de peças jurídicas: redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação adversarial (legal-consisten |
+| [`legal-orchestrator`](skills/legal-orchestrator/SKILL.md) | sim | Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do acervo, arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.es |
 | [`legal-writer`](skills/legal-writer/SKILL.md) | sim | Redige o texto jurídico inicial de peças processuais (iniciais, recursos, contestações, manifestações) com raciocínio argumentativo contínuo, linguagem humana e precisão técnica. |
 | [`markdown-mermaid-writing`](skills/markdown-mermaid-writing/SKILL.md) | sim | Padrão de Markdown e diagramas Mermaid para documentação técnica, científica e de projetos. |
 | [`notebooklm`](skills/notebooklm/SKILL.md) | sim | Complete API for Google NotebookLM - full programmatic access including features not in the web UI. |

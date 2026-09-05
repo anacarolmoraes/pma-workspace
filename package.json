@@ -6,7 +6,7 @@
   "scripts": {
     "setup": "node scripts/setup.js",
     "test": "node hooks/_teste-block-secrets.js && node hooks/_teste-block-md-integral.js && node hooks/_teste-portoes.js && node hooks/_teste-rastro.js && node scripts/lint-skills.js --errors-only",
-    "registro": "node scripts/lint-skills.js --registro"
+    "registro": "node scripts/registro-skills.js"
   },
   "dependencies": {
     "docx": "^9.6.1"

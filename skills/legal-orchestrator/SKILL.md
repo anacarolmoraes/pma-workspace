@@ -1,9 +1,10 @@
 ---
 name: legal-orchestrator
-version: 4.3.0
+version: 4.4.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
-  acervo, redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
+  acervo, arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
+  redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
   adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
   seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
   elaborar, redigir ou revisar uma peça processual completa — inicial, contestação, recurso, 
@@ -42,6 +43,7 @@ Cada estágio deixa um rastro que o portão seguinte confere. Sem o rastro, o pa
 |---|---|---|
 | Leitura de `perfil/definicoes.md` e `perfil/usuario.md` | a sessão, antes da primeira gravação da peça | hook `require-leitura` |
 | `bundle: direito/<tema>` no frontmatter e leitura de ao menos um arquivo desse bundle | Estágio 0 | hook `require-leitura` |
+| `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência) e Estágio 6. Sem hook por enquanto: entra no `md2docx` se, em uso, o estágio se mostrar pulado |
 | `<PECA>.validacao.md` ao lado da peça, com `veredito:` no frontmatter | Estágio 3 (o validator grava) | `md2docx`, que recusa compilar sem veredito, com veredito REPROVADO ou com veredito mais antigo que a última edição do `.md` |
 | `pipeline: legal-orchestrator` no frontmatter | Estágio 7, depois de cumprido o ciclo | `md2docx` |
 
@@ -66,6 +68,50 @@ Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em 
 
 ---
 
+## Estágio 0.5 — Arquitetura da peça (SEMPRE EXECUTE, ANTES DE QUALQUER PROSA)
+
+Mexer em estrutura depois do texto é o retrabalho mais caro do pipeline: invalida o `.validacao.md`, refaz humanização e recompila. Por isso a arquitetura se decide aqui, em quarenta linhas que a titular lê em dois minutos, e não em quinze páginas.
+
+Com o inventário feito e o bundle lido, apresente **só a estrutura**, sem redigir conteúdo, e grave em `<PECA>.estrutura.md` ao lado da peça:
+
+1. **Seções, na ordem em que aparecerão**, separando preliminares, mérito, tutela e pedidos.
+2. **Em cada seção:** o fato que ela afirma, o documento que o prova (`Doc. N`), a página do bundle que sustenta a tese e o `status` dessa página. Página `em_teste` aparece aqui, quando ainda é barato trocar a tese, e não como exit 3 do `md2docx`.
+3. **Argumento em destaque** (o que abre a peça) e por quê.
+4. **Peso relativo** de cada parte, em porcentagem aproximada. Não se estima em páginas.
+5. **O que fica de fora**, com um de dois motivos: *não agrega* (dilui o destaque) ou *o acervo não cobre* (regra dura 3, aplicada antes de escrever).
+6. **O que falta saber:** pergunta que a pasta e o Drive não respondem, ligada à seção que depende dela.
+
+Formato do arquivo:
+
+```markdown
+---
+peca: contestacao.md
+aprovada: não
+bundle: direito/<tema>
+---
+
+## Destaque
+<argumento que abre a peça e por quê>
+
+## Seções e peso
+1. <Seção> (N %) — Doc. N; <bundle>/<pasta>/<pagina>.md (vigente | em_teste)
+...
+
+## Fora
+- <tese ou seção>: não agrega | acervo não cobre
+
+## Falta saber
+- <Seção X> depende de <pergunta>. <Onde procurar, se houver pista>
+```
+
+**Portão humano.** Em peça argumentativa livre (contestação, réplica, apelação, agravo, REsp, embargos, manifestação de mérito), **pare e aguarde a aprovação da titular**. Ajuste pedido por ela é feito no arquivo, não na conversa; a versão com `aprovada: sim` e a data no frontmatter é a que o Estágio 1 recebe, e é vinculante: o legal-writer não cria seção, não reordena e não muda o destaque. Se durante a redação a estrutura se mostrar errada, voltar aqui e reapresentar; não improvisar.
+
+Em peça com template ou estrutura canônica (`inicial-rescisao-lote`, `apelacao-cirurgica`, cumprimento de sentença), a estrutura é o modelo: gravar o arquivo apontando o template, listar só os desvios e seguir sem parar. Desvio grande do modelo (seção nova, tese fora do template) volta a exigir aprovação.
+
+Aprovação sem leitura é rastro falso, pior que nenhum. O arquivo existe para ser lido.
+
+---
+
 ## Regra de Compatibilidade
 
 O legal-writer produz argumentos em fluxo contínuo. A tipografia-pma estrutura visualmente esse fluxo. As duas operações são complementares e não devem criar atrito:
@@ -78,9 +124,10 @@ O legal-writer produz argumentos em fluxo contínuo. A tipografia-pma estrutura 
 
 ## Estágio 1 — Redação Jurídica (SEMPRE EXECUTE)
 
-Execute o legal-writer com o contexto completo do caso.
+Execute o legal-writer com o contexto completo do caso **e com o `<PECA>.estrutura.md` aprovado no Estágio 0.5**, que é entrada vinculante: seções, ordem, destaque e o Doc. previsto para cada fato.
 
 **Instrua o legal-writer a:**
+- Seguir exatamente a estrutura aprovada, ancorando cada afirmação de fato no documento que a estrutura previu para aquela seção
 - Verificar metalinguagem antes de finalizar (nenhuma referência ao processo de escrita deve aparecer no texto)
 - Confirmar consistência numérica interna (valores da causa, danos, datas)
 - Usar citação indireta sempre que a ementa real não estiver disponível
@@ -197,6 +244,7 @@ O texto jurídico pode e deve ser humano — mas é humanidade formal, não colo
 
 Antes de entregar o output, confirme:
 
+- [ ] A peça segue o `<PECA>.estrutura.md` aprovado (seções, ordem, destaque); todo desvio foi reaprovado, não improvisado
 - [ ] Nenhuma contradição detectada entre seções
 - [ ] Valor da causa = soma dos pedidos quantificados
 - [ ] Nenhum placeholder, nota entre colchetes ou referência ao processo de escrita

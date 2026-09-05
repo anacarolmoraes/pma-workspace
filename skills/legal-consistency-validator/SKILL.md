@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.3.0
+version: 2.4.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -23,6 +23,7 @@ Confirme que você recebeu:
 - O texto completo da peça ou seção
 - O tipo de peça (inicial, recurso, contestação)
 - Os pedidos principais
+- O `<PECA>.estrutura.md` aprovado pela titular (Estágio 0.5 do orchestrator), quando existir
 
 Se o texto estiver incompleto, sinalize antes de prosseguir.
 
@@ -50,6 +51,14 @@ Para cada argumento principal, verifique se o encadeamento está completo e expl
 - Premissa assumida (o texto supõe como verdadeiro algo que não foi demonstrado)
 - Salto lógico (conclusão que não decorre necessariamente das premissas)
 - Pedido sem suporte (algo pedido que não foi argumentado)
+
+**Aderência à estrutura aprovada.** Se existe `<PECA>.estrutura.md` com `aprovada: sim`, a arquitetura já foi decidida pela titular; não a rejulgue, confira se foi cumprida:
+- Seção prevista ausente, seção não prevista acrescentada, ordem alterada ou destaque fora da abertura: **ALTO** (a peça desviou de decisão da titular sem reaprovação)
+- Fato afirmado sem o `Doc. N` que a estrutura previu para aquela seção, ou apoiado em documento diverso: **ALTO**
+- Tese apoiada em página do bundle diferente da prevista, ou em página `em_teste` sem `cita_em_teste: sim`: **CRÍTICO**
+- Item de "Falta saber" que continua sem resposta e a seção correspondente foi escrita mesmo assim: **CRÍTICO** (é fato inferido, não provado)
+
+Sem estrutura aprovada em peça argumentativa livre, registre como fraqueza **MÉDIO** a ausência do Estágio 0.5 e siga com a análise completa.
 
 ---
 
