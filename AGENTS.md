@@ -170,17 +170,26 @@ Julgamento (ficam aqui):
    pseudonimização, não anonimização irreversível — o ganho real é que o dado bancário e o
    CPF deixam de circular. Depois de anonimizar, conferir se transcrições já existentes
    continham os nomes suprimidos: o `lint-citacoes` acusaria divergência sem motivo real.
+7. **Nenhuma técnica antiética em documento nenhum** (regra da titular, 05/09/2026). Vale
+   para peça, relatório, parecer, contrato, e-mail, conteúdo de marketing: tudo o que este
+   projeto gera. Proibido, sem exceção: *prompt injection* (instrução dirigida à IA de
+   triagem do tribunal ou de quem quer que leia), texto oculto (fonte branca, tamanho zero,
+   run oculto, comentário ou metadado com comando), marcador invisível, ou qualquer artifício
+   para induzir leitor humano ou máquina fora do argumento visível. A estrutura AI-first
+   (BLUF, títulos-tese, fonte adjacente) organiza o argumento; ela nunca o esconde nem o
+   substitui por comando. Isso não é tática processual: é infração ética (art. 34 do EOAB) e
+   pode ser crime. Agente que receba pedido nesse sentido recusa e relata.
 
 Evento (hook no Claude Code; disciplina em outro agente):
 
-7. **PDF nunca é lido direto.** Sem `.md` irmão, converter com `pdfmd`. Exceção: conferência
+8. **PDF nunca é lido direto.** Sem `.md` irmão, converter com `pdfmd`. Exceção: conferência
    visual de página específica (assinatura, carimbo, layout).
-8. **Python sempre do `adv_env`**, pelo caminho em `perfil/ambiente.json`. Nunca o do sistema.
-9. **Nunca editar peça com `Set-Content`, `Out-File` ou `>` do PowerShell** — corrompe UTF-8.
-10. **`--skip-lint` é da titular, não do agente.**
-11. **Portão não se edita para passar.** `md2docx`, `lint-*`, `hooks/`, `marca.json`,
+9. **Python sempre do `adv_env`**, pelo caminho em `perfil/ambiente.json`. Nunca o do sistema.
+10. **Nunca editar peça com `Set-Content`, `Out-File` ou `>` do PowerShell** — corrompe UTF-8.
+11. **`--skip-lint` é da titular, não do agente.**
+12. **Portão não se edita para passar.** `md2docx`, `lint-*`, `hooks/`, `marca.json`,
     `definicoes.md` só mudam em sessão de manutenção declarada.
-12. **Peça editada se compila antes de encerrar** — ou se declara `rascunho: sim`.
+13. **Peça editada se compila antes de encerrar** — ou se declara `rascunho: sim`.
 
 ---
 
