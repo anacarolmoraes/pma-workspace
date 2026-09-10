@@ -19,6 +19,7 @@
 | [`diff-peca`](skills/diff-peca/SKILL.md) | sim | Compara o texto de uma peça .docx editada manualmente pela titular com o .md-fonte que a gerou, e imprime um diff estruturado em nível de parágrafo (removido / adicionado / alterad |
 | [`documentation-templates`](skills/documentation-templates/SKILL.md) | local | Documentation templates and structure guidelines. |
 | [`docx`](skills/docx/SKILL.md) | sim | Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). |
+| [`ficha-golpe-bancario`](skills/ficha-golpe-bancario/SKILL.md) | sim | Apura os números de um caso de GOLPE BANCÁRIO (falsa central, Pix, empréstimo contratado pelo golpista) ou de NEGATIVAÇÃO INDEVIDA a partir dos extratos já convertidos pelo pdfmd,  |
 | [`ficha-rescisao-lote`](skills/ficha-rescisao-lote/SKILL.md) | sim | Apura os fatos numéricos de um caso de rescisão de compromisso de compra e venda de LOTE urbano (contrato + extrato de pagamento) e calcula, de forma determinística, os cenários de |
 | [`gerador-cumprimento-sentenca`](skills/gerador-cumprimento-sentenca/SKILL.md) | sim | Lê sentença, acórdão (apelação/monocrática) e acórdão em embargos de declaração da pasta do caso, extrai os trechos que fixam índice de correção, montante de devolução e percentual |
 | [`heic-converter`](skills/heic-converter/SKILL.md) | sim | Converte imagens HEIC/HEIF (formato padrão de prints e fotos de iPhone) em JPG legíveis e aptas a protocolo judicial, em lote e localmente. |

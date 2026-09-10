@@ -14,6 +14,16 @@
 //   7. manifestação sobre a audiência de conciliação/mediação (CPC 319, VII; 334 §5º)
 //   8. bloco ::assinatura (definicoes §4)
 //   9. se pede gratuidade, cita o art. 98 ou 99 do CPC (definicoes §2)
+//  v2 (2026-09-08), bloqueios:
+//  10. um só valor da causa na peça (o número do 292 aparece igual em toda menção)
+//  11. `Doc. N` citado exige rol `documentos:` no frontmatter (CPC 320; checar-docs.js)
+//  12. sem "correção monetária pela Selic" (Selic é base da taxa legal de juros, CC 406;
+//      correção é IPCA, CC 389, p.ú.)
+//  v2, AVISOS (imprimem ⚠ e não bloqueiam — indício para revisão humana):
+//   A. intimação exclusiva em nome da subscritora (CPC 272, § 5º)
+//   B. capítulo de tutela com número (R$, prazo, data): perigo descrito, não só citado
+//   C. pedidos em alíneas
+//   D. gratuidade indica renda ou prova (forma A ou B pela faixa da ADC 80, definicoes §2)
 //
 // Peça sem `tipo: inicial` (ou tipo ausente) passa sem conferir: o lint é do
 // tipo, não do arquivo. `tipo:` faz a peça ser reconhecida como peça pelos hooks
@@ -109,10 +119,60 @@ if (/gratuidade/i.test(prosa)) {
     /art(?:igo|\.)?\s*9[89]\b/i.test(prosa), 'definicoes.md §2 e Tema 1.178/STJ');
 }
 
+// ── lint-inicial v2 (2026-09-08) ─────────────────────────────────────────────
+const avisos = [];
+const av = (nome, ok, dica) => avisos.push({ nome, ok, dica });
+const reais = (s) => { const out = []; const rx = /R\$\s?([\d.]+,\d{2})/g; let m; while ((m = rx.exec(s))) out.push(m[1]); return out; };
+const capitulo = (rx) => {
+  const i = corpo.findIndex((l) => /^#{1,2}\s/.test(l) && rx.test(l));
+  if (i < 0) return null;
+  let j = i + 1;
+  while (j < corpo.length && !/^#{1,2}\s/.test(corpo[j])) j++;
+  return corpo.slice(i + 1, j).filter((l) => !l.trim().startsWith('>')).join('\n');
+};
+
+const linhasValor = prosa.split('\n').filter((l) => /valor da causa|d[áa]-se [àa] causa|atribui(?:-se)? [àa] causa/i.test(l));
+const valoresCausa = [...new Set(linhasValor.map((l) => reais(l)[0]).filter(Boolean))];
+t('10. Um só valor da causa na peça',
+  valoresCausa.length <= 1,
+  `encontrados: ${valoresCausa.map((v) => 'R$ ' + v).join(' · ')} — o número do art. 292 é um só; a ficha numérica é a fonte`);
+
+const citaDoc = /\bDocs?\.\s*\d/.test(prosa);
+t('11. `Doc. N` citado exige rol `documentos:` no frontmatter',
+  !citaDoc || Object.prototype.hasOwnProperty.call(meta, 'documentos'),
+  'CPC 320 — declare `documentos:` (n, descricao, arquivo) e rode checar-docs.js');
+
+t('12. Sem "correção monetária pela Selic"',
+  !/corre[çc][ãa]o(?: monet[áa]ria)?[^.\n]{0,40}\bselic\b/i.test(prosa),
+  'a Selic é a base da taxa legal de juros (CC 406, § 1º), não índice de correção; correção é IPCA (CC 389, p.ú.)');
+
+av('A. Intimação exclusiva em nome da subscritora (art. 272, § 5º)',
+  /272/.test(prosa) && /intima[çc]/i.test(prosa), 'requerimentos finais: intimações exclusivamente em nome da advogada subscritora');
+const capTutela = capitulo(/tutela/i);
+if (capTutela !== null || /art\.?\s*30[03]\b|art\.?\s*311\b/.test(prosa)) {
+  const alvo = capTutela !== null ? capTutela : prosa;
+  av('B. Tutela descreve o perigo com número (R$, prazo, data)',
+    /R\$\s?[\d.]+,\d{2}|\d+\s*(?:dias?|meses|anos?|%)|\d{2}\/\d{2}\/\d{4}/i.test(alvo),
+    'citar o art. 300 sem descrever o fato é o que faz a tutela ser indeferida de plano (checklist de saída)');
+}
+const capPedidos = capitulo(/Dos pedidos/i);
+if (capPedidos !== null) {
+  av('C. Pedidos em alíneas', /(^|\n)\s*(?:\*\*)?[a-z]\)/.test(capPedidos), 'alíneas a), b), c)… na ordem do playbook (preliminares · tutela · citação · mérito · subsidiários · ônus · exibição · custas)');
+}
+if (/gratuidade/i.test(prosa)) {
+  const capGrat = capitulo(/gratuidade|justi[çc]a gratuita|hipossufici/i) || prosa;
+  av('D. Gratuidade indica a renda ou a prova (forma A ou B, definicoes §2)',
+    /R\$\s?[\d.]+,\d{2}|renda|rendimento|sal[áa]rio|contracheque|DIRPF|imposto de renda|declara[çc][ãa]o/i.test(capGrat),
+    'pós-ADC 80: faixa de R$ 5.000,00 decide a forma; pedido_justica_gratuita, Passo 0');
+}
+
 let falhas = 0;
 for (const x of testes) {
   if (x.ok) console.log(`✔ ${x.nome}`);
   else { falhas++; console.log(`✘ ${x.nome} — ${x.dica}`); }
+}
+for (const x of avisos) {
+  if (!x.ok) console.log(`⚠ ${x.nome} — ${x.dica} (aviso, não bloqueia)`);
 }
 if (falhas) {
   console.error(`\n${falhas} item(ns) do checklist da inicial reprovado(s). Corrigir antes de gerar o .docx.`);

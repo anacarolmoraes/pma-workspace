@@ -3,6 +3,8 @@
 // (exclui transcrições literais) e falha acima dos limites do SKILL.md.
 // Uso: node lint-ia.js <gerar_peca.js | peca.md>
 // Saída: relatório + exit 0 (passou) / 1 (falhou) / 2 (uso).
+// lint-ia v1.2 (manutenção 2026-09-08): título com verbo fora do aviso; contagens
+// globais só na prosa argumentativa; "não é X, é Y" conta como paralelismo negativo.
 'use strict';
 
 const fs = require('fs');
@@ -51,9 +53,12 @@ const capsReais = caps.filter((c) => !c.preambulo);
 const capitulos = capsReais.length || 1;
 const prosa = caps.map((c) => c.linhas.join('\n')).join('\n');
 const prosaArgumentativa = capsReais.map((c) => c.linhas.join('\n')).join('\n');
+// Preâmbulo (endereçamento, qualificação) não é prosa argumentativa: fica fora
+// também das contagens globais. Peça sem capítulo (raro) cai na prosa toda.
+const prosaLint = prosaArgumentativa.trim() ? prosaArgumentativa : prosa;
 
 // ── Padrões e limites ────────────────────────────────────────────────────────
-const contar = (re, alvo = prosa) => (alvo.match(re) || []);
+const contar = (re, alvo = prosaLint) => (alvo.match(re) || []);
 const checks = [];
 const avisos = [];
 const add = (nome, ocorrencias, limite, dica) =>
@@ -74,7 +79,7 @@ checks.push({
   amostra: porCap.filter((c) => c.n > 2).map((c) => `${c.n}× em "${c.titulo.slice(0, 60)}"`),
 });
 
-add('Paralelismo negativo ("e não" contrastivo)', contar(/[,—(]\s*e não\b|\bnão em\b.{0,25}—/g), 1,
+add('Paralelismo negativo ("e não" contrastivo)', contar(/[,—(]\s*e não\b|\bnão em\b.{0,25}—|(?<![\wÀ-ÿ])não (?:é|são|era|foi|se trata de)(?![\wÀ-ÿ])[^.;:]{2,60}?,\s*(?:é|são|era|foi|trata-se de|mas)(?![\wÀ-ÿ])/gi), 1,
   'Afirmar direto; o contraste fica implícito.');
 
 add('Pergunta retórica (?) na prosa própria', contar(/\?/g), 0,
@@ -112,13 +117,13 @@ const CORRELATIVAS = new Set(['ora', 'seja', 'quer', 'nem', 'tanto', 'já', 'uma
 // a última oração costuma vir ligada por "e", sem vírgula que a separe.
 const ANAFORICAS = ['não', 'nem', 'sem', 'tampouco', 'jamais'];
 const triades = [];
-for (const frase of prosa.split(/(?<=[.!?])\s+/)) {
+for (const frase of prosaLint.split(/(?<=[.!?])\s+/)) {
   for (const p of ANAFORICAS) {
     const n = (frase.match(new RegExp(`(?:^|[\\s,;(])${p}\\s`, 'gi')) || []).length;
     if (n >= 3) { triades.push(frase.slice(0, 90)); break; }
   }
 }
-for (const frase of prosa.split(/(?<=[.!?])\s+/)) {
+for (const frase of prosaLint.split(/(?<=[.!?])\s+/)) {
   const partes = frase.split(/,\s*(?:e\s+)?|;\s*/).map((p) => p.trim()).filter(Boolean);
   let seq = 1;
   for (let i = 1; i < partes.length; i++) {
@@ -170,7 +175,7 @@ for (const f of ['impõe-se', 'de rigor', 'resta claro', 'insta salientar', 'cum
 }
 
 // Frases-clone: sentenças longas idênticas repetidas na prosa própria
-const sentencas = prosa.match(/[A-ZÀ-Ú][^.!?]{40,200}[.]/g) || [];
+const sentencas = prosaLint.match(/[A-ZÀ-Ú][^.!?]{40,200}[.]/g) || [];
 const vistos = new Map();
 for (const s of sentencas) {
   const k = s.replace(/\s+/g, ' ').trim();
@@ -185,9 +190,11 @@ checks.push({ nome: 'Frases-clone (mesma sentença ≥ 2x)', n: clones.length, l
 // não é mecanicamente segura — e um portão com falso positivo leva ao
 // --skip-lint, que desliga TODAS as verificações.
 const TITULOS_CONVENCIONAIS = /^(d[oa]s?\s+)?(pedidos?|requerimentos?|fatos?|s[íi]ntese.*|prelimin(ar|ares)|tempestividade|conclus[ãa]o)$/i;
+// Título curto COM verbo finito já enuncia tese ("A pretensão está prescrita"): fora do aviso.
+const RX_VERBO_TITULO = /(?<![\wÀ-ÿ])(é|são|está|estão|foi|foram|era|eram|não|nem|deve|devem|pode|podem|cabe|cabem|há|tem|têm|corre|correm|incide|incidem|prevalece|subsiste|decorre|configura|viola|inexiste|descabe|prescreve|preclui|precluiu|[\wÀ-ÿ]+(?:ou|iu|ram|aram|eram|iram|ará|erá|irá)|[\wÀ-ÿ]+-se)(?![\wÀ-ÿ])/i;
 const vazios = capsReais
   .map((c) => c.titulo.replace(/^[IVXLC]+\.\s*/, '').replace(/\s+$/, ''))
-  .filter((t) => t && t.split(/\s+/).length <= 4 && !TITULOS_CONVENCIONAIS.test(t));
+  .filter((t) => t && t.split(/\s+/).length <= 4 && !TITULOS_CONVENCIONAIS.test(t) && !RX_VERBO_TITULO.test(t));
 if (vazios.length) {
   avisos.push({
     nome: 'Título de capítulo sem conclusão enunciada',

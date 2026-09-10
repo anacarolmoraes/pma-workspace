@@ -1,6 +1,6 @@
 ---
 name: inicial-rescisao-lote
-version: 1.0.0
+version: 1.1.0
 description: |
   Orquestra a produção completa da petição inicial de rescisão de compromisso
   de compra e venda de LOTE urbano (Lei 6.766/79), do dossiê ao .docx
@@ -45,7 +45,7 @@ Clonar `material_padrao_escritorio/TEMPLATE_INICIAL_RESCISAO_LOTE.md` para a pas
 **Forma e valores: ler `perfil/definicoes.md`** — endereçamento e estrutura (§5), gratuidade (§2), valor da causa (§1 — cai no art. 292, II, CPC: valor do contrato) e assinatura (§4). Não reproduzir essas regras aqui: o arquivo é a fonte única.
 
 ### Etapa 6 — Humanização (skill `humanizer-forense`)
-Rodar `lint-ia.js` e corrigir cacoetes de IA sem tocar em transcrições. (O `md2docx.js` roda o lint automaticamente como portão.)
+Rodar `lint-ia.js` e `ritmo.js` (análise obrigatória). Só alterar a prosa se houver sinal, e sempre entre `checar-invariantes.js --snapshot` e `checar-invariantes.js` (violação = desfazer). Voz: `perfil/voz-forense.md`. (O `md2docx.js` roda o `lint-ia` automaticamente como portão.)
 
 ### Etapa 7 — Compilação (skill `peca-pma-builder`)
 ```powershell

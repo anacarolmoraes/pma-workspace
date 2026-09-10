@@ -184,6 +184,28 @@ Gravar `radar-jurisprudencia_<AAAA-MM-DD>.md` na pasta do caso, neste formato:
 (se nenhum: "Nenhuma decisão contrária localizada na amostra — o que não prova que não exista.")
 ```
 
+## Modo grupo de casos (dano moral, primeira fase do método bifásico)
+
+A heurística `direito/pecas/peticao-inicial/heuristicas/quantificar-dano-moral-metodo-bifasico.md`
+exige três a cinco acórdãos **do tribunal competente**, para o mesmo interesse lesado, com o
+valor fixado em cada um. O radar faz a coleta; o script extrai os valores:
+
+```bash
+node scripts/buscar.js --termos "dano moral;falsa central" --tribunais TJTO --inicio 2024-01-01 --saida <pasta-do-caso>/radar-djen
+node scripts/grupo-de-casos.js --entrada <pasta-do-caso>/radar-djen --tribunal TJTO --md <pasta-do-caso>/grupo-de-casos.md
+```
+
+`grupo-de-casos.js` (zero LLM) lê `textos/` e devolve uma tabela com tribunal, órgão,
+processo, data, **valor de dano moral** e o verbo que o acompanha (fixa, mantém, reduz,
+majora), mais faixa e mediana. A tabela alimenta `dano_moral.grupo_de_casos` do
+`dados_caso.json` da `ficha-golpe-bancario`. Duas regras:
+
+- **Valor extraído por regex é candidato, não citação.** Só entra na peça depois de conferido
+  no inteiro teor e com página no acervo (`casos_decididos/` ou `perfis/` do bundle temático),
+  que a titular deposita. Sem página, o número fica na `ANALISE.md` como pesquisa.
+- O tribunal é o da peça (`--tribunal`). Grupo de casos de outro tribunal só quando o
+  competente não tem os seus, e dito como tal.
+
 ## Regras duras
 
 1. **Nada do dossiê entra em peça sem verificação**: semáforo do `scripts/verificar.js` +

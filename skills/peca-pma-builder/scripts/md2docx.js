@@ -8,6 +8,8 @@
 //
 // Portões automáticos: antes de compilar, exige o rastro do pipeline
 // (2026-09-04 — `pipeline:`, `bundle:` e <PECA>.validacao.md com veredito mais
+// novo que a peça; 2026-09-08 — <PECA>.estrutura.md com `aprovada: sim`, salvo
+// `estrutura: template`; e
 // novo que a peça) e roda lint-remissoes.js, o lint-ia.js do humanizer-forense,
 // lint-placeholder.js (peça com [[slot]] ou [VERIFICAR] não compila),
 // lint-inicial.js (checklist mecânico do 319 quando `tipo: inicial`) e
@@ -106,13 +108,30 @@ function exigirRastro(mdPath, meta) {
     else if (/REPROVADO/.test(v)) problemas.push(`veredito REPROVADO em ${nomeVal} — corrija as fraquezas CRÍTICO/ALTO e revalide.`);
   }
 
+  // Estrutura aprovada (Estágio 0.5, portão desde 2026-09-08): a arquitetura da peça
+  // é decidida e aprovada pela titular ANTES da prosa, em <PECA>.estrutura.md com
+  // `aprovada: sim`. Peça gerada de template (inicial-rescisao-lote, golpe) declara
+  // `estrutura: template` no frontmatter: o playbook dispensa o portão humano nela.
+  if (!/^template$/i.test(String(meta.estrutura || '').trim())) {
+    const est = mdPath.replace(/\.md$/i, '.estrutura.md');
+    const nomeEst = path.basename(est);
+    if (mtime(est) === null) {
+      problemas.push(`sem ${nomeEst} — Estágio 0.5: grave a estrutura da peça ao lado dela e obtenha \`aprovada: sim\` da titular antes da prosa (peça de template declara \`estrutura: template\`).`);
+    } else {
+      let te = '';
+      try { te = fs.readFileSync(est, 'utf8'); } catch { /* tratado como não aprovada */ }
+      const ap = String(frontmatter(te).aprovada || '').trim();
+      if (!/^(sim|s|yes|true)$/i.test(ap)) problemas.push(`${nomeEst} sem \`aprovada: sim\` (está: "${ap || 'ausente'}") — a titular aprova a arquitetura antes da prosa.`);
+    }
+  }
+
   if (!problemas.length) {
-    console.log('md2docx: rastro OK (pipeline, bundle, veredito do validator)');
+    console.log('md2docx: rastro OK (pipeline, bundle, estrutura aprovada, veredito do validator)');
     return;
   }
   console.error('\nmd2docx: RASTRO DO PIPELINE INCOMPLETO — .docx não gerado.');
   for (const p of problemas) console.error(`  ✘ ${p}`);
-  console.error('\nO ciclo é: legal-orchestrator (Estágios 0–6) → veredito gravado → pipeline: declarado → md2docx.\n');
+  console.error('\nO ciclo é: legal-orchestrator (Estágio 0 → 0.5 com estrutura aprovada → 1–6) → veredito gravado → pipeline: declarado → md2docx.\n');
   process.exit(1);
 }
 

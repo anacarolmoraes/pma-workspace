@@ -66,6 +66,11 @@ const naoInicial = fm('tipo: replica\n') + '# I. Tese\n\nTexto sem nada do check
 const semTipo = fm() + '# I. Tese\n\nTexto.\n';
 const comSlot = fm() + '# I. Tese\n\nO autor pagou R$ [[valor]] à ré.\n';
 const comSic = fm() + '# I. Tese\n\nA ré escreveu "recebemos o valor [sic] integral".\n';
+// lint-inicial v2 (2026-09-08)
+const inicialSelic = inicialOk.replace('Dá-se à causa', 'Os valores sofrerão correção monetária pela taxa Selic desde o desembolso. Dá-se à causa');
+const inicialDoisValores = inicialOk.replace('# II. Dos fatos\n\nTexto.', '# II. Dos fatos\n\nO valor da causa de R$ 12.000,00 reflete o pedido.');
+const inicialDocSemRol = inicialOk.replace('# II. Dos fatos\n\nTexto.', '# II. Dos fatos\n\nO contrato (Doc. 2) prova o pagamento.');
+const inicialDocComRol = fm('tipo: inicial\ndocumentos:\n  - n: 2\n    descricao: contrato\n') + inicialDocSemRol.slice(inicialDocSemRol.indexOf('<!--'));
 
 const w = (n, c) => { const p = path.join(tmp, n); fs.writeFileSync(p, c); return p; };
 const fInicialOk = w('inicial-ok.md', inicialOk);
@@ -74,6 +79,10 @@ const fNaoInicial = w('replica.md', naoInicial);
 const fSemTipo = w('sem-tipo.md', semTipo);
 const fComSlot = w('com-slot.md', comSlot);
 const fComSic = w('com-sic.md', comSic);
+const fInicialSelic = w('inicial-selic.md', inicialSelic);
+const fInicialDoisValores = w('inicial-dois-valores.md', inicialDoisValores);
+const fInicialDocSemRol = w('inicial-doc-sem-rol.md', inicialDocSemRol);
+const fInicialDocComRol = w('inicial-doc-com-rol.md', inicialDocComRol);
 
 // hook copiado para um hooks/ falso com a lib real, para o require('./lib/transcript') resolver
 const hooksDir = path.join(tmp, 'hooks');
@@ -102,6 +111,10 @@ const casos = [
   ['lint-inicial', 1, 'inicial com Excelentíssimo, telefone, sem síntese, sem valor da causa', () => rodarLint('lint-inicial.js', fInicialRuim)],
   ['lint-inicial', 0, 'tipo: replica → nada a conferir', () => rodarLint('lint-inicial.js', fNaoInicial)],
   ['lint-inicial', 0, 'sem tipo: → nada a conferir', () => rodarLint('lint-inicial.js', fSemTipo)],
+  ['lint-inicial', 1, 'v2: "correção monetária pela Selic" reprova', () => rodarLint('lint-inicial.js', fInicialSelic)],
+  ['lint-inicial', 1, 'v2: dois valores da causa divergentes reprovam', () => rodarLint('lint-inicial.js', fInicialDoisValores)],
+  ['lint-inicial', 1, 'v2: Doc. N citado sem rol documentos: reprova', () => rodarLint('lint-inicial.js', fInicialDocSemRol)],
+  ['lint-inicial', 0, 'v2: Doc. N citado com rol documentos: passa', () => rodarLint('lint-inicial.js', fInicialDocComRol)],
   ['protect-gates', 0, 'execução de lint com 2>&1 passa', () => rodarHook(bash('node scripts/lint-skills.js 2>&1 | tail -5'))],
   ['protect-gates', 0, 'leitura de portão com 2>/dev/null... não: redirect p/ arquivo ainda conta (cat)', () => rodarHook(bash('cat skills/peca-pma-builder/scripts/md2docx.js'))],
   ['protect-gates', 2, 'sed -i em lint-ia continua bloqueado', () => rodarHook(bash('sed -i "s/2/9/" skills/humanizer-forense/scripts/lint-ia.js'))],

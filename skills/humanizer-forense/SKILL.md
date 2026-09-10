@@ -1,18 +1,21 @@
 ---
 name: humanizer-forense
-version: 1.1.0
+version: 1.2.0
 description: |
   Remove sinais de escrita de IA de peças processuais em português jurídico brasileiro,
   SEM tocar na estrutura AI-first invisível (BLUF, títulos-conclusão, transcrições).
   Desde 2026-07-16, rótulos meta-textuais visíveis ("Conclusão do capítulo:" etc.)
   são eles próprios sinal de IA — remover, dissolvendo em prosa.
-  Use após redigir qualquer petição/recurso e antes de gerar o .docx. Alvos: excesso de
-  travessões, paralelismos negativos ("X — e não Y"), perguntas retóricas em série,
-  frases-clone entre capítulos, registro inflado ("por excelência", "impõe-se" em série),
-  regra de três artificial, tríade anafórica, enumeração mecânica ("A primeira é… A segunda…"),
-  frase truncada de efeito e parágrafo inteiro em negrito. Protege transcrições literais,
-  citações, números e datas — e NÃO mexe em título-tese nem em BLUF, que são estrutura.
-  Inclui lint quantitativo (scripts/lint-ia.js) plugável nos workflows de peça.
+  Use após redigir qualquer petição/recurso e antes de gerar o .docx: a ANÁLISE é
+  obrigatória em toda peça; a ALTERAÇÃO, só quando lint, ritmo ou leitura acusam sinal,
+  e sempre entre um snapshot e o guardião de invariantes (scripts/checar-invariantes.js),
+  que reprova mudança de número, data, dispositivo, julgado, transcrição, título-tese,
+  BLUF, modalidade, negação ou pedido. Alvos: excesso de travessões, paralelismos
+  negativos ("X — e não Y"), perguntas retóricas em série, frases-clone entre capítulos,
+  registro inflado ("por excelência", "impõe-se" em série), regra de três artificial,
+  tríade anafórica, enumeração mecânica, frase truncada de efeito, parágrafo em negrito.
+  Inclui lint quantitativo (scripts/lint-ia.js, portão do md2docx) e diagnóstico de ritmo
+  não bloqueante (scripts/ritmo.js). Voz de referência: perfil/voz-forense.md.
 allowed-tools:
   - Read
   - Write
@@ -26,6 +29,28 @@ allowed-tools:
 
 Camada de **superfície** sobre a heurística `estrutura-ai-first` (bundle D12): a arquitetura da peça (posição da conclusão, títulos-tese, transcrições com fonte) fica intacta; o que muda é a textura da prosa. Fonte dos padrões: Wikipedia, "Signs of AI writing" (WikiProject AI Cleanup), adaptada ao gênero forense pt-BR.
 
+## Análise obrigatória, alteração condicional (08/09/2026)
+
+Até 08/09/2026 havia divergência: o AGENTS.md dizia que toda peça passa pela skill, e o Estágio 5 do orchestrator dizia que ela é condicional. A harmonização é esta:
+
+```text
+humanizer-forense      → SEMPRE executado (lint-ia + ritmo.js + leitura)
+alteração da prosa     → SÓ quando há sinal (lint reprovado, sinal de ritmo, ou leitura acusa)
+guardião de invariantes→ SEMPRE que houve alteração (snapshot antes, checar-invariantes depois)
+revalidação jurídica   → SEMPRE que houve alteração (Estágio 3 do orchestrator de novo)
+```
+
+O resultado fica registrado no frontmatter do `<PECA>.validacao.md` (quem grava é o orchestrator, ao fim do Estágio 5), sem artefato novo:
+
+```yaml
+humanizer_analisado: sim
+humanizer_alterou: nao            # ou sim
+invariantes: preservados          # preservados | preservados com avisos | violados | n/a (sem alteração)
+ritmo_sinais: 0                   # saída do ritmo.js
+```
+
+Analisar sem alterar é resultado legítimo. Alterar sem checar invariantes não é.
+
 ## Invariantes — NUNCA alterar
 
 1. **Transcrições literais** (`pQuote`, citações de decisão, ementa, súmula, norma): intocáveis, inclusive travessões e erros do original.
@@ -35,6 +60,38 @@ Camada de **superfície** sobre a heurística `estrutura-ai-first` (bundle D12):
 5. **Terminologia técnica** consagrada (prequestionamento, dialeticidade, incindibilidade etc.) não é "vocabulário de IA" — não trocar por sinônimo leigo.
 6. **TÍTULOS-TESE E BLUF SÃO ESTRUTURA, NÃO SUPERFÍCIE (lição de 2026-08-04):** humanizar **não** é despir o título. O que sai são os rótulos meta-textuais (invariante 2); o que fica é o título que **enuncia a conclusão** do capítulo e a conclusão nas primeiras linhas dele (regras 2 e 3 de `estrutura-ai-first`). Numa réplica real a passada de humanização trocou sete títulos-tese por rótulos vazios ("Dos juros de mora", "Da sucumbência") e moveu a conclusão de quatro capítulos para depois da tese da parte contrária — a prosa melhorou e a peça deixou de ser AI-first. São camadas independentes: mexer numa não autoriza mexer na outra. O `lint-ia.js` emite **aviso** (não bloqueio) para título de capítulo sem conclusão enunciada.
 7. **MODALIDADE DAS FORMULAÇÕES (lição da 1ª banca, jul/2026):** condicional/hipotético NUNCA vira afirmativo. "Ainda que se aceite X" e "mesmo que X fosse verdade" são concessões *ad argumentandum*; reescrevê-las como "e a parte aceita X" transforma hipótese em confissão — mudança de modalidade é mudança de mérito. Na dúvida sobre o valor jurídico de uma reformulação, manter a original.
+8. **Negações e pedidos.** Frase parecida não troca de polaridade ("não nega" ≠ "nega"); verbo de pedido não muda ("condenar" ≠ "reconhecer"); item de pedido não some nem surge.
+
+### Guardião de invariantes (`scripts/checar-invariantes.js`)
+
+Até 08/09/2026 os invariantes valiam por disciplina; os dois incidentes acima (títulos despidos, hipótese virada afirmação) passaram. Agora a conferência é mecânica, antes e depois de qualquer alteração:
+
+```powershell
+node skills\humanizer-forense\scripts\checar-invariantes.js --snapshot clientes\<caso>\PECA.md   # ANTES de editar
+# ... humanização ...
+node skills\humanizer-forense\scripts\checar-invariantes.js clientes\<caso>\PECA.md              # compara com o snapshot
+node skills\humanizer-forense\scripts\checar-invariantes.js --limpar clientes\<caso>\PECA.md     # apaga o snapshot depois
+```
+
+O snapshot fica ao lado da peça como `<PECA>.antes-humanizer.md`, com um comentário HTML na primeira linha (por isso os hooks de peça não o tratam como peça); apaga-se depois da conferência. `--json` devolve o resultado para o registro no `.validacao.md`. Também compara dois arquivos quaisquer: `checar-invariantes.js antes.md depois.md`.
+
+O que ele confere e como reage:
+
+| Invariante | Bloqueia (✘) | Avisa (⚠) |
+|---|---|---|
+| Frontmatter e diretivas (`::endereco`, `::assinatura`) | qualquer diferença | |
+| Transcrições em blockquote | qualquer diferença, inclusive travessão | |
+| Valores em R$, percentuais, datas, números de processo, demais números | sumiu ou surgiu | |
+| Dispositivos (art., §, inciso, alínea), precedentes, leis, súmulas, temas | sumiu ou surgiu | |
+| Nomes de parte em caixa alta | sumiu ou surgiu | |
+| Capítulos | número ou ordem diferente; título-tese que virou rótulo | título reformulado que segue enunciando tese |
+| BLUF | abertura do capítulo desceu para o 3º parágrafo ou além | |
+| Modalidade ("ainda que", "caso", "subsidiariamente", "em tese"…) | marcador sumiu | marcador novo |
+| Negações | frase parecida com número diferente de negações | |
+| Pedidos (capítulo com "pedido"/"requer" no título) | verbo de pedido ou item enumerado diferente | |
+| Extensão da prosa própria | | variação acima de 20% |
+
+Violação não se "explica": desfaz-se a alteração ou se leva à titular. Exit 1 = há violação; exit 2 = falta snapshot (grave-o antes de editar).
 
 ## Tabela de substituições
 
@@ -53,6 +110,9 @@ Camada de **superfície** sobre a heurística `estrutura-ai-first` (bundle D12):
 | Frase truncada de efeito ("Existia.", "Não se amolda.") | ≤ 1 | Integrar ao período anterior; o corte seco é golpe de modelo |
 | Parágrafo inteiro em negrito como efeito dramático | 0 | Devolver a frase ao corpo do parágrafo; a ênfase vem do argumento |
 | Cadência de tabela na impugnação ("O autor alega X. Não procede, porque Y." em sequência; "o autor alega" ou "não procede" repetidos) | ≤ 1 cada por capítulo | Fundir as linhas em blocos temáticos com a versão do réu como fio; abrir cada bloco por ângulo diferente (documento, data, contradição interna do autor); manter cada fato identificável pela narrativa, não pela enumeração (playbook da contestação, capítulo V) |
+| Dois-pontos em série na prosa (preferência da titular, 12/08/2026) | ≤ 1 de prosa por capítulo (aviso do `ritmo.js`) | Reservar para citação em bloco, síntese e "requer-se:"; na argumentação, ponto, ponto e vírgula ou conjunção |
+
+Os limites acima com número são os do `lint-ia.js` (portão). Frequência estilística que o lint não conta (ritmo, aberturas, conectivos) é aviso do `ritmo.js`, não reprovação: indício para a passada humana, não prova de prosa ruim. Não se acrescenta palavra proibida à tabela para "pegar mais": o retorno é baixo e o custo é empobrecer o vocabulário jurídico.
 
 ## Falsos positivos do gênero forense (NÃO corrigir)
 
@@ -64,18 +124,29 @@ Camada de **superfície** sobre a heurística `estrutura-ai-first` (bundle D12):
 
 ## Processo de aplicação
 
-1. Rodar o lint: `node scripts/lint-ia.js caminho/gerar_peca.js` (ou .md). Ele conta os padrões fora de citação e falha acima dos limites — inclusive rótulos meta-textuais visíveis (limite 0). O `md2docx.js` do peca-pma-builder já roda este lint automaticamente como portão de compilação.
+1. **Medir.** `node scripts/lint-ia.js caminho/peca.md` (portão: conta os padrões fora de citação e falha acima dos limites, inclusive rótulos meta-textuais) e `node scripts/ritmo.js caminho/peca.md` (diagnóstico: frases de tamanho uniforme, parágrafos do mesmo tamanho em série, aberturas repetidas, conectivo em cada parágrafo, norma→aplicação→conclusão em série, fecho "Isso é X", enumeração fora dos pedidos, dois-pontos em série, capítulo raso; nunca reprova). O `md2docx.js` já roda o `lint-ia` como portão de compilação.
 
-   **O travessão é medido POR CAPÍTULO, não no total** (correção de 2026-08-04). Até então o limite era um orçamento global de `2 × nº de capítulos`, e uma peça de 16 capítulos passava com 25 travessões concentrados em três deles. O relatório agora nomeia o pior capítulo.
+   **O travessão é medido POR CAPÍTULO, não no total** (correção de 2026-08-04). O relatório nomeia o pior capítulo.
 
-   **Lint verde não é prosa aprovada.** O lint pega padrões contáveis; não pega ritmo. Numa réplica real a peça passou em todos os itens e ainda assim foi lida como escrita por IA. Por isso os passos 3 e 4 não são opcionais.
-2. Reescrever só a prosa própria, seguindo a tabela; conferir cada invariante.
-3. **Calibração de voz (OBRIGATÓRIA quando a peça passa de 6 capítulos):** ler uma peça humana do escritório sobre tema próximo (ex.: as razões de REsp ou os EDcl do próprio caso, escritos por advogado) e imitar o ritmo de frase: períodos mais longos, vírgulas, menos simetria.
-4. Passada final anti-IA: perguntar "o que neste texto ainda parece gerado por IA?" e corrigir o que sobrar.
-5. Rodar o lint de novo até passar; depois `lint-remissoes.js` (peca-pma-builder) e gerar o .docx.
+   **Lint verde não é prosa aprovada.** O lint pega padrões contáveis; o `ritmo.js` pega frequência; nenhum dos dois pega voz. Numa réplica real a peça passou em todos os itens e ainda assim foi lida como escrita por IA. Por isso o passo 2 inclui leitura, e não só medição.
+
+2. **Decidir.** Há sinal se o lint reprovou, se o `ritmo.js` apontou sinal, ou se a leitura da peça contra `perfil/voz-forense.md` acusa prosa de modelo. Sem sinal: registrar `humanizer_alterou: nao` e encerrar aqui. Com sinal: seguir.
+
+3. **Snapshot.** `node scripts/checar-invariantes.js --snapshot caminho/peca.md`. Sem isso o passo 5 não tem com o que comparar.
+
+4. **Reescrever só a prosa própria**, seguindo a tabela e o perfil de voz; conferir cada invariante enquanto edita. **Calibração de voz, proporcional** (substitui a fronteira fixa de seis capítulos): peça curta ou rotineira, `perfil/voz-forense.md` basta; peça longa (> 6 capítulos), recurso ou peça estratégica, o perfil **e** uma peça humana próxima (razões, embargos, contrarrazões do próprio caso escritos por advogado, ou tema vizinho do escritório), da qual se imita o ritmo e **nunca** se copia fato, trecho ou número.
+
+5. **Conferir invariantes.** `node scripts/checar-invariantes.js caminho/peca.md`. Violação (exit 1) desfaz a alteração correspondente; não se justifica nem se contorna. Depois, `--limpar`.
+
+6. **Passada final anti-IA:** perguntar "o que neste texto ainda parece gerado por IA?" e corrigir o que sobrar; repetir o passo 5 se editou.
+
+7. **Revalidar.** Toda alteração exige o `legal-consistency-validator` de novo (Estágio 3 do orchestrator): humanização depois da validação sem nova checagem é porta de entrada de erro. O orchestrator grava então os campos `humanizer_*` no `.validacao.md`.
+
+8. Rodar o lint de novo até passar; depois `lint-remissoes.js` (peca-pma-builder) e gerar o .docx.
 
 ## Limites (fora do escopo)
 
-- Não valida conteúdo jurídico (legal-consistency-validator) nem estrutura (checklists dos playbooks).
+- Não valida conteúdo jurídico (legal-consistency-validator) nem estrutura (checklists dos playbooks). O `checar-invariantes.js` confere que a humanização não mudou o mérito, não que o mérito está certo.
 - Não aplicar a transcrições, contratos, atas ou traduções: só a prosa argumentativa própria.
 - Texto não-forense (artigos, LinkedIn, e-mails): usar a skill `humanizer` genérica.
+- O `lint-ia.js` é portão (`protect-gates`): correção de detector (falso positivo, divergência entre esta tabela e a regex) entra por patch em `planos/` e sessão de manutenção, não por edição direta.

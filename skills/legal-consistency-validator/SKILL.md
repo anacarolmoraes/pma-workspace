@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.9.0
+version: 2.11.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -100,7 +100,7 @@ Procure ativamente:
 **B. Contradições estruturais** — Argumentos que, juntos, enfraquecem a tese. Exemplo: alegar que o banco deveria ter bloqueado a transação E que o cliente agiu de boa-fé e sem suspeita são compatíveis, mas alegar descuido do banco e comportamento atípico do cliente na mesma seção sem articulá-los é contradição estrutural.
 
 **C. Inconsistências numéricas** — Verifique:
-- **Valor da causa:** conferir contra `perfil/definicoes.md` §1 — a regra depende do objeto da ação. Regra geral e cumulação: soma dos pedidos quantificados (art. 292, VI, CPC). **Ação cujo objeto é a rescisão/resolução de negócio jurídico: valor do ato** (art. 292, II, CPC) — é o caso da inicial de rescisão de lote, onde o valor da causa é o do contrato e **não** deve ser acusado como divergente.
+- **Valor da causa:** conferir contra `perfil/definicoes.md` §1 — a regra depende do objeto da ação. Regra geral e cumulação: soma dos pedidos quantificados (art. 292, VI, CPC). **Ação cujo objeto é a rescisão/resolução de negócio jurídico: valor do ato** (art. 292, II, CPC) — é o caso da inicial de rescisão de lote, onde o valor da causa é o do contrato e **não** deve ser acusado como divergente. Quando o caso tem ficha numérica (`FICHA_CASO.md` da `ficha-rescisao-lote` ou da `ficha-golpe-bancario`), a ficha é o gabarito: rodar `node skills/ficha-golpe-bancario/scripts/calc.js <dados_caso.json> --conferir <PECA>.md` e tratar como **ALTO** todo `R$` da peça que não sai da ficha e todo número central da ficha (material, moral, valor da causa) ausente da peça. Número na peça sem documento que o sustente é **CRÍTICO**.
 - Valor de danos morais igual em todas as seções onde aparecer
 - Datas consistentes (data do fato, da contestação, da audiência, dos documentos)
 - Cálculos de juros e correção matematicamente corretos
@@ -198,6 +198,10 @@ completo em `<PECA>.validacao.md`, na mesma pasta (para `INICIAL_RESCISAO.md`, o
 peca: INICIAL_RESCISAO.md
 veredito: APROVADO | APROVADO COM RESSALVAS | REPROVADO
 validado_em: 2026-09-04T15:40
+humanizer_analisado: sim          # campos do Estágio 5 do orchestrator (desde 08/09/2026)
+humanizer_alterou: nao            # sim | nao
+invariantes: n/a                  # saída do checar-invariantes.js quando alterou; n/a se não alterou
+ritmo_sinais: 0                   # saída do ritmo.js
 ---
 ```
 
@@ -206,6 +210,12 @@ Esse arquivo é o rastro que o `md2docx` confere antes de compilar: sem ele, com
 compila. Por isso, **cada nova rodada de validação sobrescreve o arquivo**, e qualquer edição
 da peça depois do veredito exige rodar o validator de novo. Não editar o arquivo à mão para
 mudar o veredito: quem muda o veredito é a peça corrigida.
+
+Os quatro campos `humanizer_*`/`invariantes`/`ritmo_sinais` são gravados pelo orchestrator ao
+fim do Estágio 5, **depois** deste veredito. Ao revalidar uma peça humanizada, o validator
+sobrescreve o arquivo e **preserva** esses campos se já existirem (o orchestrator os atualiza
+em seguida). Peça humanizada com `invariantes: violados` não recebe veredito diferente de
+REPROVADO: mudança de mérito na humanização é fraqueza CRÍTICA, não estilo.
 
 O arquivo não é peça (não leva `titulo:`/`processo:`/`pipeline:`), então não dispara os hooks
 de peça. Contém só o output abaixo; nunca dado pessoal além do que a própria peça já traz.

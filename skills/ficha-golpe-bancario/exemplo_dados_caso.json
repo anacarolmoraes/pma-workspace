@@ -1,0 +1,35 @@
+{
+  "_comentario": "EXEMPLO FICTÍCIO — nomes, datas e valores inventados, só para mostrar o formato. Nunca versionar dados de cliente real neste arquivo. Toda transação vem do extrato convertido pelo pdfmd, com a fonte (Doc. N, p. X).",
+  "cliente": "FULANO DE TAL",
+  "tema": "golpe",
+  "responsabilidade": "contratual",
+  "data_referencia": "2026-09-08",
+  "salario_minimo": 1621.00,
+  "pericia_necessaria": false,
+  "out": "FICHA_CASO_EXEMPLO.md",
+  "transacoes": [
+    { "data": "2025-03-10", "valor": 4800.00, "descricao": "Pix para conta de terceiro (falsa central)", "canal": "app", "conta": "Banco A", "fonte": "Doc. 3, p. 2" },
+    { "data": "2025-03-10", "valor": 4800.00, "descricao": "Mesmo Pix, visto no extrato da conta intermediária", "canal": "app", "conta": "Banco B", "fonte": "Doc. 4, p. 1" },
+    { "data": "2025-03-10", "valor": 2500.00, "descricao": "Pix para conta de terceiro", "canal": "app", "conta": "Banco A", "fonte": "Doc. 3, p. 2" }
+  ],
+  "estornos": [
+    { "data": "2025-03-12", "valor": 500.00, "descricao": "Devolução parcial via MED", "fonte": "Doc. 3, p. 3" }
+  ],
+  "cobrancas_indevidas": [
+    { "data": "2025-04-05", "valor": 320.00, "descricao": "Parcela de empréstimo contratado pelo golpista", "fonte": "Doc. 3, p. 4" },
+    { "data": "2025-05-05", "valor": 320.00, "descricao": "Parcela de empréstimo contratado pelo golpista", "fonte": "Doc. 3, p. 5" }
+  ],
+  "pedir_dobro": true,
+  "dano_moral": {
+    "grupo_de_casos": [
+      { "processo": "0000000-00.2025.8.27.0000", "tribunal": "TJTO, 1ª Câmara Cível", "data": "2025-06-01", "valor": 5000.00, "fonte": "casos_decididos/exemplo-a.md" },
+      { "processo": "0000000-01.2025.8.27.0000", "tribunal": "TJTO, 2ª Câmara Cível", "data": "2025-08-01", "valor": 8000.00, "fonte": "casos_decididos/exemplo-b.md" },
+      { "processo": "0000000-02.2024.8.27.0000", "tribunal": "TJTO, 1ª Câmara Cível", "data": "2024-11-01", "valor": 6000.00, "fonte": "casos_decididos/exemplo-c.md" }
+    ],
+    "circunstancias": [
+      { "fato": "verba alimentar: o valor subtraído era o salário do mês", "efeito": "eleva", "doc": "Doc. 5" },
+      { "fato": "reclamação administrativa ignorada por 40 dias", "efeito": "eleva", "doc": "Doc. 6" }
+    ],
+    "valor_pedido": 8000.00
+  }
+}

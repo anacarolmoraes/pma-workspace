@@ -1,6 +1,6 @@
 ---
 name: legal-orchestrator
-version: 4.9.0
+version: 4.11.0
 description: |
   Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
   acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
@@ -8,7 +8,7 @@ description: |
   em réplica, mapa da contestação em cinco eixos com incontrovérsia, confissões e prazos paralelos), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
   redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
   adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
-  seletiva (humanizer-forense) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
+  com análise obrigatória e alteração condicional (humanizer-forense, com guardião de invariantes) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
   elaborar, redigir ou revisar uma peça processual completa — inicial, contestação, recurso, 
   manifestação, agravo, embargos ou qualquer documento jurídico formal. Triggers: "faça a petição", 
   "elabore a inicial", "construa o recurso", "redija a contestação", "monte a peça".
@@ -46,8 +46,9 @@ Cada estágio deixa um rastro que o portão seguinte confere. Sem o rastro, o pa
 | Leitura de `perfil/definicoes.md` e `perfil/usuario.md` | a sessão, antes da primeira gravação da peça | hook `require-leitura` |
 | `bundle: direito/<tema>` no frontmatter e leitura de ao menos um arquivo desse bundle | Estágio 0 | hook `require-leitura` |
 | `clientes/<caso>/ANALISE.md` (cronologia, teses candidatas, mapa probatório, ataques) | Estágio 0, item 4; atualizada a cada peça nova do mesmo caso | Estágio 0.5 (a estrutura aponta para ela) e Estágio 3 |
-| `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência) e Estágio 6. Sem hook por enquanto: entra no `md2docx` se, em uso, o estágio se mostrar pulado |
+| `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência), Estágio 6 e o `md2docx`, que desde 08/09/2026 recusa compilar sem o arquivo com `aprovada: sim` (peça de template declara `estrutura: template` no frontmatter e passa) |
 | `<PECA>.validacao.md` ao lado da peça, com `veredito:` no frontmatter | Estágio 3 (o validator grava) | `md2docx`, que recusa compilar sem veredito, com veredito REPROVADO ou com veredito mais antigo que a última edição do `.md` |
+| `humanizer_analisado`, `humanizer_alterou`, `invariantes`, `ritmo_sinais` no frontmatter do `<PECA>.validacao.md` | Estágio 5 (o orchestrator grava, depois da validação ou revalidação); `invariantes` vem do `checar-invariantes.js` | Estágio 6 (checklist) e a titular. Sem hook por enquanto |
 | `pipeline: legal-orchestrator` no frontmatter | Estágio 7, depois de cumprido o ciclo | `md2docx` |
 
 Peça sem matéria de acervo (manifestação puramente processual, por exemplo) declara `bundle: nenhum`. A decisão fica no documento, não numa exceção do portão.
@@ -63,9 +64,11 @@ Não redija com o que está à mão. Levante o que existe, **em dois lugares**, 
 
 Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em PDF. A réplica foi redigida sem a inicial e sem o contrato, e afirmou que o cliente não pagara sinal — o contrato registrava R$ 1.339,96 no campo "sinal de negócio", e a inicial pedia justamente a devolução dele. Os dois documentos estavam no Drive desde 2018.
 
-**Portão:** se faltar a peça anterior ou o documento que sustenta os valores, **pare e peça** — não redija com placeholder, e não infira o número a partir do que a parte contrária afirma. Quando o tema tiver skill de apuração numérica (ex.: `ficha-rescisao-lote` para rescisão de lote), rodá-la aqui, antes do Estágio 1, e usar a ficha como fonte dos valores da peça.
+**Portão:** se faltar a peça anterior ou o documento que sustenta os valores, **pare e peça** — não redija com placeholder, e não infira o número a partir do que a parte contrária afirma. Quando o tema tiver skill de apuração numérica, rodá-la aqui, antes do Estágio 1, e usar a ficha como fonte dos valores da peça: `ficha-rescisao-lote` para rescisão de lote; `ficha-golpe-bancario` para golpe bancário, consignado fraudulento e negativação (dano material por transação com fonte, dupla contagem, dobro condicionado à data, encargos por verba, dano moral bifásico, valor da causa e teto do Juizado; `--conferir PECA.md` acusa todo `R$` da peça que não sai da ficha).
 
-3. **Acervo (arsenal-juridico).** Abrir `<bundles>/index.md` (o roteador), escolher o bundle da matéria e ler, dentro dele, `index.md`, `jurisprudencia/`, `teses/`, `heuristicas/` e `casos_decididos/`; depois `direito/pecas/<tipo>/` para a técnica da peça. O caminho de `<bundles>` está em `perfil/ambiente.json`. O nome do bundle escolhido vai para o frontmatter da peça (`bundle: direito/<tema>`) antes da primeira gravação: o hook `require-leitura` bloqueia a gravação se o campo falta ou se nenhum arquivo daquele bundle foi lido na sessão.
+**Intake da inicial (2026-09-08).** Contestação e réplica geram roteiro de entrevista a partir da peça adversária; a inicial gera o seu a partir do art. 320 e do mapa probatório, pela heurística `direito/pecas/peticao-inicial/heuristicas/matriz-documentos-da-inicial.md` do acervo (Parte A: o que toda inicial junta; Parte B: uma pergunta ao cliente por fato *frágil* ou *a produzir*, com o documento esperado; Parte C: gratuidade pela faixa da ADC 80), mais a matriz do tema quando existir (consignado, golpe). O resultado é `clientes/<caso>/DOCUMENTOS.md` com estado `presente | pendente | dispensado`; os `presente` viram o rol `documentos:` do frontmatter. A qualificação das partes (art. 319, II) vem de `clientes/<caso>/caso.json` (schema em `skills/legal-orchestrator/references/caso.schema.json`) e o preâmbulo sai de `node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/caso.json`, que também lista o que falta (`--checar`). Nove dos doze despachos de emenda minerados no DJEN em 09/09/2026 pediam documento de gratuidade ou comprovante de endereço em nome próprio: é coleta, e se resolve aqui.
+
+3. **Acervo (arsenal-juridico).** Abrir `<bundles>/index.md` (o roteador), escolher o bundle da matéria e ler, dentro dele, `index.md`, `jurisprudencia/`, `teses/`, `heuristicas/` e `casos_decididos/`; depois `direito/pecas/<tipo>/` para a técnica da peça. Em petição inicial, também `direito/pecas/peticao-inicial/perfis/` quando houver perfil da vara ou comarca de destino (gratuidade, tutela no despacho inicial, causas de emenda já recebidas daquele juízo). O caminho de `<bundles>` está em `perfil/ambiente.json`. O nome do bundle escolhido vai para o frontmatter da peça (`bundle: direito/<tema>`) antes da primeira gravação: o hook `require-leitura` bloqueia a gravação se o campo falta ou se nenhum arquivo daquele bundle foi lido na sessão.
 
 **Portão:** toda tese empregada tem página no bundle. Se o acervo não cobre o ponto, a peça diz que não cobre; não se cita precedente de memória (AGENTS.md, regra dura 3). Página `status: em_teste` não foi conferida contra a fonte oficial: citá-la exige `cita_em_teste: sim` no frontmatter ou a promoção da página a `vigente` depois da conferência.
 
@@ -242,20 +245,35 @@ Execute se o Estágio 3 retornar REPROVADO (há fraqueza CRÍTICA ou ALTA) ou AP
 
 ---
 
-## Estágio 5 — Humanização Seletiva (CONDICIONAL)
+## Estágio 5 — Humanização (SEMPRE ANALISA; ALTERA SÓ COM SINAL)
 
-Avalie: o texto, após a padronização tipográfica, perdeu ritmo e soa mecânico?
+Até 08/09/2026 este estágio era condicional e o AGENTS.md dizia que toda peça passa pelo humanizer; a divergência levava ora a pular a revisão, ora a mexer em prosa que já estava boa. A regra agora é uma só: **a análise é obrigatória em toda peça; a alteração, condicional; a conferência de invariantes e a revalidação, obrigatórias sempre que houve alteração.**
 
-**Critério objetivo para acionar o humanizer:**
-- Mais de 3 parágrafos consecutivos com a mesma estrutura (afirmação + norma + conclusão)
-- Frases com comprimento muito uniforme (todas longas ou todas curtas)
-- Presença de conectivos genéricos repetitivos ("além disso", "outrossim", "nesse sentido")
-- Dois ou mais parágrafos consecutivos que abrem com sujeito novo sem conectivo de retomada ou contraste
-- Presença de enumeração `(a)/(b)/(c)` fora da seção de pedidos
-- O padrão de fecho `"Isso é [X]"` aparece mais de uma vez na mesma seção
+**1. Medir (sempre):**
 
-**Se SIM:** Acione a skill **`humanizer-forense`** (a do escritório: protege transcrições, títulos-tese e BLUF, e traz o `lint-ia.js`). As instruções abaixo são o modo jurídico que ela aplica; valem como fallback se a skill não estiver no ambiente.
-**Se NÃO:** Pule este estágio. Mesmo assim o `lint-ia.js` roda no `md2docx` (Estágio 7): se reprovar, voltar aqui.
+```powershell
+node skills\humanizer-forense\scripts\lint-ia.js clientes\<caso>\PECA.md
+node skills\humanizer-forense\scripts\ritmo.js   clientes\<caso>\PECA.md
+```
+
+O `lint-ia` é portão (reprova acima dos limites). O `ritmo.js` é diagnóstico e nunca reprova: mede o que o lint não conta (frases de comprimento uniforme, quatro ou mais parágrafos do mesmo tamanho, parágrafos abrindo igual, conectivo em cada parágrafo, norma, aplicação e conclusão em série, fecho "Isso é [X]" repetido, enumeração (a)/(b) fora dos pedidos, dois-pontos em série, capítulo raso). Além dos medidores, ler a peça contra `perfil/voz-forense.md`.
+
+**2. Decidir.** Há sinal se o `lint-ia` reprovou, se o `ritmo.js` apontou sinal, ou se a leitura acusa prosa de modelo.
+- **Sem sinal:** não alterar. Gravar o registro (item 4) com `humanizer_alterou: nao` e seguir ao Estágio 6.
+- **Com sinal:** acionar a skill **`humanizer-forense`** (a do escritório: protege transcrições, títulos-tese e BLUF, traz o `lint-ia.js`, o `ritmo.js` e o guardião de invariantes). As instruções do modo jurídico abaixo valem como fallback se a skill não estiver no ambiente.
+
+**3. Alterar entre snapshot e guardião.** Antes de tocar na prosa, `checar-invariantes.js --snapshot PECA.md`; depois da passada, `checar-invariantes.js PECA.md`. Violação (exit 1: número, data, dispositivo, julgado, transcrição, título-tese, BLUF, modalidade, negação ou pedido alterado) desfaz a alteração correspondente; não se justifica nem se contorna. Depois, `--limpar`. **Calibração de voz proporcional:** peça curta, `perfil/voz-forense.md` basta; peça longa (mais de 6 capítulos), recurso ou peça estratégica, o perfil e uma peça humana próxima, da qual se imita o ritmo e nunca se copia fato ou trecho.
+
+**Revalidação obrigatória:** se o humanizer alterou o texto, reexecute o Estágio 3 sobre a versão humanizada antes de avançar ao Estágio 6 — humanização depois da validação sem nova checagem é porta de entrada de erro. Se a revalidação retornar REPROVADO, trate no Estágio 4 (o limite de 3 iterações continua valendo).
+
+**4. Registrar no `<PECA>.validacao.md`** (frontmatter, depois da validação ou revalidação; sem artefato novo):
+
+```yaml
+humanizer_analisado: sim
+humanizer_alterou: nao            # ou sim
+invariantes: n/a                  # preservados | preservados com avisos | violados (não avança) | n/a se não alterou
+ritmo_sinais: 0                   # número de sinais do ritmo.js na versão final
+```
 
 ### Humanizer em Modo Jurídico
 
@@ -275,10 +293,9 @@ O humanizer genérico foi projetado para texto geral. Para petições, aplique c
 - "Add soul" / tangentes e pensamentos incompletos
 - Qualquer instrução de "deixar a bagunça entrar"
 - Eliminação de dois pontos quando eles introduzem prosa contínua (elimine apenas quando precedem lista enumerada)
+- Qualquer mudança de mérito disfarçada de estilo: modalidade ("ainda que" virando afirmação), polaridade ("não nega" virando "nega"), verbo de pedido, título-tese despido, conclusão do capítulo movida para baixo. O `checar-invariantes.js` reprova; a regra vale antes dele.
 
 O texto jurídico pode e deve ser humano — mas é humanidade formal, não coloquial.
-
-**Revalidação obrigatória:** se o humanizer alterou o texto, reexecute o Estágio 3 sobre a versão humanizada antes de avançar ao Estágio 6 — humanização depois da validação sem nova checagem é porta de entrada de erro. Se a revalidação retornar REPROVADO, trate no Estágio 4 (o limite de 3 iterações continua valendo).
 
 ---
 
@@ -297,6 +314,7 @@ Antes de entregar o output, confirme:
 - [ ] Todos os réus têm fundamentação específica, não apenas menção genérica
 - [ ] A tutela de urgência, se pedida, descreve o perigo concreto (não apenas cita o art. 300)
 - [ ] Nenhum fato marcado *a produzir* na `ANALISE.md` é afirmado como provado; todos aparecem no protesto por provas com o meio nomeado
+- [ ] O `.validacao.md` traz `humanizer_analisado: sim`; se `humanizer_alterou: sim`, `invariantes` não é `violados` e a revalidação é posterior à alteração
 - [ ] Toda jurisprudência está **transcrita** em bloco, com fonte declarada e página correspondente no bundle (o `lint-citacoes` confere literalidade e voz do julgado). Citação indireta só para ponto que o acervo não cobre, e dita como tal
 - [ ] `<PECA>.validacao.md` é mais novo que a última edição da peça e não diz REPROVADO
 - [ ] **Checklist de saída do tipo de peça**, em `<bundles>/direito/pecas/<tipo>/index.md` (petição inicial: requisitos do art. 319 I–VII, documentos do art. 320, encargos, requerimentos finais; réplica: preliminares respondidas, incontroversos listados com folha, confissões transcritas, posturas do art. 436, especificação de provas fato a fato, prazos paralelos na cronologia). A técnica da peça mora no acervo; o orchestrator só aponta

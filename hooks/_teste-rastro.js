@@ -129,8 +129,18 @@ const pVelho = escrever('veredito-velho.md', fm(completo));
 escrever('veredito-velho.validacao.md', vered('APROVADO'), antes);
 const pSemVeredito = escrever('sem-veredito.md', fm(completo));
 escrever('sem-veredito.validacao.md', '---\npeca: X.md\n---\n', depois);
+const estr = (ap) => `---\npeca: X.md\naprovada: ${ap}\nbundle: direito/imobiliario\n---\n\n## Destaque\nX\n`;
 const pOk = escrever('ok.md', fm(completo));
 escrever('ok.validacao.md', vered('APROVADO COM RESSALVAS'), depois);
+escrever('ok.estrutura.md', estr('sim'));
+// estrutura aprovada (2026-09-08)
+const pSemEstrutura = escrever('sem-estrutura.md', fm(completo));
+escrever('sem-estrutura.validacao.md', vered('APROVADO'), depois);
+const pEstruturaNao = escrever('estrutura-nao.md', fm(completo));
+escrever('estrutura-nao.validacao.md', vered('APROVADO'), depois);
+escrever('estrutura-nao.estrutura.md', estr('não'));
+const pTemplate = escrever('template.md', fm(completo + 'estrutura: template\n'));
+escrever('template.validacao.md', vered('APROVADO'), depois);
 
 function rodarDocx(md) {
   const r = spawnSync(process.execPath, [MD2DOCX, md], {
@@ -147,7 +157,10 @@ const casosDocx = [
   [B, 'veredito REPROVADO', pReprovado],
   [B, 'veredito mais velho que a peça', pVelho],
   [B, 'validacao.md sem veredito:', pSemVeredito],
-  [P, 'pipeline + bundle + veredito novo', pOk],
+  [P, 'pipeline + bundle + veredito novo + estrutura aprovada', pOk],
+  [B, 'sem <PECA>.estrutura.md', pSemEstrutura],
+  [B, 'estrutura com aprovada: não', pEstruturaNao],
+  [P, 'estrutura: template no frontmatter dispensa o arquivo', pTemplate],
 ];
 
 let falhas = 0;

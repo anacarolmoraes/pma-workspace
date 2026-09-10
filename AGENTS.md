@@ -139,8 +139,13 @@ andaime aparecendo no texto.
 Rótulo de andaime é a marca mais reconhecível de texto gerado por IA.
 
 **Antes do `.docx`, a prosa própria passa pela skill `humanizer-forense`**: o `lint-ia` só
-reprova; quem corrige é a skill. Lint verde não é prosa aprovada — calibrar pela voz humana do
-escritório em peça longa.
+reprova; quem corrige é a skill. A **análise** é obrigatória em toda peça (`lint-ia` +
+`ritmo.js` + leitura); a **alteração**, só quando há sinal, e sempre entre um snapshot e o
+`checar-invariantes.js`: humanização que muda número, data, dispositivo, julgado, transcrição,
+título-tese, posição da conclusão, modalidade, negação ou pedido é mudança de mérito, não de
+estilo, e se desfaz. Lint verde não é prosa aprovada — a voz de referência é
+[`perfil/voz-forense.md`](perfil/voz-forense.md); em peça longa ou estratégica, também uma
+peça humana próxima, da qual se imita o ritmo e nunca se copia fato.
 
 Base visual: `material_padrao_escritorio/PETICAO_MODELO_FORMATACAO.docx`. NotebookLM só
 quando a titular o mencionar.

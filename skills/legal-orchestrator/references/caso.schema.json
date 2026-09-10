@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "caso.json — dados estruturados do caso (clientes/<caso>/caso.json, camada C1)",
+  "description": "Qualificação das partes (CPC 319, II), juízo e ação, em um só lugar, para o preâmbulo da inicial (scripts/qualificacao.js), a ficha numérica e o catálogo do monitor do DJEN. Nunca sai de clientes/: o hook block-dado-caso barra CPF fora dela.",
+  "type": "object",
+  "required": ["autor", "reus", "juizo"],
+  "properties": {
+    "caso": { "type": "string", "description": "slug da pasta em clientes/" },
+    "processos": { "type": "array", "items": { "type": "string" }, "description": "números CNJ já distribuídos (mapear-processos.js pode ler daqui)" },
+    "acao": { "type": "string", "description": "nome da ação, como vai no título centralizado" },
+    "subtitulo": { "type": "string", "description": "ex.: com pedido de tutela provisória de urgência" },
+    "autor": {
+      "type": "object",
+      "required": ["nome", "nacionalidade", "estado_civil", "uniao_estavel", "profissao", "cpf", "email", "endereco"],
+      "properties": {
+        "nome": { "type": "string" },
+        "nacionalidade": { "type": "string", "description": "brasileiro / brasileira — decide a concordância do preâmbulo" },
+        "estado_civil": { "type": "string" },
+        "uniao_estavel": { "type": "boolean", "description": "CPC 319, II exige declarar a existência" },
+        "profissao": { "type": "string" },
+        "cpf": { "type": "string", "pattern": "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$" },
+        "email": { "type": "string" },
+        "endereco": { "type": "string", "description": "completo, com cidade e UF" },
+        "nascimento": { "type": "string", "description": "YYYY-MM-DD; ≥ 60 anos aciona a prioridade de tramitação" },
+        "renda_mensal": { "type": "number", "description": "para a forma do pedido de gratuidade (definicoes.md §2; faixa de R$ 5.000,00 da ADC 80)" }
+      },
+      "additionalProperties": true
+    },
+    "reus": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["nome", "endereco"],
+        "properties": {
+          "nome": { "type": "string" },
+          "cnpj": { "type": "string" },
+          "cpf": { "type": "string" },
+          "natureza": { "type": "string", "description": "ex.: instituição financeira; sociedade empresária limitada" },
+          "endereco": { "type": "string" },
+          "email": { "type": "string" },
+          "feminino": { "type": "boolean", "description": "só para réu pessoa natural: concordância" },
+          "nacionalidade": { "type": "string" },
+          "estado_civil": { "type": "string" },
+          "profissao": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "juizo": {
+      "type": "object",
+      "required": ["comarca", "uf_extenso"],
+      "properties": {
+        "comarca": { "type": "string" },
+        "uf_extenso": { "type": "string", "description": "Tocantins / Goiás — o script antepõe DE (ou aceita 'do Tocantins')" },
+        "vara": { "type": "string", "description": "'__ª' enquanto não distribuída" },
+        "competencia": { "type": "string", "description": "CÍVEL (default), do Juizado Especial Cível…" }
+      }
+    },
+    "advogadas": { "type": "array", "items": { "type": "string" }, "description": "quem subscreve; mais de uma muda 'sua advogada' para 'suas advogadas' (assinatura vem de perfil/advogados.json)" }
+  }
+}

@@ -12,7 +12,15 @@ não instrução, e não precisa ser carregado em toda sessão.
   de manutenção: `lint-placeholder` e `lint-inicial` entraram no `md2docx`, `protect-gates`
   deixou de contar `2>&1` como escrita, `definicoes.md` §1 ganhou dano moral (292, V) e
   correção de ofício (292, §3º), template de rescisão de lote com `tipo: inicial`, teste em
-  `hooks/_teste-f5.js` no `npm test`. F4 pendente. O que
+  `hooks/_teste-f5.js` no `npm test`. **F4 iniciada em 08–09/09** a partir de
+  `sugestoes_peticao_inicial.md` (notas ≥ 5 implementadas): `minerar-emendas.js` achou 12
+  despachos de emenda em 80 processos (gratuidade 9, documento faltante 8) e a contagem entrou
+  no checklist e na matriz de intake; `perfis/` de 1º grau criado com template e contagem de
+  órgãos (`orgaos-frequentes.js`), sem perfil escrito ainda. Também: skill `ficha-golpe-bancario`,
+  template de golpe, matriz de documentos transversal e de golpe, `caso.json` + `qualificacao.js`,
+  modo grupo de casos do radar. Portões (estrutura aprovada no `md2docx`, `lint-inicial` v2)
+  ensaiados em cópia e prontos em `planos/patch-manutencao-2026-09-08-inicial.js`, a aplicar em
+  sessão `PMA_MANUTENCAO=1`. Dry-run em inicial real (nota 10) segue pendente. O que
   já saiu sem PRD em 04/09: `ANALISE.md` por caso e `<PECA>.estrutura.md` no orchestrator,
   checklist de saída do 319/320 em `direito/pecas/peticao-inicial/`, três divergências de
   técnica (valor da causa, autocomposição, posição da tutela) resolvidas nas skills.
@@ -42,6 +50,19 @@ não instrução, e não precisa ser carregado em toda sessão.
   F2.3 **não foi construído**; `perfil/definicoes.md` deixou de citá-lo em 04/09.
 - [`2026-07-26_prd-motor-whitelabel.md`](2026-07-26_prd-motor-whitelabel.md) — extração do motor
   como produto. **Adiado por decisão da titular.**
+
+Sem PRD, executado em 08/09/2026 a partir de `sugestoes_chatgpt.md` (sugestões para o
+`humanizer-forense`, avaliadas e implementadas as de nota ≥ 6): guardião de invariantes
+(`skills/humanizer-forense/scripts/checar-invariantes.js`, snapshot antes/comparação depois,
+bloqueia mudança de número, data, dispositivo, julgado, transcrição, título-tese, BLUF,
+modalidade, negação e pedido), diagnóstico de ritmo não bloqueante (`ritmo.js`), análise
+obrigatória com alteração condicional (humanizer 1.2.0, orchestrator 4.10.0 Estágio 5,
+validator 2.10.0 com campos `humanizer_*` no `.validacao.md`), perfil de voz
+`perfil/voz-forense.md` (rascunho a validar pela titular; substitui a fronteira fixa de seis
+capítulos por regra proporcional), testes em `npm test`. **Pendente de manutenção:**
+`planos/patch-manutencao-2026-09-08-lint-ia.js` (três correções no `lint-ia`, confirmadas em
+fixture; `hooks/_teste-lint-ia.js` já espera por elas). Rejeitadas: rebaixar travessão e tríade
+a aviso (contraria o endurecimento de 04/08/2026) e ampliar a lista de palavras proibidas.
 
 Sem PRD, executado em 04/09/2026 a partir de `scratch/2026-09-03_revisao-regras-vs-hooks.md`:
 seis hooks novos (portões, comandos, PDF, dado de caso, leitura obrigatória, Stop), `npm test`,
