@@ -45,6 +45,11 @@ node scripts/datajud.js --processo <n> --tribunal stj --movimentos 10           
 node scripts/prazo.js --processo 0014893-46.2025.8.27.2700 --tribunal TJTO --dias 15
 node scripts/prazo.js --processo <n> --tribunal <sigla> --dias 15 --data 2026-06-26  # ancorar em disponibilização específica
 node scripts/prazo.js --processo <n> --tribunal TJTO --dias 15 --feriados feriados/tjto.json  # incluir feriados locais
+
+# 4) Prazos que nascem da CITAÇÃO (a fila do DJEN não os enxerga: citação em processo novo não é intimação)
+node scripts/prazo-citacao.js --processo <n> --tribunal TJTO --citacao 2026-09-04 --modo oficial            # contestação, art. 335, III (começo pelo art. 231)
+node scripts/prazo-citacao.js ... --audiencia 2026-10-15 --liminar-djen 2026-09-02 --cronologia            # os três relógios: contestação (335, I), agravo da liminar (1.003, § 5º), desinteresse (334, § 5º)
+node scripts/prazo-citacao.js ... --caso nome --gravar                                                     # acrescenta a linha à fila PENDENTES.md para o hook de abertura alertar
 ```
 
 ## Monitor diário de intimações (vigilância do escritório)
@@ -219,6 +224,7 @@ registrado na memória `humanizer-forense` sobre `Set-Content` em `gerar_*.js`.
 3. **Matéria penal:** prazo em dias corridos — `prazo.js` é para prazos em dias úteis (cível); não usar em penal sem ajuste.
 4. Se o DJEN retornar mais de uma comunicação no período, `prazo.js` usa a mais recente e lista as demais — confira se a âncora é a intimação certa (campo `tipoDocumento`/trecho do texto).
 5. Datas sempre `AAAA-MM-DD` nos parâmetros.
+6. **`prazo-citacao.js` — citação, não intimação.** Dia do começo pelo art. 231 conforme `--modo` (correio e oficial: data da JUNTADA; escrivão: data do ato; edital: informar o fim da dilação; eletrônica: informar a data da CONSULTA); litisconsórcio: repetir `--citacao`, vale a última (§ 1º). O inciso do art. 335 é escolhido pelos parâmetros (`--cancelamento` → II; `--audiencia` → I; nada → III) e a saída traz também a conta do inciso III para conferência. Contagem: exclui o dia do começo, dias úteis, feriado local de `feriados/<sigla>.json`. Não serve para Juizado Especial (Lei 9.099, art. 30) nem penal. A linha gravada na fila leva `id:manual-…` e não é tocada pelo monitor; marcar `TRATADA` à mão ao protocolar.
 
 ## Limites (fora do escopo)
 - Não peticiona, não acessa autos sigilosos (dados públicos apenas), não substitui a conferência do eproc/DJEN oficial para fins de certidão.

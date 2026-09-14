@@ -48,7 +48,7 @@ const troca = (t, de, para, rel) => { exige(t, de, rel); return t.split(de).join
 // ── 1. md2docx: estrutura aprovada no rastro ──────────────────────────────────
 rw('skills/peca-pma-builder/scripts/md2docx.js', (t) => {
   const rel = 'md2docx.js';
-  if (/estrutura aprovada \(Estágio 0\.5/.test(t)) throw new Error('já aplicado (md2docx exige estrutura)');
+  if (/estrutura aprovada \(Estágio 0\.5/i.test(t)) throw new Error('já aplicado (md2docx exige estrutura)');
   let s = t;
   s = troca(s,
     "  if (!problemas.length) {\n    console.log('md2docx: rastro OK (pipeline, bundle, veredito do validator)');",

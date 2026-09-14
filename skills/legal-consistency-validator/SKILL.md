@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.11.0
+version: 2.12.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -66,7 +66,7 @@ Para cada argumento principal, verifique se o encadeamento está completo e expl
 **Em contestação** (gabarito: `ANALISE.md`, seção 5, tabela de impugnação especificada, e o espelho no `<PECA>.estrutura.md`):
 - Alegação de fato da inicial sem impugnação precisa na peça, ou com negativa geral ("impugna-se todos os fatos"): **CRÍTICO** (presume-se verdadeira, art. 341, CPC). Conferir contra a inicial, não só contra a tabela: fato que a tabela esqueceu é a mesma falha.
 - Incompetência relativa ou convenção de arbitragem presentes nos documentos e não alegadas: **CRÍTICO** (precluem, art. 337, §§ 5º e 6º).
-- Inciso do art. 337 marcado "cabe" na estrutura e sem subseção: **ALTO**; prescrição ou decadência não examinadas: **ALTO**.
+- Inciso do art. 337 marcado "cabe" na estrutura e sem subseção: **ALTO**; prescrição ou decadência não examinadas: **ALTO**. Prejudicial alegada: conferir a aritmética com `node skills/legal-consistency-validator/scripts/prescricao.js --termo <data> --regra <chave> --distribuicao <data>` (interrupção única, suspensão da Lei 14.010/2020, retroação do art. 240, § 1º); data-limite da peça diferente da do script sem explicação: **ALTO**. O termo inicial e a regra continuam sendo julgamento com página no bundle.
 - Fato impeditivo, modificativo ou extintivo alegado sem `Doc.` do réu nem meio de prova nomeado: **ALTO** (o ônus é do réu, art. 373, II).
 - Pedido da inicial sem resposta individual: **ALTO**.
 - Fato provado por documento do autor negado pela peça sem prova em contrário: **ALTO** (custa a credibilidade do conjunto).
@@ -134,6 +134,16 @@ Assuma o papel do advogado da parte contrária: dos réus quando a peça é do a
 - Existe algum fato narrado que pode ser usado contra o autor?
 - Há alguma ausência de argumento que o juiz vai perguntar e a petição não responde?
 - A proposta de acordo, se existir, está em local estrategicamente correto? (Em petição inicial, não deveria estar — entrega o piso negocial antes da audiência.)
+
+**Espelho reverso (só contestação).** O advogado do autor vai preencher, contra a nossa contestação, a tabela que o escritório usa em réplica (`direito/pecas/replica/heuristicas/tabela-alegacoes-resposta.md`, Partes 2 a 4). Preencher primeiro, com a contestação e os anexos dela como se fossem do adversário, e só depois responder às perguntas acima. O que a tabela acusar é fraqueza com severidade própria:
+- **2-A, fato da inicial silenciado ou coberto só por negativa geral** (a inicial lida fato a fato, não a tabela da seção 5): **CRÍTICO** (art. 341; o autor pedirá a fixação como incontroverso no saneamento, art. 357, II).
+- **2-B, pedido da inicial não combatido nem por consequência**: **ALTO** (o autor requer julgamento antecipado parcial, art. 356, I e § 2º).
+- **Parte 3, confissão**: fato contrário ao interesse do réu admitido para contar a versão própria, sem que a peça já lhe dê a consequência jurídica no mesmo trecho: **ALTO**; se a admissão veio junto com fato novo sem `Doc.` do réu, a cisão do art. 395 entrega o fato admitido ao autor e deixa o fato novo sem prova: **CRÍTICO**.
+- **Parte 3, documento do réu contra o réu** (anexo nosso que confirma fato da inicial e a peça não neutraliza): **ALTO** (art. 408).
+- **Parte 3, contradição interna** (dois capítulos que se excluem; narrativa desmentida pelo próprio anexo; versão diferente da dada em BO, notificação ou outro processo): **ALTO**.
+- **Parte 3, documento invocado e não juntado** ("a gravação comprova", "o sistema registra") sem constar do rol de `documentos:`: **ALTO** (o autor pede exibição com a presunção do art. 400; o `checar-docs.js` da Fase 7 pega o `Doc. N` sem rol, esta linha pega o documento sem `Doc.`).
+- **Parte 4, postura acessória sem o requisito que o autor vai cobrar** (reconvenção sem valor da causa ou custas; impugnação à gratuidade sem indício concreto, art. 99, § 2º; arguição de falsidade sem a argumentação específica, art. 430): **ALTO**.
+Registrar no `<PECA>.validacao.md`, seção própria "Espelho reverso", a tabela preenchida: é o gabarito da réplica que virá, e serve para conferir a réplica real do autor quando chegar.
 
 ---
 
