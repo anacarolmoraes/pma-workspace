@@ -69,6 +69,16 @@ A peça declara no frontmatter o bundle que a sustenta — `bundle: direito/<tem
 Não centralizar jurisprudência, estratégias ou casos decididos: tese de "empréstimo não
 realizado" não se confunde com tese de "golpe bancário". O caso herda o contexto do tema-pai.
 
+**A pasta do caso é para quem a abre sem ser agente** (decisão de 01/10/2026): PDF que chegou,
+DOCX que vai, e **um** arquivo de estado, `clientes/<caso>/ANALISE.md` (modelo em
+`skills/legal-orchestrator/references/ANALISE.template.md`): dados das partes, cronologia,
+`prazos:`, teses, provas, documentos, radar, decisões da titular. Não se cria
+`ANALISE_<data>.md`, `cronologia.md`, `DOCUMENTOS.md`, `caso.json` nem
+`radar-jurisprudencia_<data>.md`. Painel: `node scripts/caso.js [caso]`. **Rastro de trabalho
+nasce em `tmp/`**, nunca na pasta do cliente (lotes do radar, renders, comparações); o que
+sobrou de antes sai com `node scripts/limpar-caso.js --apagar` (lista fechada; o duvidoso só é
+relatado).
+
 *(No Claude Code, o hook `require-leitura` bloqueia a gravação da peça sem os dois primeiros e
 sem que o bundle declarado em `bundle:` tenha sido lido na sessão.)*
 

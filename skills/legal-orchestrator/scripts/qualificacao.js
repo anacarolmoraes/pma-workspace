@@ -9,8 +9,8 @@
 // clientes/ (camada C1); o hook block-dado-caso impede que CPF saia de lá.
 //
 // Uso:
-//   node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/caso.json            # imprime o preâmbulo
-//   node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/caso.json --checar   # só lista o que falta
+//   node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/ANALISE.md            # imprime o preâmbulo
+//   node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/ANALISE.md --checar   # só lista o que falta
 'use strict';
 
 const fs = require('fs');
@@ -18,8 +18,18 @@ const path = require('path');
 
 const arq = process.argv[2];
 const soChecar = process.argv.includes('--checar');
-if (!arq) { console.error('Uso: node qualificacao.js clientes/<caso>/caso.json [--checar]'); process.exit(2); }
-const c = JSON.parse(fs.readFileSync(path.resolve(arq), 'utf8'));
+if (!arq) { console.error('Uso: node qualificacao.js clientes/<caso>/ANALISE.md [--checar]   (ou clientes/<caso>/caso.json, legado)'); process.exit(2); }
+
+// Os dados moram no bloco ```json caso da ANALISE.md (único arquivo de estado do caso,
+// decisão de 01/10/2026). caso.json avulso continua aceito como legado.
+function lerDados(caminho) {
+  const texto = fs.readFileSync(path.resolve(caminho), 'utf8');
+  if (!/\.md$/i.test(caminho)) return JSON.parse(texto);
+  const m = texto.match(/```json\s+caso\s*\r?\n([\s\S]*?)\r?\n```/);
+  if (!m) { console.error(`Sem bloco \`\`\`json caso em ${caminho} — modelo em skills/legal-orchestrator/references/ANALISE.template.md`); process.exit(2); }
+  try { return JSON.parse(m[1]); } catch (e) { console.error(`Bloco json caso inválido em ${caminho}: ${e.message}`); process.exit(2); }
+}
+const c = lerDados(arq);
 
 const faltas = [];
 const exigir = (obj, campo, rotulo) => { if (!obj || !String(obj[campo] || '').trim()) faltas.push(rotulo); };

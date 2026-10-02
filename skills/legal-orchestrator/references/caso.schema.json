@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "caso.json — dados estruturados do caso (clientes/<caso>/caso.json, camada C1)",
-  "description": "Qualificação das partes (CPC 319, II), juízo e ação, em um só lugar, para o preâmbulo da inicial (scripts/qualificacao.js), a ficha numérica e o catálogo do monitor do DJEN. Nunca sai de clientes/: o hook block-dado-caso barra CPF fora dela.",
+  "title": "Dados estruturados do caso — bloco ```json caso dentro de clientes/<caso>/ANALISE.md (camada C1)",
+  "description": "Qualificação das partes (CPC 319, II), juízo e ação, em um só lugar, para o preâmbulo da inicial (scripts/qualificacao.js), a ficha numérica e o catálogo do monitor do DJEN. Desde 01/10/2026 mora na seção 0 da ANALISE.md, único arquivo de estado do caso (modelo: ANALISE.template.md); caso.json avulso é legado e ainda é lido. Nunca sai de clientes/: o hook block-dado-caso barra CPF fora dela.",
   "type": "object",
   "required": ["autor", "reus", "juizo"],
   "properties": {

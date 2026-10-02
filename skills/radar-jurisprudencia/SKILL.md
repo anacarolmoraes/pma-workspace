@@ -64,8 +64,12 @@ tese, 2 a 4 termos:
 
 ```bash
 node scripts/buscar.js --termos "termo1;termo2;termo3" --tribunais TJTO,STJ,TJRS,TJSP,TJCE \
-  --inicio 2024-01-01 --saida <pasta-do-caso>/radar-djen
+  --inicio 2024-01-01 --saida tmp/radar-djen/<caso>
 ```
+
+A saída vai para `tmp/` (ignorado pelo git, fora da pasta do cliente): é rastro regenerável
+que nenhuma sessão futura relê. **Nunca** gravar em `clientes/<caso>/`; o que ficou lá de
+rodadas antigas sai com `node scripts/limpar-caso.js --apagar`.
 
 O script filtra o que não decide nada (edital, mero expediente), deduplica por processo,
 para cedo quando já tem candidato de sobra, e grava:
@@ -90,7 +94,7 @@ Interpretar o resumo do console:
 Gerar os lotes com o fatiador (zero LLM — corta o top-60 por score e grava os arquivos):
 
 ```bash
-node scripts/lotes.js --entrada <pasta-do-caso>/radar-djen/candidatos.json --top 60 --tamanho 25
+node scripts/lotes.js --entrada tmp/radar-djen/<caso>/candidatos.json --top 60 --tamanho 25
 ```
 
 Lotes de **25–30, não menos**: cada subagente paga um custo fixo alto só por existir
@@ -158,10 +162,13 @@ de citar; CINZA = DataJud não achou (processo recente/segredo) — verificaçã
 O semáforo entra no campo Status de cada item. VERDE **não dispensa** a conferência do
 inteiro teor — só elimina o risco mais barato de detectar.
 
-Gravar `radar-jurisprudencia_<AAAA-MM-DD>.md` na pasta do caso, neste formato:
+Gravar como subseção da seção **8. Radar de jurisprudência** da `ANALISE.md` do caso (único
+arquivo de estado do caso; nunca como `radar-jurisprudencia_<data>.md` avulso), com os
+títulos abaixo rebaixados dois níveis (`#` vira `###`), e atualizar `atualizada:` no
+frontmatter. Formato:
 
 ```markdown
-# Radar de jurisprudência — <caso> — <data>
+# Radar — <data> — <tese>
 > Fonte: DJEN (texto de publicação, não inteiro teor oficial). Isto é AMOSTRA, não censo:
 > o DJEN só enxerga decisões cujo texto foi publicado na intimação, e cada tribunal migrou
 > para o DJEN em data própria — ausência de resultado NÃO significa ausência de
@@ -191,11 +198,11 @@ exige três a cinco acórdãos **do tribunal competente**, para o mesmo interess
 valor fixado em cada um. O radar faz a coleta; o script extrai os valores:
 
 ```bash
-node scripts/buscar.js --termos "dano moral;falsa central" --tribunais TJTO --inicio 2024-01-01 --saida <pasta-do-caso>/radar-djen
-node scripts/grupo-de-casos.js --entrada <pasta-do-caso>/radar-djen --tribunal TJTO --md <pasta-do-caso>/grupo-de-casos.md
+node scripts/buscar.js --termos "dano moral;falsa central" --tribunais TJTO --inicio 2024-01-01 --saida tmp/radar-djen/<caso>
+node scripts/grupo-de-casos.js --entrada tmp/radar-djen/<caso> --tribunal TJTO --md tmp/radar-djen/<caso>/grupo-de-casos.md
 ```
 
-`grupo-de-casos.js` (zero LLM) lê `textos/` e devolve uma tabela com tribunal, órgão,
+`grupo-de-casos.js` (zero LLM) lê `textos/` e devolve uma tabela (que se copia para a seção 8 da `ANALISE.md`) com tribunal, órgão,
 processo, data, **valor de dano moral** e o verbo que o acompanha (fixa, mantém, reduz,
 majora), mais faixa e mediana. A tabela alimenta `dano_moral.grupo_de_casos` do
 `dados_caso.json` da `ficha-golpe-bancario`. Duas regras:

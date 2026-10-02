@@ -204,7 +204,8 @@ async function main() {
   const tribunais = String(a.tribunais).split(',').map((t) => t.trim().toUpperCase()).filter(Boolean);
   const inicio = a.inicio || '2024-01-01';
   const fim = a.fim || hoje();
-  const saida = path.resolve(a.saida || 'radar-djen-resultado');
+  // Default em tmp/ (fora da pasta do cliente): rastro regenerável não mora em clientes/.
+  const saida = path.resolve(a.saida || path.join(__dirname, '..', '..', '..', 'tmp', 'radar-djen', 'sem-caso'));
   const maxPorTribunal = Number(a['max-por-tribunal'] || 40);
   const alvo = Number(a.alvo || 30);
   const paginas = Number(a.paginas || 2);

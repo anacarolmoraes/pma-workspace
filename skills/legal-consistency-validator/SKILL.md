@@ -86,7 +86,7 @@ Para cada argumento principal, verifique se o encadeamento está completo e expl
 - Tese jurídica da defesa respondida sem passar pelo repertório de defesas típicas do bundle temático quando ele existe (linha "coberta" ignorada, ou linha "lacuna" preenchida de memória): **ALTO**.
 - Tese jurídica da defesa respondida sem página do bundle temático e sem a declaração de que o acervo não cobre: **CRÍTICO** (regra dura 3).
 - Negativa pura da contestação rebatida com reedição da inicial (capítulo que reargumenta fato já afirmado e provado, sem fato novo, tese ou documento do réu a responder): **MÉDIO** (memorial antecipado; a estrutura decide se sai ou vira especificação de prova).
-- Posturas acessórias com prazo próprio (agravo do réu, falsidade, denunciação) presentes na contestação e ausentes da `cronologia.md` e da estrutura: **ALTO**.
+- Posturas acessórias com prazo próprio (agravo do réu, falsidade, denunciação) presentes na contestação e ausentes de `prazos:` da `ANALISE.md` e da estrutura: **ALTO**.
 
 Sem estrutura aprovada em peça argumentativa livre, registre como fraqueza **MÉDIO** a ausência do Estágio 0.5 e siga com a análise completa.
 
