@@ -26,13 +26,23 @@ const { detectar, textosDe, formatar } = require(path.join(__dirname, '..', 'scr
 
 const FERRAMENTAS = new Set(['Read', 'Bash', 'PowerShell']);
 const TETO_ARQUIVO = 5 * 1024 * 1024;
-// O próprio detector, seus testes e a área de preparação contêm as assinaturas.
-const RX_PROPRIO = /(^|\/)(hooks\/|planos\/hooks-injecao\/|scratch\/sessoes\/injecao\.log$)/;
+// O próprio detector, seus consumidores, seus testes e a área de preparação contêm as
+// assinaturas. Vale para Read E para comando de shell que leia esses arquivos: até
+// 01/10/2026 só o Read era isento, e cada `sed -n` num hook disparava alarme falso.
+// O pdfmd já varre o que converte (regra dura 7), então reler a saída dele é redundante.
+const RX_PROPRIO =
+  /(^|[\\/\s"'`])(hooks[\\/]|planos[\\/]hooks-injecao[\\/]|scripts[\\/]lib[\\/]injecao\.js|scripts[\\/]lint-docx\.js|[\w-]*lint-injecao\.js|(ler|executar)-pdfmd\.js|scratch[\\/]sessoes[\\/]injecao\.log|_teste-[\w-]+\.js)/i;
 
 function alvoDe(entrada) {
   const inp = entrada.tool_input || {};
   if (entrada.tool_name === 'Read') return String(inp.file_path || inp.path || '');
   return String(inp.command || '').slice(0, 160);
+}
+
+function ehProprio(entrada) {
+  const inp = entrada.tool_input || {};
+  const alvo = entrada.tool_name === 'Read' ? String(inp.file_path || inp.path || '') : String(inp.command || '');
+  return RX_PROPRIO.test(norm(alvo));
 }
 
 function textoDe(entrada) {
@@ -67,7 +77,7 @@ function main(bruto) {
   const entrada = parseEntrada(bruto);
   if (!entrada || !FERRAMENTAS.has(String(entrada.tool_name || ''))) process.exit(0);
   const alvo = alvoDe(entrada);
-  if (entrada.tool_name === 'Read' && RX_PROPRIO.test(norm(alvo))) process.exit(0);
+  if (ehProprio(entrada)) process.exit(0);
 
   const achados = detectar(textoDe(entrada));
   if (!achados.length) process.exit(0);

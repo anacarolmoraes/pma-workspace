@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { setTimeout: esperar } = require('timers/promises');
-const { calcularPrazo, feriadosLocais } = require('../lib/prazo-core.js');
+const { calcularPrazo, feriadosLocais, hojeLocal } = require('../lib/prazo-core.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
@@ -270,9 +270,10 @@ function atualizarFila(novas, catalogo) {
   const oabs = carregarOABs();
   const catalogo = carregarCatalogo();
 
-  const hoje = new Date();
+  // Janela em dia civil de Brasília (meio-dia UTC para o d2s não escorregar de dia).
+  const hoje = new Date(`${hojeLocal()}T12:00:00Z`);
   const inicio = new Date(hoje);
-  inicio.setDate(inicio.getDate() - DIAS_JANELA);
+  inicio.setUTCDate(inicio.getUTCDate() - DIAS_JANELA);
 
   const vistos = new Set(fs.existsSync(SEEN) ? JSON.parse(fs.readFileSync(SEEN, 'utf8')) : []);
   const novas = [];

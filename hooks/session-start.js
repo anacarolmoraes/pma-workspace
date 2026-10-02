@@ -52,8 +52,9 @@ const DIAS_PRAZO_CURTO = CFG.dias_prazo_curto;
 // diferentes para o mesmo prazo divergiriam. Se o módulo não carregar, cai para
 // dias corridos e AVISA, em vez de mentir um número.
 let diasUteisRestantes = null;
+let hojeLocal = null;
 try {
-  ({ diasUteisRestantes } = require(path.join(RAIZ, 'skills', 'pesquisa-djen', 'lib', 'prazo-core.js')));
+  ({ diasUteisRestantes, hojeLocal } = require(path.join(RAIZ, 'skills', 'pesquisa-djen', 'lib', 'prazo-core.js')));
 } catch {
   /* segue em dias corridos */
 }
@@ -67,10 +68,13 @@ const ler = (p) => {
 };
 
 const hoje = () => new Date();
+// Dia civil de Brasília (não UTC): depois das 21h o ISO já é amanhã.
+const hojeIso = () => (hojeLocal ? hojeLocal() : new Date().toISOString().slice(0, 10));
 const diasAte = (iso) => {
-  const d = new Date(`${iso}T12:00:00`);
+  const d = new Date(`${iso}T12:00:00Z`);
+  const h = new Date(`${hojeIso()}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return null;
-  return Math.round((d - hoje()) / 86400000);
+  return Math.round((d - h) / 86400000);
 };
 
 // Dias ÚTEIS até a data, pelo núcleo do monitor (feriado local + recesso). Sem
@@ -197,14 +201,26 @@ function montar() {
     linhas.push(`📥 **Intimações não tratadas: ${fila.length}** (fila em \`skills/pesquisa-djen/monitor/PENDENTES.md\`)`);
 
     // Embargos primeiro: é o prazo mais curto, e é o que se perde calado.
-    const noPrazo = fila
+    const comPrazo = fila
       .filter((i) => i.edclIso)
       .map((i) => ({ ...i, uteis: uteisAte(i.edclIso, i.tribunal) }))
-      .filter((i) => i.uteis !== null && i.uteis >= 0)
+      .filter((i) => i.uteis !== null)
       .sort((a, b) => a.uteis - b.uteis);
 
+    // VENCIDO vem antes de tudo. Até 01/10/2026 o filtro `uteis >= 0` apagava do
+    // alerta exatamente a linha mais urgente: a decisão ABERTA cujo prazo já passou.
+    const vencidos = comPrazo.filter((i) => i.uteis < 0 && !i.edclDuvida);
+    const noPrazo = comPrazo.filter((i) => i.uteis >= 0);
     const emb = noPrazo.filter((i) => !i.edclDuvida);
     const duvida = noPrazo.filter((i) => i.edclDuvida);
+
+    if (vencidos.length) {
+      linhas.push(`⛔ **Embargos VENCIDOS — ${vencidos.length} decisão(ões) ainda ABERTA(S) com os ${CFG.prazo_edcl} d.ú. passados:**`);
+      for (const i of vencidos.slice(0, 6)) {
+        linhas.push(`   - ${i.processo} (${i.tribunal}) — venceu ${i.edclIso}, há **${-i.uteis}** dia(s) útil(eis). Marcar TRATADA se já resolvida; senão, avaliar o recurso principal.`);
+      }
+      if (vencidos.length > 6) linhas.push(`   - … e mais ${vencidos.length - 6} na fila.`);
+    }
 
     if (emb.length) {
       linhas.push(`🔴 **Embargos de declaração (${CFG.prazo_edcl} d.ú.) — ${emb.length} decisão(ões) no prazo:**`);
@@ -220,6 +236,14 @@ function montar() {
         `🟡 **${duvida.length} comunicação(ões) de tipo ambíguo** (rótulo "Outros") ainda dentro dos ` +
           `${CFG.prazo_edcl} dias — a mais próxima vence ${menor.edclIso}. Abrir para ver se é decisão.`,
       );
+    }
+
+    const fatalVencido = fila.filter((i) => {
+      const d = i.prazoIso ? diasAte(i.prazoIso) : null;
+      return d !== null && d < 0;
+    });
+    if (fatalVencido.length) {
+      linhas.push(`⛔ **Recurso principal com fatal já passado e linha ainda ABERTA — ${fatalVencido.length}.** Triar na fila: ou foi tratado sem marcar, ou o prazo se perdeu.`);
     }
 
     const curtos = fila.filter((i) => {
@@ -253,9 +277,19 @@ function montar() {
   linhas.push('_A fila não substitui a conferência no eproc/DJEN oficial antes de protocolar._');
 
   if (linhas.length > MAX_LINHAS) {
+    // Mesmo no modo compacto, o vencido não some: é a linha que justifica o hook.
+    // Leva o título ⛔ e os itens indentados logo abaixo dele.
+    const vencidas = [];
+    let dentro = false;
+    for (const l of linhas) {
+      if (l.startsWith('⛔')) dentro = true;
+      else if (!l.startsWith('   ')) dentro = false;
+      if (dentro) vencidas.push(l);
+    }
     return [
       '## Estado da operação (injetado pelo hook)',
       alerta ? `⚠️  **DJEN:** ${alerta}` : '',
+      ...vencidas,
       `📥 **${fila.length} intimações não tratadas.** Fila completa: \`skills/pesquisa-djen/monitor/PENDENTES.md\` — ler antes de planejar o dia.`,
     ]
       .filter(Boolean)

@@ -19,9 +19,13 @@ const path = require('path');
 const { RAIZ, norm, lerStdin, parseEntrada } = require('./lib/transcript');
 
 const PROTEGIDOS = [
-  /^hooks\/(?!_teste-)[\w.-]+\.js$/,
+  // Testes dos hooks também são portão: enfraquecer o teste é o caminho mais curto
+  // para enfraquecer o hook (01/10/2026).
+  /^hooks\/[\w.-]+\.js$/,
   /^hooks\/lib\//,
-  /^\.claude\/settings\.json$/,
+  // settings.local.json carrega o `env` — é onde PMA_MANUTENCAO liga. Se o agente
+  // pudesse gravá-lo, ligaria o modo manutenção sozinho.
+  /^\.claude\/settings(\.local)?\.json$/,
   /^perfil\/(marca|advogados|monitor-djen|perfil)\.json$/,
   /^perfil\/definicoes\.md$/,
   /^scripts\/(lint-docx|lint-skills|setup)\.js$/,
@@ -32,8 +36,10 @@ const PROTEGIDOS = [
   /^skills\/pesquisa-djen\/scripts\/(monitor|prazo)\.js$/,
 ];
 
+// Inclui escrita programática (node -e / python -c): `writeFileSync` sobre um portão
+// é a mesma coisa que `Set-Content` sobre ele (brecha fechada em 01/10/2026).
 const RX_ESCRITA_SHELL =
-  /(\bsed\s+-i|(^|[^>])>{1,2}(?!&)\s*["']?\S|\b(Set-Content|Out-File|Add-Content|tee)\b|\b(rm|del|Remove-Item|mv|move|Move-Item|cp|copy|Copy-Item)\b|\bgit\s+(checkout|restore|rm)\b)/i;
+  /(\bsed\s+-i|(^|[^>])>{1,2}(?!&)\s*["']?\S|\b(Set-Content|Out-File|Add-Content|tee)\b|\b(rm|del|Remove-Item|mv|move|Move-Item|cp|copy|Copy-Item)\b|\bgit\s+(checkout|restore|rm)\b|\b(writeFileSync|writeFile|appendFileSync|appendFile|renameSync|unlinkSync|copyFileSync|truncateSync|rmSync)\b|\bopen\s*\([^)]*['"][wa]|\[System\.IO\.File\]::|\[IO\.File\]::|\bNew-Item\b)/i;
 
 function relativo(p) {
   const abs = path.resolve(RAIZ, String(p));

@@ -32,6 +32,14 @@ const FERIADOS_NACIONAIS = [
 const d2s = (d) => d.toISOString().slice(0, 10);
 const s2d = (s) => new Date(`${s}T12:00:00Z`); // meio-dia UTC evita bug de fuso
 
+// "Hoje" é o dia civil em Brasília, não o dia UTC. `toISOString()` vira o dia
+// seguinte às 21h (BRT), e o alerta passava a dizer "vence hoje" para amanhã
+// enquanto escondia o que vencia de fato hoje (achado da auditoria de 01/10/2026).
+const FUSO = 'America/Sao_Paulo';
+function hojeLocal(agora = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: FUSO, year: 'numeric', month: '2-digit', day: '2-digit' }).format(agora);
+}
+
 function emRecesso(d) {
   const m = d.getUTCMonth() + 1;
   const dia = d.getUTCDate();
@@ -141,7 +149,7 @@ function diasUteisRestantes(ate, de, opts = {}) {
   const cal = criarCalendario([...locais.datas, ...(opts.feriadosExtra || [])]);
 
   const fim = s2d(ate);
-  const base = de ? s2d(de) : s2d(d2s(new Date()));
+  const base = de ? s2d(de) : s2d(hojeLocal());
   if (Number.isNaN(fim.getTime()) || Number.isNaN(base.getTime())) return null;
 
   if (d2s(fim) === d2s(base)) return 0;
@@ -164,6 +172,7 @@ module.exports = {
   feriadosLocais,
   calcularPrazo,
   diasUteisRestantes,
+  hojeLocal,
   d2s,
   s2d,
 };

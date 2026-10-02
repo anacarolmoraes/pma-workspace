@@ -50,18 +50,40 @@ function raizesCorpus(pecaPath) {
   };
   const ambiente = lerJson(path.join(RAIZ, 'perfil', 'ambiente.json'));
   const perfil = lerJson(path.join(RAIZ, 'perfil', 'perfil.json'));
-  const acervo = ambiente?.bundles || perfil?.caminhos?.bundles;
+  // Em teste (PMA_TESTE=1) o acervo pode ser uma fixture; fora de teste a variável é ignorada.
+  const acervo = (process.env.PMA_TESTE && process.env.PMA_LINT_CITACOES_ACERVO) || ambiente?.bundles || perfil?.caminhos?.bundles;
   if (acervo) raizes.push(acervo);
   // 2. Acervo local por tema (jurisprudencia_stj/, teses/, casos_decididos/)
   for (const area of ['direito_bancario', 'direito_digital', 'rescisao_contrato_imovel', 'recursos_gerais', 'cobranca_honorarios']) {
     const p = path.join(RAIZ, area);
     if (fs.existsSync(p)) raizes.push(p);
   }
-  // 3. A própria pasta do caso (sentença, contestação, acórdão dos autos)
-  raizes.push(path.dirname(path.resolve(pecaPath)));
-  const pai = path.dirname(path.dirname(path.resolve(pecaPath)));
-  if (pai.startsWith(RAIZ)) raizes.push(pai);
+  // 3. A pasta do caso NÃO entra aqui inteira: ver arquivosDoCaso(). Até 01/10/2026
+  //    entravam a pasta do caso e a pasta-pai (clientes/ inteiro), e a peça acabava
+  //    verificada contra ANALISE.md, .estrutura.md, versão antiga dela mesma ou peça de
+  //    OUTRO cliente — uma ementa fabricada que aparecesse em qualquer um saía VERIFICADA.
   return [...new Set(raizes)].filter((r) => fs.existsSync(r));
+}
+
+// Da pasta do caso só vale documento DOS AUTOS: a conversão do pdfmd, reconhecida pelo
+// manifesto `.pdfmd.json` irmão (sentença, contestação, acórdão juntado). Tudo o que é
+// texto nosso (peça, análise, estrutura, validação, snapshot, rascunho) fica fora.
+function arquivosDoCaso(pecaPath) {
+  const dir = path.dirname(path.resolve(pecaPath));
+  const todos = varrer(dir, [], 0);
+  return todos.filter((f) => {
+    if (!/\.md$/i.test(f) || /\.index\.md$/i.test(f)) return false;
+    return fs.existsSync(f.replace(/\.md$/i, '.pdfmd.json'));
+  });
+}
+
+// Texto nosso nunca é fonte de citação, esteja onde estiver.
+const RX_TEXTO_NOSSO = /(^|[\\/])(ANALISE\.md|[^\\/]*\.(estrutura|validacao|snapshot)\.md)$/i;
+function ehTextoNosso(arquivo, texto) {
+  if (RX_TEXTO_NOSSO.test(arquivo)) return true;
+  // `pipeline:` é o rastro obrigatório de toda peça nossa (md2docx exige); página de
+  // acervo nunca o tem.
+  return /^pipeline:\s*\S/m.test(texto.slice(0, 1500));
 }
 
 function varrer(dir, saida = [], profundidade = 0) {
@@ -341,9 +363,10 @@ function main() {
   // Índice do corpus (lido uma vez)
   const arquivos = [];
   for (const r of raizesCorpus(pecaPath)) varrer(r, arquivos);
+  arquivos.push(...arquivosDoCaso(pecaPath));
   const alvoPeca = path.resolve(pecaPath);
-  const corpus = arquivos
-    .filter((f) => path.resolve(f) !== alvoPeca)
+  const corpus = [...new Set(arquivos.map((f) => path.resolve(f)))]
+    .filter((f) => f !== alvoPeca)
     .map((f) => {
       let t = '';
       try {
@@ -351,6 +374,7 @@ function main() {
       } catch {
         /* ignore */
       }
+      if (ehTextoNosso(f, t)) return null;
       // runs = cada sequência contígua de dígitos, para casar número de precedente
       // com precisão; digitos = tudo colapsado, para número CNJ com pontuação variável.
       return {
@@ -362,7 +386,8 @@ function main() {
         status: statusDaPagina(t),
         estrutura: lerEstrutura(f, t),
       };
-    });
+    })
+    .filter(Boolean);
 
   const resultados = [];
 

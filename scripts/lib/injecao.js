@@ -41,7 +41,10 @@ const PADROES = [
   },
   {
     tipo: 'instrucao_ia',
-    rx: /\b(nota|mensagem|instru[çc][ãa]o|instru[çc][õo]es|aviso|recado|orienta[çc][ãa]o|note|message|instructions?)\s+(para|ao|à|a|to|for)\s+(o |a |the |an? )?(IA|intelig[êe]ncia artificial|assistente|modelo|LLM|AI|language model|sistema de triagem|triagem automatizada|automated screening|revisor autom[áa]tico)\b/gi,
+    // "aviso ao modelo", "orientação para o modelo" e "recado ao assistente" são português
+    // comum (comentário de código, texto de gabinete). O destinatário precisa ser
+    // inequivocamente a máquina: "modelo" só com "de linguagem"/"de IA".
+    rx: /\b(nota|mensagem|instru[çc][ãa]o|instru[çc][õo]es|note|message|instructions?)\s+(para|ao|à|a|to|for)\s+(o |a |the |an? )?(IA|intelig[êe]ncia artificial|assistente( virtual| de IA| de triagem)?|modelo de (linguagem|IA)|LLM|AI|language model|sistema de triagem|triagem automatizada|automated screening|revisor autom[áa]tico)\b/gi,
   },
   {
     tipo: 'instrucao_ia',
