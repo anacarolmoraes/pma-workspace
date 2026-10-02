@@ -14,7 +14,7 @@ Regra que nomeia um evento ("quando X, faça Y") não mora em prosa: mora aqui. 
 falho deixa passar · guarda `CLAUDE_INVOKED_BY`). Suíte: `npm test`.
 
 | Evento | Script | O que garante |
-|---|---|---|
+| --- | --- | --- |
 | `PreToolUse` (todos) | `block-secrets.js` | credencial (`.env`, `*.pem`, token do gws, `mcp_config.json`) não entra no contexto. **Não** bloqueia documento de cliente |
 | `PreToolUse` Read | `block-md-integral.js` | `.md` canônico longo de bundle `pdfmd` (>300 linhas com `.pdfmd.json` irmão) é lido por `ler-pdfmd.js --mapa`, não inteiro |
 | `PreToolUse` Read | `block-pdf.js` | PDF não se lê direto: converte com `pdfmd` ou lê o `.md` irmão. Exceção: `Read` com `pages` (conferência visual) |
@@ -27,6 +27,7 @@ falho deixa passar · guarda `CLAUDE_INVOKED_BY`). Suíte: `npm test`.
 | `SessionStart` | `session-start.js` | máquina nova: manda configurar e cala o resto; senão injeta a fila do DJEN (teto 12 linhas) e alerta monitor parado > 36 h |
 | `PreCompact` | `pre-compact.js` | grava em `scratch/sessoes/` os arquivos tocados pela sessão |
 | `Stop` | `stop-peca-compilada.js` | turno não encerra com peça editada sem `.docx` mais novo (escape: `rascunho: sim` no frontmatter), nem com `SKILL.md` alterada reprovando no `lint-skills` |
+| `Stop` | `scripts/limpar-caso.js --hook` | pasta de caso não acumula rastro: trava de editor, lote do radar, estágio do `pdfmd`, `_assets` órfã e snapshot com > 24 h saem ao encerrar o turno; o duvidoso só é relatado por `npm run limpar` |
 
 **Sessão de manutenção.** Para mexer em portão, a titular abre o Claude Code com
 `PMA_MANUTENCAO=1` no ambiente (no shell, ou em `.claude/settings.local.json` → `"env"`).
