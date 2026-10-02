@@ -3,6 +3,13 @@
 Changelog dos planos de evolução do sistema. Saiu do `CLAUDE.md` em 04/09/2026: é registro,
 não instrução, e não precisa ser carregado em toda sessão.
 
+- [`2026-10-01_plano-pasta-de-caso-enxuta.md`](2026-10-01_plano-pasta-de-caso-enxuta.md)
+  — pasta de cliente sem rastro de máquina (censo: 5 arquivos gerados por documento real).
+  Cinco sugestões com nota. **4 e 5 executadas em 01–02/10** (`ANALISE.md` como único arquivo
+  de estado do caso, `scripts/caso.js`, `scripts/limpar-caso.js` no `Stop`, radar em `tmp/`).
+  **Pendente: 1** (pasta `.ia/` para o que o `pdfmd` gera; é a que mais reduz volume; sessão
+  de manutenção, com plano de arquivos e teste de aceitação no documento). 2 e 3 são opção,
+  não fila.
 - [`2026-09-04_prd-fluxo-peticao-inicial.md`](2026-09-04_prd-fluxo-peticao-inicial.md)
   — fluxo próprio da petição inicial no acervo (playbook + workflow únicos, cinco heurísticas
   transversais, três páginas que dependem de depósito de fonte pela titular, mineração dos
