@@ -168,3 +168,4 @@ desktop.ini
 ~$*
 .~lock.*#
 .claude/settings.local.json
+tmp/
