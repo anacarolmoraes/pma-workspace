@@ -1,0 +1,33 @@
+{
+  "_criterio": "Só entra DIA INTEIRO sem expediente (feriado, ponto facultativo, suspensão), além dos nacionais já embutidos em lib/prazo-core.js e do recesso 20/12-20/01. Fica FORA, por ser conservador (data fatal igual ou anterior à real, nunca posterior): expediente parcial (Cinzas até 12h/14h, horário reduzido em jogo da Copa), feriado só da capital ou de comarca, e data não confirmada em ato oficial. Pesquisa em 02/10/2026; 2027 ainda sem ato publicado em nenhum tribunal. Depois de alterar este arquivo: node skills/pesquisa-djen/scripts/recalcular-prazos.js",
+  "_fonte": "Portaria STJ/GDG 1.010/2025 (https://www.stj.jus.br/sites/portalp/Contato-e-ajuda/Fale-conosco/Horarios-de-funcionamento); Portaria STJ/GP 461/2026 para 29/06; Lei 5.010/66, art. 62",
+  "_verificado_em": "2026-10-02",
+  "datas": [
+    "2026-04-01",
+    "2026-04-02",
+    "2026-04-20",
+    "2026-06-05",
+    "2026-06-29",
+    "2026-08-10",
+    "2026-08-11",
+    "2026-10-28",
+    "2026-12-07",
+    "2026-12-08"
+  ],
+  "_legenda": {
+    "2026-04-01": "Quarta-feira Santa (Lei 5.010, art. 62)",
+    "2026-04-02": "Quinta-feira Santa",
+    "2026-04-20": "Ponto facultativo",
+    "2026-06-05": "Ponto facultativo (Corpus Christi, emenda)",
+    "2026-06-29": "Ponto facultativo, jogo do Brasil; prazos prorrogados para 30/06 (Port. GP 461/2026)",
+    "2026-08-10": "Ponto facultativo",
+    "2026-08-11": "Criação dos Cursos Jurídicos (Lei 5.010, art. 62)",
+    "2026-10-28": "Dia do Servidor (página oficial); a notícia fala em 30/10 como ponto facultativo — divergência, 30/10 NÃO incluído",
+    "2026-12-07": "Ponto facultativo",
+    "2026-12-08": "Dia da Justiça"
+  },
+  "_excluidos": {
+    "2026-02-18": "Cinzas: expediente a partir das 14h (parcial)",
+    "2026-10-30": "divergência entre página e notícia; conferir a Portaria 1.010 na íntegra"
+  }
+}

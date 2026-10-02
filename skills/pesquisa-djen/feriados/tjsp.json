@@ -1,0 +1,32 @@
+{
+  "_criterio": "Só entra DIA INTEIRO sem expediente (feriado, ponto facultativo, suspensão), além dos nacionais já embutidos em lib/prazo-core.js e do recesso 20/12-20/01. Fica FORA, por ser conservador (data fatal igual ou anterior à real, nunca posterior): expediente parcial (Cinzas até 12h/14h, horário reduzido em jogo da Copa), feriado só da capital ou de comarca, e data não confirmada em ato oficial. Pesquisa em 02/10/2026; 2027 ainda sem ato publicado em nenhum tribunal. Depois de alterar este arquivo: node skills/pesquisa-djen/scripts/recalcular-prazos.js",
+  "_fonte": "Provimento CSM 2.813/2025 (DJE 25/11/2025). Página oficial https://www.tjsp.jus.br/CanaisComunicacao/Feriados/ProcessosFisicos não renderizou; teor conferido em republicação (cnbsp.org.br, 25/11/2025) — conferir no DJE.",
+  "_verificado_em": "2026-10-02",
+  "_confianca": "média",
+  "datas": [
+    "2026-04-02",
+    "2026-04-20",
+    "2026-06-05",
+    "2026-07-09",
+    "2026-07-10",
+    "2026-10-28",
+    "2026-12-07",
+    "2026-12-08"
+  ],
+  "_legenda": {
+    "2026-04-02": "Endoenças (Quinta-feira Santa)",
+    "2026-04-20": "Suspensão de expediente (compensação)",
+    "2026-06-05": "Suspensão de expediente",
+    "2026-07-09": "Revolução Constitucionalista (feriado estadual)",
+    "2026-07-10": "Suspensão de expediente",
+    "2026-10-28": "Dia do Servidor",
+    "2026-12-07": "Suspensão de expediente",
+    "2026-12-08": "Dia da Justiça"
+  },
+  "_excluidos": {
+    "2026-02-18": "Cinzas: expediente a partir das 13h (parcial)",
+    "2026-06-29": "jogo do Brasil: só processos físicos tiveram prazo suspenso; digitais seguem art. 224 §1º",
+    "2026-01-07 a 2026-01-20": "prazos suspensos — já coberto pelo recesso do art. 220",
+    "feriados municipais": "constam do anexo do provimento, por comarca; não incluídos"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "_criterio": "Só entra DIA INTEIRO sem expediente (feriado, ponto facultativo, suspensão), além dos nacionais já embutidos em lib/prazo-core.js e do recesso 20/12-20/01. Fica FORA, por ser conservador (data fatal igual ou anterior à real, nunca posterior): expediente parcial (Cinzas até 12h/14h, horário reduzido em jogo da Copa), feriado só da capital ou de comarca, e data não confirmada em ato oficial. Pesquisa em 02/10/2026; 2027 ainda sem ato publicado em nenhum tribunal. Depois de alterar este arquivo: node skills/pesquisa-djen/scripts/recalcular-prazos.js",
+  "_fonte": "Informe oficial TJMG (https://www.tjmg.jus.br/portal-tjmg/informes/calendario-de-feriados-em-2026-suspensoes-de-expediente.htm); Portaria Conjunta 1.764/PR/2026 (https://www8.tjmg.jus.br/institucional/at/pdf/pc17642026.pdf); PC 1.798/PR/2026 (comarcas)",
+  "_verificado_em": "2026-10-02",
+  "datas": [
+    "2026-02-18",
+    "2026-04-01",
+    "2026-04-02",
+    "2026-04-20",
+    "2026-06-05",
+    "2026-10-30",
+    "2026-12-07",
+    "2026-12-08"
+  ],
+  "_legenda": {
+    "2026-02-18": "Quarta-feira de Cinzas: expediente e prazos suspensos, prorrogados ao 1º dia útil (PC 1.764)",
+    "2026-04-01": "Quarta-feira Santa",
+    "2026-04-02": "Quinta-feira Santa",
+    "2026-04-20": "Suspensão de expediente",
+    "2026-06-05": "Suspensão de expediente",
+    "2026-10-30": "Dia do Funcionário Público (MG), prazos prorrogados (PC 1.764)",
+    "2026-12-07": "Suspensão, prazos prorrogados (PC 1.764)",
+    "2026-12-08": "Dia da Justiça"
+  },
+  "_excluidos": {
+    "jun-jul/2026": "jogos do Brasil: horário reduzido, prazos vencendo no dia prorrogados (PC 1.819) — parcial",
+    "2026-08-15": "Assunção / aniversário de BH: sábado e municipal",
+    "feriados de comarca": "PC 1.798, 1.814 e 1.828/2026, por comarca; não incluídos"
+  }
+}

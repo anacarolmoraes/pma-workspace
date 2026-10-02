@@ -86,7 +86,18 @@ inicial (`lib/prazo-teor.js`). Quando existe, é esse o prazo que vence, não a 
 embargos; o hook de abertura o alerta primeiro. `(+N)` indica outros prazos no mesmo ato,
 que precisam de leitura. Linha anterior à coluna fica sem a célula.
 
-⚠️ **No Juizado Especial o recurso inominado é de 10 dias** (Lei 9.099/95, art. 42), não 15: a coluna `fatal` é referência de recurso cível comum e precisa ser conferida contra o ato concreto.
+**Prazo por órgão** (desde 02/10/2026, `lib/prazo-ato.js`): órgão de Juizado Especial sai com
+**10 d.ú.** na coluna `fatal`, marcado `(10 d.ú. JEC)` (Lei 9.099/95, art. 42; dias úteis pelo
+art. 12-A). Turma Recursal sai `(15 d.ú. TR)`, a conferir. O resto segue o recurso cível comum.
+A coluna continua referência: o ato concreto manda.
+
+Quando um calendário de feriados muda ou a regra de prazo muda, as linhas ABERTAS antigas
+carregam o cálculo velho. Recalcular:
+
+```powershell
+node skills\pesquisa-djen\scripts\recalcular-prazos.js --dry-run   # mostra o que mudaria
+node skills\pesquisa-djen\scripts\recalcular-prazos.js             # grava (só ABERTA)
+```
 
 ### A busca é NACIONAL — regra dura
 

@@ -1,0 +1,19 @@
+{
+  "_criterio": "Só entra DIA INTEIRO sem expediente (feriado, ponto facultativo, suspensão), além dos nacionais já embutidos em lib/prazo-core.js e do recesso 20/12-20/01. Fica FORA, por ser conservador (data fatal igual ou anterior à real, nunca posterior): expediente parcial (Cinzas até 12h/14h, horário reduzido em jogo da Copa), feriado só da capital ou de comarca, e data não confirmada em ato oficial. Pesquisa em 02/10/2026; 2027 ainda sem ato publicado em nenhum tribunal. Depois de alterar este arquivo: node skills/pesquisa-djen/scripts/recalcular-prazos.js",
+  "_fonte": "Ato 05/2025-OE (notícia oficial https://www.tjrs.jus.br/novo/noticia/aprovado-calendario-de-feriados-da-justica-estadual-para-2026/; tabela lida em republicação). TJRS não suspende expediente em Cinzas, Quinta Santa nem Dia do Servidor.",
+  "_verificado_em": "2026-10-02",
+  "_confianca": "média",
+  "datas": [
+    "2026-12-08"
+  ],
+  "_legenda": {
+    "2026-12-08": "Dia da Justiça"
+  },
+  "_excluidos": {
+    "2026-02-02": "N. Sra. dos Navegantes: só Porto Alegre (lei municipal)",
+    "2026-09-20": "Farroupilha cai em domingo",
+    "2026-10-28": "TJRS mantém expediente normal no Dia do Servidor",
+    "recesso 2026/27": "ato do Órgão Especial ainda não publicado; vale o art. 220 do CPC",
+    "feriados de comarca": "lei municipal de cada comarca; não incluídos"
+  }
+}

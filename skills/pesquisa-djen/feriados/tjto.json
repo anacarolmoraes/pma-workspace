@@ -1,14 +1,37 @@
 {
-  "_instrucoes": "Feriados/suspensões de expediente do TJTO além dos nacionais já embutidos no prazo.js. Alimentar a cada ano com a portaria anual de feriados do TJTO (ex.: Portaria 3741/2025 declarou 16-17/02/2026 — já cobertos como forenses nacionais). CONFERIR a portaria vigente antes de confiar nesta lista para data fatal.",
-  "_fonte": "PENDENTE: transcrever da portaria anual do TJTO (wwwa.tjto.jus.br) — lista abaixo contém apenas os feriados estaduais notórios do Tocantins",
+  "_criterio": "Só entra DIA INTEIRO sem expediente (feriado, ponto facultativo, suspensão), além dos nacionais já embutidos em lib/prazo-core.js e do recesso 20/12-20/01. Fica FORA, por ser conservador (data fatal igual ou anterior à real, nunca posterior): expediente parcial (Cinzas até 12h/14h, horário reduzido em jogo da Copa), feriado só da capital ou de comarca, e data não confirmada em ato oficial. Pesquisa em 02/10/2026; 2027 ainda sem ato publicado em nenhum tribunal. Depois de alterar este arquivo: node skills/pesquisa-djen/scripts/recalcular-prazos.js",
+  "_fonte": "Portaria TJTO 3.741/2025 (DJ matéria 904337: https://diario.tjto.jus.br/materia/904337); Portaria 2.050/2026 para 29/06 (https://diario.tjto.jus.br/materia/922007); notícia set/2026 mantendo 05/10 (https://tjto.jus.br/comunicacao/noticias/judiciario-tocantinense-mantem-feriado-do-aniversario-do-estado-na-segunda-feira-5-de-outubro)",
+  "_verificado_em": "2026-10-02",
   "datas": [
+    "2026-04-01",
+    "2026-04-02",
+    "2026-04-20",
+    "2026-06-05",
     "2026-06-29",
+    "2026-08-10",
+    "2026-08-11",
     "2026-09-08",
-    "2026-10-05"
+    "2026-10-05",
+    "2026-10-30",
+    "2026-12-18"
   ],
   "_legenda": {
-    "2026-06-29": "Ponto facultativo TJTO (segunda-feira) — Diário da Justiça, matéria 922007 (https://diario.tjto.jus.br/materia/922007); portaria arquivada em clientes/leonardo/ponto_facultativo_TJTO.pdf",
-    "2026-09-08": "Nossa Senhora da Natividade, padroeira do Estado do Tocantins — CONFIRMAR na portaria TJTO",
-    "2026-10-05": "Criação do Estado do Tocantins (feriado estadual) — CONFIRMAR na portaria TJTO"
+    "2026-04-01": "Quarta-feira Santa (art. 1º)",
+    "2026-04-02": "Quinta-feira Santa (art. 1º)",
+    "2026-04-20": "Ponto facultativo, véspera de Tiradentes (art. 3º; portaria silente sobre prazo)",
+    "2026-06-05": "Ponto facultativo, emenda de Corpus Christi (art. 3º)",
+    "2026-06-29": "Ponto facultativo, jogo do Brasil; prazos prorrogados (Port. 2.050/2026, art. 2º)",
+    "2026-08-10": "Ponto facultativo, véspera de 11/08 (art. 3º)",
+    "2026-08-11": "Criação dos Cursos Jurídicos (art. 1º)",
+    "2026-09-08": "Nossa Senhora da Natividade, padroeira do TO, Lei est. 627/1993 (art. 1º) — CONFIRMADO",
+    "2026-10-05": "Criação do Estado do Tocantins (art. 1º) — CONFIRMADO; TJTO manteve 05/10 com prazos suspensos; 09/10 expediente normal no Judiciário",
+    "2026-10-30": "Dia do Servidor transferido de 28/10 (art. 2º)",
+    "2026-12-18": "Dia da Justiça transferido de 08/12 (art. 2º)"
+  },
+  "_excluidos": {
+    "2026-03-19": "Padroeiro de Palmas: só a Capital (art. 4º)",
+    "2026-05-20": "Aniversário de Palmas: só a Capital (art. 4º)",
+    "2026-08-15": "Senhor do Bonfim cai em sábado",
+    "recesso 2026/27": "ato próprio do TJTO não encontrado; vale o art. 220 do CPC já embutido"
   }
 }

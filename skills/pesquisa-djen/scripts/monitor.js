@@ -21,6 +21,7 @@ const { setTimeout: esperar } = require('timers/promises');
 const { calcularPrazo, feriadosLocais, hojeLocal } = require('../lib/prazo-core.js');
 const { identificarCliente, rotuloCliente } = require('../lib/cliente-djen.js');
 const { extrairPrazo, rotuloPrazo } = require('../lib/prazo-teor.js');
+const { prazoRecurso } = require('../lib/prazo-ato.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
@@ -216,10 +217,13 @@ function montarLinha(n, catalogo) {
 
   try {
     const base = { disponibilizacao: n.disponibilizacao, tribunal: n.tribunal };
-    const r = calcularPrazo({ ...base, dias: PRAZO_REF });
+    // Prazo de referência conforme o órgão: Juizado = 10 d.ú. (Lei 9.099, art. 42).
+    const ref = prazoRecurso(n, PRAZO_REF);
+    const r = calcularPrazo({ ...base, dias: ref.dias });
     fatal = r.data_fatal;
     termo = r.termo_inicial;
-    if (!r.confiavel) flag = ' ⚠ SEM FERIADO LOCAL';
+    if (ref.rito !== 'comum') flag = ` (${ref.rotulo})`;
+    if (!r.confiavel) flag += ' ⚠ SEM FERIADO LOCAL';
 
     // Embargos correm do MESMO termo inicial, com contagem menor — mas só fazem
     // sentido contra decisão. Em ato ordinatório a coluna fica `n/a`: contagem
