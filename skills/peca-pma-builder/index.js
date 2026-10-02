@@ -14,10 +14,17 @@
 const path = require('path');
 const fs = require('fs');
 
-// Carrega docx do diretório global do npm (Windows padrão; ajustar se necessário)
-const globalNodeModules = process.env.NPM_GLOBAL_NODE_MODULES
-  || 'C:\\Users\\anamo\\AppData\\Roaming\\npm\\node_modules';
-const docx = require(path.join(globalNodeModules, 'docx'));
+// Carrega docx pela resolução normal do Node (node_modules do projeto, declarado
+// em package.json). NPM_GLOBAL_NODE_MODULES é só uma via de emergência, para uma
+// instalação em que o pacote exista apenas no diretório global do npm.
+let docx;
+try {
+  docx = require('docx');
+} catch (e) {
+  const globalNodeModules = process.env.NPM_GLOBAL_NODE_MODULES
+    || 'C:\\Users\\anamo\\AppData\\Roaming\\npm\\node_modules';
+  docx = require(path.join(globalNodeModules, 'docx'));
+}
 const {
   Document, Packer, Paragraph, TextRun, AlignmentType, ImageRun,
   PageNumber, Footer, Header, HeightRule, BorderStyle,
@@ -316,10 +323,16 @@ async function buildDoc(opts) {
 async function validarTimbrado(docxPath) {
   let JSZip;
   try {
-    JSZip = require(path.join(globalNodeModules, 'docx', 'node_modules', 'jszip'));
-  } catch (e1) {
-    try { JSZip = require(path.join(globalNodeModules, 'jszip')); }
-    catch (e2) { return { ok: true, problemas: [], aviso: 'jszip indisponível — validação do timbrado pulada' }; }
+    JSZip = require('jszip');
+  } catch (e0) {
+    const globalNodeModules = process.env.NPM_GLOBAL_NODE_MODULES
+      || 'C:\\Users\\anamo\\AppData\\Roaming\\npm\\node_modules';
+    try {
+      JSZip = require(path.join(globalNodeModules, 'docx', 'node_modules', 'jszip'));
+    } catch (e1) {
+      try { JSZip = require(path.join(globalNodeModules, 'jszip')); }
+      catch (e2) { return { ok: true, problemas: [], aviso: 'jszip indisponível — validação do timbrado pulada' }; }
+    }
   }
   const problemas = [];
   const zip = await JSZip.loadAsync(fs.readFileSync(docxPath));
@@ -361,10 +374,16 @@ async function validarTimbrado(docxPath) {
 async function validarConteudo(docxPath, ancoras) {
   let JSZip;
   try {
-    JSZip = require(path.join(globalNodeModules, 'docx', 'node_modules', 'jszip'));
-  } catch (e1) {
-    try { JSZip = require(path.join(globalNodeModules, 'jszip')); }
-    catch (e2) { return { ok: true, faltando: [], aviso: 'jszip indisponível — validação de conteúdo pulada' }; }
+    JSZip = require('jszip');
+  } catch (e0) {
+    const globalNodeModules = process.env.NPM_GLOBAL_NODE_MODULES
+      || 'C:\\Users\\anamo\\AppData\\Roaming\\npm\\node_modules';
+    try {
+      JSZip = require(path.join(globalNodeModules, 'docx', 'node_modules', 'jszip'));
+    } catch (e1) {
+      try { JSZip = require(path.join(globalNodeModules, 'jszip')); }
+      catch (e2) { return { ok: true, faltando: [], aviso: 'jszip indisponível — validação de conteúdo pulada' }; }
+    }
   }
   const zip = await JSZip.loadAsync(fs.readFileSync(docxPath));
   const nome = Object.keys(zip.files).find((f) => /^word\/document\.xml$/.test(f));
