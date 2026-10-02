@@ -185,7 +185,7 @@ function main() {
 
   const dirs = fs
     .readdirSync(SKILLS, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !IGNORAR.has(d.name))
+    .filter((d) => d.isDirectory() && !IGNORAR.has(d.name) && !d.name.startsWith('_'))
     .map((d) => d.name)
     .sort();
 

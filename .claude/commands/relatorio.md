@@ -53,7 +53,7 @@ Em caso de perfil de consumo, encaixe nesse esqueleto: baseline + cluster + cál
 divergência dentro de *Análise Jurídica*; subsunção fator a fator do REsp 2.222.059/STJ no
 *Quadro-Resumo*; cada valor com fonte e data.
 
-**`.docx` (para o juiz), derivado do `.md`** — via skill `docx` (`skills/docx/SKILL.md`),
+**`.docx` (para o juiz), derivado do `.md`** — via skill `docx` (`skills/_externas/docx/SKILL.md`),
 docx-js em Node, com estas especificações exatas:
 
 - A4; **Times New Roman 12 pt; entrelinha 1,5**

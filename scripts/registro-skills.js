@@ -56,7 +56,7 @@ function gitIgnorado(rel) {
 function gerar() {
   const dirs = fs
     .readdirSync(SKILLS, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && !IGNORAR.has(d.name))
+    .filter((d) => d.isDirectory() && !IGNORAR.has(d.name) && !d.name.startsWith('_'))
     .map((d) => d.name)
     .filter((n) => fs.existsSync(path.join(SKILLS, n, 'SKILL.md')))
     .sort(); // mesma ordem do lint-skills (byte a byte; maiúscula antes)

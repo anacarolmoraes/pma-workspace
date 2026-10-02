@@ -125,14 +125,14 @@ skills/yt-search/
 # Continuam na sua máquina; apenas não são distribuídas para a
 # equipe, para o projeto chegar enxuto a quem está começando.
 # ------------------------------------------------------------
-skills/vulnerability-scanner/
-skills/documentation-templates/
-skills/skill-mcp-creator/
-skills/audio-converter/
-skills/pdf/
-skills/xlsx/
-skills/Scrapling-Skill/
-skills/smart-browser-orchestrator/
+skills/_externas/vulnerability-scanner/
+skills/_externas/documentation-templates/
+skills/_externas/skill-mcp-creator/
+skills/_externas/audio-converter/
+skills/_externas/pdf/
+skills/_externas/xlsx/
+skills/_externas/Scrapling-Skill/
+skills/_externas/smart-browser-orchestrator/
 # Decisão da Fase 5 (02/08/2026): o fluxo NotebookLM não depende
 # delas (verificado por grep — nenhuma referência fora das próprias
 # pastas), então não entram no motor.
