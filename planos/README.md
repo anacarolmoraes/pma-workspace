@@ -19,8 +19,7 @@ não instrução, e não precisa ser carregado em toda sessão.
   órgãos (`orgaos-frequentes.js`), sem perfil escrito ainda. Também: skill `ficha-golpe-bancario`,
   template de golpe, matriz de documentos transversal e de golpe, `caso.json` + `qualificacao.js`,
   modo grupo de casos do radar. Portões (estrutura aprovada no `md2docx`, `lint-inicial` v2)
-  ensaiados em cópia e prontos em `planos/patch-manutencao-2026-09-08-inicial.js`, a aplicar em
-  sessão `PMA_MANUTENCAO=1`. Dry-run em inicial real (nota 10) segue pendente. O que
+  **aplicados** (patch em `planos/aplicados/`). A inicial João Marcos x Five Senses (01/10/2026) rodou o pipeline central em caso real; o intake foi redesenhado em 01/10 (um só `ANALISE.md` por caso) e ainda não rodou em caso novo. O que
   já saiu sem PRD em 04/09: `ANALISE.md` por caso e `<PECA>.estrutura.md` no orchestrator,
   checklist de saída do 319/320 em `direito/pecas/peticao-inicial/`, três divergências de
   técnica (valor da causa, autocomposição, posição da tutela) resolvidas nas skills.
@@ -59,10 +58,10 @@ modalidade, negação e pedido), diagnóstico de ritmo não bloqueante (`ritmo.j
 obrigatória com alteração condicional (humanizer 1.2.0, orchestrator 4.10.0 Estágio 5,
 validator 2.10.0 com campos `humanizer_*` no `.validacao.md`), perfil de voz
 `perfil/voz-forense.md` (rascunho a validar pela titular; substitui a fronteira fixa de seis
-capítulos por regra proporcional), testes em `npm test`. **Pendente de manutenção:**
-`planos/patch-manutencao-2026-09-08-lint-ia.js` (três correções no `lint-ia`, confirmadas em
-fixture; `hooks/_teste-lint-ia.js` já espera por elas). Rejeitadas: rebaixar travessão e tríade
+capítulos por regra proporcional), testes em `npm test`. **Patch do `lint-ia` aplicado** (v1.2, marcador no arquivo; patch arquivado em `planos/aplicados/`). Rejeitadas: rebaixar travessão e tríade
 a aviso (contraria o endurecimento de 04/08/2026) e ampliar a lista de palavras proibidas.
+
+Patches de manutenção já aplicados ficam em [`aplicados/`](aplicados/) (injeção 05/09, inicial e lint-ia 08/09); os de 01–02/10/2026 (CI no GitHub, `docx` carregado do `node_modules` do projeto, `skills/_externas/`, poda de vocabulário) estão só no histórico do git.
 
 Sem PRD, executado em 04/09/2026 a partir de `scratch/2026-09-03_revisao-regras-vs-hooks.md`:
 seis hooks novos (portões, comandos, PDF, dado de caso, leitura obrigatória, Stop), `npm test`,
