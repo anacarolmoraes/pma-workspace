@@ -15,7 +15,7 @@ Divisão de trabalho, para não queimar token:
 | Etapa | Quem faz | Custo |
 |---|---|---|
 | Busca, filtro, dedupe, recorte | `scripts/buscar.js` | zero LLM |
-| Triagem favorável/contrário | subagente **Haiku** em lote | baixo |
+| Triagem favorável/contrário | modelo pequeno em sessões paralelas, em lote | baixo |
 | Leitura integral + dossiê | modelo principal, **só os finalistas** | controlado |
 
 ## 1. Definir tese(s) e lado do cliente
@@ -97,7 +97,7 @@ Gerar os lotes com o fatiador (zero LLM — corta o top-60 por score e grava os 
 node scripts/lotes.js --entrada tmp/radar-djen/<caso>/candidatos.json --top 60 --tamanho 25
 ```
 
-Lotes de **25–30, não menos**: cada subagente paga um custo fixo alto só por existir
+Lotes de **25–30, não menos**: cada sessão paralela paga um custo fixo alto só por existir
 (prompt de sistema), então lote pequeno é o jeito mais caro de triar — 6 lotes de 12 custam
 o dobro de 2 lotes de 30 para o mesmo trabalho. Haiku classifica 30 itens tão bem quanto 12.
 No buscar.js, `--relevantes` (palavras da tese que não servem de busca mas indicam aderência,
