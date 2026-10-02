@@ -61,8 +61,8 @@ Portões da titular estão marcados como **[PORTÃO]** — nada neles executa se
 
 `skills/pesquisa-djen/monitor/PENDENTES.md`: 37 ABERTA × 1 TRATADA. A coluna "caso" está `?`
 em 36 linhas — a fila diz que há prazo, mas não diz de quem. `scripts/mapear-processos.js`
-existe e não foi rodado em produção. O processo `0012960-14.2026.8.27.2729` aparece 4×,
-`5447210-85.2026.8.09.0024` 3× (ids de comunicação distintos inflam a fila). 11 linhas de
+existe e não foi rodado em produção. O processo `<processo A>` aparece 4×,
+`<processo B>` 3× (ids de comunicação distintos inflam a fila). 11 linhas de
 TJGO/TJPR carregam `⚠ SEM FERIADO LOCAL` — o prazo desses tribunais está calculado sem feriado
 forense local (`monitor/cobertura.json` confirma: só existe `feriados/tjto.json`).
 
@@ -70,7 +70,7 @@ forense local (`monitor/cobertura.json` confirma: só existe `feriados/tjto.json
 
 - **F1.1 — Vincular**: rodar `mapear-processos.js` contra `clientes/` e o histórico de peças;
   preencher a coluna "caso" das 36 linhas. O que não casar automaticamente vira lista curta
-  para a titular resolver à mão (é ela quem sabe se `0031494-89.2019.8.27.0000` é dela).
+  para a titular resolver à mão (é ela quem sabe se `<processo C>` é dela).
 - **F1.2 — Deduplicar**: o monitor passa a agrupar comunicações do mesmo processo + mesmo tipo
   na mesma linha (ids adicionais viram sufixo), preservando a regra "o monitor só acrescenta".
 - **F1.3 — Feriados**: criar `feriados/tjgo.json` e `feriados/tjpr.json` no mesmo formato do
