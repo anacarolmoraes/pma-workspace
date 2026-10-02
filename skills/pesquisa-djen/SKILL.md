@@ -80,6 +80,12 @@ A coluna de embargos depende do **tipo do documento** (`lib/tipo-documento.js`),
 
 Contagem regressiva onde não cabe recurso é ruído, e ruído ensina a ignorar o alerta — daí a classificação.
 
+**Coluna `prazo fixado no ato`** (desde 01/10/2026): o monitor lê no teor da intimação o prazo
+que o juízo fixou ("no prazo de 5 (cinco) dias") e calcula a data a partir do mesmo termo
+inicial (`lib/prazo-teor.js`). Quando existe, é esse o prazo que vence, não a presunção de
+embargos; o hook de abertura o alerta primeiro. `(+N)` indica outros prazos no mesmo ato,
+que precisam de leitura. Linha anterior à coluna fica sem a célula.
+
 ⚠️ **No Juizado Especial o recurso inominado é de 10 dias** (Lei 9.099/95, art. 42), não 15: a coluna `fatal` é referência de recurso cível comum e precisa ser conferida contra o ato concreto.
 
 ### A busca é NACIONAL — regra dura

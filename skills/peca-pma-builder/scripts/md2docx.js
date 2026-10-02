@@ -172,8 +172,11 @@ function rodarLints(mdPath) {
   ];
   for (const l of lints) {
     if (!fs.existsSync(l.script)) {
-      console.warn(`md2docx: AVISO — ${l.nome} não encontrado em ${l.script}; portão pulado.`);
-      continue;
+      // Portão ausente não é portão aberto. Até 01/10/2026 isto era aviso e a peça
+      // compilava sem o lint — exatamente o fail-open que o rastro proíbe.
+      console.error(`\nmd2docx: ${l.nome} não encontrado em ${l.script} — portão AUSENTE, .docx não gerado.`);
+      console.error('Instalação incompleta: rodar `node scripts/setup.js` ou restaurar o arquivo pelo git.\n');
+      process.exit(1);
     }
     const r = spawnSync(process.execPath, [l.script, mdPath], { encoding: 'utf8' });
     if (r.status === 3) {
@@ -668,12 +671,21 @@ async function main() {
   // Não substitui os lints de entrada — cobre o que eles não veem, que é o que
   // efetivamente sai para o juízo.
   const lintDocx = path.join(__dirname, '..', '..', '..', 'scripts', 'lint-docx.js');
-  if (!semTimbre && fs.existsSync(lintDocx)) {
+  if (!semTimbre) {
+    if (!fs.existsSync(lintDocx)) {
+      // Mesmo princípio dos lints de entrada: portão ausente não compila.
+      descartar(saved);
+      console.error(`\nmd2docx: scripts/lint-docx.js não encontrado — portão AUSENTE, .docx descartado.\n`);
+      process.exit(1);
+    }
     const r = spawnSync(process.execPath, [lintDocx, saved], { encoding: 'utf8' });
     if (r.status !== 0) {
-      console.error('\nmd2docx: o .docx GERADO está fora do padrão visual PMA:\n');
+      // Reprovado = não existe. Deixar o .docx em disco com exit 1 era convite a
+      // protocolar o arquivo errado (achado de 01/10/2026).
+      descartar(saved);
+      console.error('\nmd2docx: o .docx GERADO está fora do padrão visual PMA e foi DESCARTADO:\n');
       console.error(r.stdout || r.stderr || '');
-      process.exitCode = 1;
+      process.exit(1);
     } else if ((r.stdout || '').includes('AVISO')) {
       console.warn((r.stdout || '').split('\n').filter((l) => /AVISO|^\s{8}/.test(l)).join('\n'));
     }
@@ -695,7 +707,8 @@ async function main() {
   const c = await validarConteudo(saved, ancoras);
   if (c.aviso) console.warn(`md2docx: AVISO — ${c.aviso}`);
   else if (!c.ok) {
-    console.error('md2docx: o .docx gravado NÃO contém todo o texto da fonte:');
+    descartar(saved);
+    console.error('md2docx: o .docx gravado NÃO contém todo o texto da fonte — arquivo descartado:');
     for (const f of c.faltando) console.error(`  ✘ ausente: "${String(f).slice(0, 80)}…"`);
     console.error('  Regerar; se persistir, conferir se outro processo está com o arquivo aberto.');
     process.exit(1);
@@ -705,10 +718,21 @@ async function main() {
     const v = await validarTimbrado(saved);
     if (v.aviso) console.warn(`md2docx: AVISO — ${v.aviso}`);
     else if (!v.ok) {
-      console.error('md2docx: TIMBRADO INVÁLIDO no .docx gerado:');
+      descartar(saved);
+      console.error('md2docx: TIMBRADO INVÁLIDO no .docx gerado — arquivo descartado:');
       for (const prob of v.problemas) console.error(`  ✘ ${prob}`);
       process.exit(1);
     } else console.log('md2docx: timbrado validado (cabeçalho, rodapé, distâncias).');
+  }
+}
+
+// Artefato reprovado por um portão de saída não fica em disco: um .docx que existe
+// é um .docx que alguém protocola. Falha ao apagar vira aviso explícito.
+function descartar(docxPath) {
+  try {
+    fs.unlinkSync(docxPath);
+  } catch (e) {
+    console.error(`md2docx: não consegui apagar ${docxPath} (${e.message}) — NÃO protocolar este arquivo.`);
   }
 }
 

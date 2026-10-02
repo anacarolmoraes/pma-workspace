@@ -107,6 +107,7 @@ function lerFila() {
   const iOrgao = acharCol('tribunal', 'órgão', 'orgao');
   const iEdcl = acharCol('embargos');
   const iFatal = acharCol('fatal');
+  const iFixado = acharCol('fixado');
   if (iStatus < 0 || iFatal < 0) return [];
 
   const dataDe = (c) => {
@@ -130,6 +131,10 @@ function lerFila() {
       edclDuvida: celulaEdcl.includes('?'),
       prazoIso: dataDe(cols[iFatal]),
       prazoTexto: cols[iFatal] || '(sem prazo calculado)',
+      // Prazo que o juízo fixou no ato (coluna de 01/10/2026): quando existe, é o
+      // que vence de verdade. Linha antiga não tem a célula → null.
+      fixadoIso: iFixado > -1 ? dataDe(cols[iFixado]) : null,
+      fixadoTexto: iFixado > -1 ? cols[iFixado] || '' : '',
     });
   }
   return itens;
@@ -213,6 +218,28 @@ function montar() {
     const noPrazo = comPrazo.filter((i) => i.uteis >= 0);
     const emb = noPrazo.filter((i) => !i.edclDuvida);
     const duvida = noPrazo.filter((i) => i.edclDuvida);
+
+    // Prazo FIXADO no ato vem antes da presunção de embargos: é o ato concreto.
+    const fixados = fila
+      .filter((i) => i.fixadoIso)
+      .map((i) => ({ ...i, uteis: uteisAte(i.fixadoIso, i.tribunal) }))
+      .filter((i) => i.uteis !== null)
+      .sort((a, b) => a.uteis - b.uteis);
+    const fixVencidos = fixados.filter((i) => i.uteis < 0);
+    const fixCurtos = fixados.filter((i) => i.uteis >= 0 && i.uteis <= CFG.prazo_edcl);
+    if (fixVencidos.length) {
+      linhas.push(`⛔ **Prazo FIXADO NO ATO já vencido — ${fixVencidos.length} linha(s) ABERTA(S):**`);
+      for (const i of fixVencidos.slice(0, 6)) {
+        linhas.push(`   - ${i.processo} (${i.tribunal}) — ${i.fixadoTexto.replace(/\*\*/g, '')}, há **${-i.uteis}** dia(s) útil(eis)`);
+      }
+    }
+    if (fixCurtos.length) {
+      linhas.push(`⏱ **Prazo fixado no ato vencendo em ≤ ${CFG.prazo_edcl} d.ú. — ${fixCurtos.length}:**`);
+      for (const i of fixCurtos.slice(0, 6)) {
+        const quanto = i.uteis === 0 ? '**VENCE HOJE**' : `faltam **${i.uteis}** dia(s) útil(eis)`;
+        linhas.push(`   - ${i.processo} (${i.tribunal}) — ${i.fixadoTexto.replace(/\*\*/g, '')}, ${quanto}`);
+      }
+    }
 
     if (vencidos.length) {
       linhas.push(`⛔ **Embargos VENCIDOS — ${vencidos.length} decisão(ões) ainda ABERTA(S) com os ${CFG.prazo_edcl} d.ú. passados:**`);

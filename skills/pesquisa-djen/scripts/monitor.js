@@ -20,6 +20,7 @@ const path = require('path');
 const { setTimeout: esperar } = require('timers/promises');
 const { calcularPrazo, feriadosLocais, hojeLocal } = require('../lib/prazo-core.js');
 const { identificarCliente, rotuloCliente } = require('../lib/cliente-djen.js');
+const { extrairPrazo, rotuloPrazo } = require('../lib/prazo-teor.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
@@ -197,7 +198,7 @@ const CABECALHO = `# Fila de intimações — DJEN
 > O monitor **só acrescenta** linhas. Troque \`ABERTA\` por \`TRATADA\` quando resolver;
 > nada é removido automaticamente.
 
-| status | processo | tribunal / órgão | disponibilização | documento | embargos (${PRAZO_EDCL} d.ú.) | fatal (${PRAZO_REF} d.ú.) | termo inicial | caso |
+| status | processo | tribunal / órgão | disponibilização | documento | embargos (${PRAZO_EDCL} d.ú.) | fatal (${PRAZO_REF} d.ú.) | termo inicial | caso | prazo fixado no ato |
 |---|---|---|---|---|---|---|---|---|
 `;
 
@@ -248,10 +249,49 @@ function montarLinha(n, catalogo) {
   const nome = n.cliente && n.cliente !== '?' ? n.cliente : '';
   const caso = nome && pasta ? `${nome} · ${pasta}` : nome || pasta || '?';
 
+  // Prazo fixado no ato, contado do mesmo termo inicial. Em dias úteis pelo núcleo;
+  // "corridos" só quando o ato diz isso. Sem prazo no teor, a célula fica `—`.
+  let fixado = '—';
+  if (n.prazoTeor) {
+    try {
+      const p = n.prazoTeor;
+      let data;
+      if (p.uteis === false) {
+        const d = new Date(`${termo}T12:00:00Z`);
+        d.setUTCDate(d.getUTCDate() + p.dias);
+        data = d.toISOString().slice(0, 10);
+      } else {
+        data = calcularPrazo({ disponibilizacao: n.disponibilizacao, tribunal: n.tribunal, dias: p.dias }).data_fatal;
+      }
+      fixado = `**${data}** (${rotuloPrazo(p)})`;
+    } catch {
+      fixado = `? (${rotuloPrazo(n.prazoTeor)})`;
+    }
+  }
+
   return (
     `| ABERTA | ${n.processo} | ${n.tribunal} / ${n.orgao} | ${n.disponibilizacao} | ` +
-    `${n.documento || n.tipo} | ${edcl} | **${fatal}**${flag} | ${termo} | ${caso} | <!-- id:${n.id} -->`
+    `${n.documento || n.tipo} | ${edcl} | **${fatal}**${flag} | ${termo} | ${caso} | ${fixado} | <!-- id:${n.id} -->`
   );
+}
+
+// Grava por arquivo temporário + rename: ou o arquivo novo inteiro, ou o antigo.
+function gravarAtomico(destino, conteudo) {
+  const tmp = `${destino}.tmp-${process.pid}`;
+  fs.writeFileSync(tmp, conteudo, 'utf8');
+  fs.renameSync(tmp, destino);
+}
+
+// A coluna "prazo fixado no ato" entrou em 01/10/2026. Fila antiga ganha a coluna no
+// cabeçalho e no separador; as linhas antigas ficam sem a célula (o hook lê por nome
+// de coluna e tolera célula ausente).
+function migrarCabecalho(texto) {
+  const linhas = texto.split('\n');
+  const i = linhas.findIndex((l) => l.startsWith('| status |'));
+  if (i < 0 || /prazo fixado/i.test(linhas[i])) return texto;
+  linhas[i] = `${linhas[i].trimEnd()} prazo fixado no ato |`;
+  if (linhas[i + 1] && /^\|\s*-+/.test(linhas[i + 1])) linhas[i + 1] = `${linhas[i + 1].trimEnd()} --- |`;
+  return linhas.join('\n');
 }
 
 function atualizarFila(novas, catalogo) {
@@ -262,12 +302,13 @@ function atualizarFila(novas, catalogo) {
     atual = CABECALHO;
   }
   if (!atual.includes('| status |')) atual = CABECALHO + atual;
+  atual = migrarCabecalho(atual);
 
   const jaNaFila = idsNaFila(atual);
   const linhas = novas.filter((n) => !jaNaFila.has(String(n.id))).map((n) => montarLinha(n, catalogo));
   if (!linhas.length) return 0;
 
-  fs.writeFileSync(PENDENTES, `${atual.trimEnd()}\n${linhas.join('\n')}\n`, 'utf8');
+  gravarAtomico(PENDENTES, `${atual.trimEnd()}\n${linhas.join('\n')}\n`);
   return linhas.length;
 }
 
@@ -305,11 +346,17 @@ function atualizarFila(novas, catalogo) {
         // Quem é o cliente sai do cabeçalho da própria intimação (parte cujo
         // advogado tem OAB nossa). A fila deixa de dizer só o número do processo.
         cliente: rotuloCliente(identificarCliente(item, oabs)),
+        // Prazo que o juízo FIXOU no ato ("no prazo de 5 (cinco) dias"): é ele que
+        // vence, não a presunção de embargos/recurso (lição da triagem de 01/10/2026).
+        prazoTeor: extrairPrazo(item.texto),
       });
     }
   }
 
-  fs.writeFileSync(SEEN, JSON.stringify([...vistos]), 'utf8');
+  // seen.json só é gravado DEPOIS de a fila receber as linhas (abaixo): gravado
+  // antes, uma falha na escrita da fila (arquivo aberto no editor, disco) marcava
+  // a intimação como vista e ela nunca mais voltava (achado de 01/10/2026).
+  const gravarVistos = () => gravarAtomico(SEEN, JSON.stringify([...vistos]));
 
   // Cobertura de feriados: sem o calendário do tribunal, a data fatal calculada
   // é IGUAL OU ANTERIOR à real (erro conservador — nunca posterior), mas ainda
@@ -352,6 +399,7 @@ function atualizarFila(novas, catalogo) {
   );
 
   if (!novas.length) {
+    gravarVistos();
     console.log(`Nenhuma comunicação nova no DJEN (janela ${d2s(inicio)}..${d2s(hoje)}, OABs ${oabs.map((o) => o.numero).join('/')}).`);
     process.exit(0);
   }
@@ -369,6 +417,7 @@ function atualizarFila(novas, catalogo) {
   );
 
   const acrescentadas = atualizarFila(novas, catalogo);
+  gravarVistos();
   console.log(`${novas.length} intimação(ões) NOVA(S); ${acrescentadas} acrescentada(s) à fila.`);
   console.log(`Fila: ${PENDENTES}`);
   for (const n of novas) {

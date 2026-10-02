@@ -15,15 +15,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Carrega docx pela resolução normal do Node (node_modules do projeto, declarado
-// em package.json). NPM_GLOBAL_NODE_MODULES é só uma via de emergência, para uma
-// instalação em que o pacote exista apenas no diretório global do npm.
+// em package.json). Sem ele, falha com instrução — não cai em caminho de uma
+// máquina específica, que mudaria a versão do pacote em silêncio (01/10/2026).
 let docx;
 try {
   docx = require('docx');
 } catch (e) {
-  const globalNodeModules = process.env.NPM_GLOBAL_NODE_MODULES
-    || 'C:\\Users\\anamo\\AppData\\Roaming\\npm\\node_modules';
-  docx = require(path.join(globalNodeModules, 'docx'));
+  throw new Error(
+    `peca-pma-builder: pacote "docx" não encontrado (${e.message}). ` +
+      'Rodar `npm install` na raiz do workspace (ou `node scripts/setup.js`).',
+  );
 }
 const {
   Document, Packer, Paragraph, TextRun, AlignmentType, ImageRun,
