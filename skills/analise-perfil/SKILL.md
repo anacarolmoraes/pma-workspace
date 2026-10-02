@@ -116,6 +116,30 @@ Regras de redação:
 - Não argumente direito além do necessário para a subsunção; a valoração
   jurídica e a petição são do `legal-orchestrator`.
 
+### 3.1. Mostrar o que cada instituição tinha diante de si
+
+O relatório mede a divergência; o juiz precisa ver também que ela era **visível no
+momento da validação**. Depois do quadro-resumo, inclua a tabela "O que cada
+instituição tinha diante de si" (instituição × operação × sinais no próprio
+sistema), uma linha por instituição, inclusive o banco emissor dos boletos quando
+houver escoamento por boleto (linha digitável: banco nos três primeiros dígitos;
+campos idênticos entre boletos = mesmo cedente). Só sinal que constava do próprio
+registro da instituição naquele instante; nada de conhecimento posterior.
+
+### 3.2. Compilar o .docx para juntada
+
+O `.md` é a fonte de verdade; o que se junta é o `.docx` no padrão de relatório
+(Times New Roman 12, entrelinha 1,5, ABNT 3/2/3/2; ver `.claude/commands/relatorio.md`).
+Relatório não é peça: não passa pelo `md2docx` nem leva timbrado.
+
+```powershell
+node skills/analise-perfil/scripts/relatorio_abnt.js clientes/<caso>/provas/<relatorio>.md
+```
+
+O script reabre o `.docx` e confere fonte, margens e número de tabelas contra a
+fonte; frontmatter (`titulo`, `subtitulo`, `data`, `processo`, `cliente`, `autor`,
+`classificacao`) vira o bloco de abertura. Na peça, o `Doc. N` aponta para o `.docx`.
+
 ### 4. Entregar
 
 Grave o `.md` na pasta `provas/` do caso, ao lado do JSON e do script

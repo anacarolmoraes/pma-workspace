@@ -1,6 +1,6 @@
 ---
 name: legal-consistency-validator
-version: 2.12.0
+version: 2.13.0
 description: |
   Valida estruturalmente textos jurídicos simulando escrutínio judicial adversarial: detecta 
   contradições, saltos lógicos, inconsistências numéricas, citações fabricadas e pedidos sem 
@@ -50,6 +50,7 @@ Trace o fluxo:
 
 Para cada argumento principal, verifique se o encadeamento está completo e explícito. Identifique onde há:
 - Premissa assumida (o texto supõe como verdadeiro algo que não foi demonstrado)
+- Regime temporal afirmado sem o fato: peça que diz "contrato posterior à Lei 13.786" ou "anterior à lei" sem a data do contrato ou do fato no texto, com `Doc. N`: **ALTO**. A data é o fato que decide a lei aplicável; sem ela, o regime foi presumido e o juízo não tem como conferir
 - Salto lógico (conclusão que não decorre necessariamente das premissas)
 - Pedido sem suporte (algo pedido que não foi argumentado)
 

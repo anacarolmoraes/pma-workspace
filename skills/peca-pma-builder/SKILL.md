@@ -1,6 +1,6 @@
 ---
 name: peca-pma-builder
-version: 1.3.0
+version: 1.4.0
 description: |
   Biblioteca Node compartilhada para geração de peças jurídicas .docx no padrão PMA.
   Caminho preferido: escrever a peça em Markdown (dialeto PMA) e compilar com
@@ -34,9 +34,10 @@ node skills/peca-pma-builder/scripts/md2docx.js clientes/caso/PECA.md
 O `.md` é a **fonte da verdade** da peça: ~20–30% mais barato de escrever e de
 reler por agente do que `p()`/`pMixed()` em JS, editável sem risco de corromper
 sintaxe, e os lints (`lint-remissoes.js`, `lint-ia.js` do humanizer-forense)
-rodam direto sobre ele. Scripts `gerar_*.js` continuam suportados apenas para
-layouts que o dialeto não cobre (tabelas, visual law) — para prosa corrida,
-**não** criar novos `gerar_*.js`.
+rodam direto sobre ele. Tabela e quadro de destaque entraram no dialeto em
+16/09/2026 (`::tabela`, `::quadro`, abaixo); scripts `gerar_*.js` continuam
+suportados apenas para layout que o dialeto ainda não cobre (gráfico, linha do
+tempo desenhada) — para prosa corrida ou tabela, **não** criar novos `gerar_*.js`.
 
 ### Dialeto
 
@@ -73,6 +74,36 @@ são unidas em um só parágrafo justificado. Linha em branco separa.
 ::right texto à direita
 ::br                                   ← quebra() (espaço vertical)
 ::pagebreak                            ← pageBreak()
+
+::tabela Legenda opcional em negrito   ← tabela GFM → Table do docx (desde 2026-09-16)
+| Hora  | Lançamento            | Valor       |
+|:-----:|-----------------------|------------:|
+| 16:52 | Pix Open Finance Envio | −R$ 4.999,90 |
+::                                     ← cabeçalho bold com fundo cinza e repetido a cada
+                                         página; Montserrat 10 pt; largura útil da página;
+                                         colunas proporcionais ao texto mais longo;
+                                         alinhamento por :--:/---: ou, sem marcação,
+                                         coluna só de valores/"—" vai para a direita;
+                                         linha não quebra entre páginas; **bold** inline vale
+
+::quadro                               ← caixa de destaque (visual law): fundo cinza-claro,
+Uma ou mais linhas; linha em branco      filete laranja à esquerda, Montserrat 12 pt
+separa parágrafos dentro do quadro.      justificado. Serve para o número que resume o
+::                                       capítulo, não para rótulo meta-textual.
+
+::cronologia Legenda opcional          ← linha do tempo (visual law): "hora | ator | evento [| valor]"
+!16:32:06 | PicPay | Chave Pix criada (Doc. 12) |
+16:52 | Banco do Brasil | Pix Open Finance para a conta PicPay (Doc. 7) | −R$ 4.999,90
+::                                       faixa de cor por ator (paleta fixa, na ordem em que
+                                         cada ator aparece), hora em negrito, "!" no início
+                                         destaca o evento, legenda de cores ao final. Uma linha
+                                         por evento; saldo e documento vão no texto do evento.
+
+::barras Legenda opcional              ← gráfico de barras horizontais (visual law, desde 2026-09-18):
+!Sentença | R$ 1.547,26                  "rótulo | valor", uma barra por linha, proporcional ao maior
+Critério do STJ | R$ 543,92              valor, escala a partir do zero; "!" pinta a barra de laranja,
+::                                       as demais saem cinza. É tabela, não imagem: o valor fica
+                                         à direita da barra e continua texto pesquisável.
 
 ::assinatura
 NOME DA ADVOGADA | OAB/TO 0000
@@ -251,4 +282,4 @@ Não editar sem coordenar com a usuária.
 ## Limites (FORA DO ESCOPO)
 - **Não** redige conteúdo jurídico — isso é tarefa do `legal-writer`/`legal-orchestrator`.
 - **Não** valida consistência argumentativa — isso é `legal-consistency-validator`.
-- **Não** decide layout visual avançado (tabelas complexas, gráficos, visual law) — para isso, estender este builder ou usar a skill `docx` diretamente.
+- **Não** decide layout visual além de `::tabela` e `::quadro` (gráfico, mapa mental, célula mesclada, tabela aninhada) — para isso, estender este builder em sessão de manutenção; nunca gerar o `.docx` por outro caminho sem rodar os quatro lints à mão (AGENTS.md §4).

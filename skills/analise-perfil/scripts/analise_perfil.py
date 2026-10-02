@@ -81,7 +81,7 @@ def e_consumo(desc):
     """Exclui linhas técnicas que não exprimem consumo."""
     return not any(x in desc for x in (
         "RENDIMENTO SALDO", "RECOMPRA CDB", "JUROS LIQUIDO",
-        "DEVOLU", "SALDO ANTERIOR"))
+        "DEVOLU", "SALDO ANTERIOR", "RENDE FACIL"))
 
 
 def resumo(vals):

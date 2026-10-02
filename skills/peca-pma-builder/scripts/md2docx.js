@@ -33,6 +33,20 @@
 // ::endereco ... ::         → endereco([linhas]) (negrito, à esquerda)
 // ::assinatura ... ::       → assinatura(); linhas "NOME | OAB",
 //                             linha opcional "local: Palmas — TO, data."
+// ::tabela [legenda] ... ::  → tabela GFM (| a | b |, linha |---|) em Table do docx:
+//                             cabeçalho em negrito com fundo cinza, Montserrat 10 pt,
+//                             largura útil da página, colunas proporcionais ao conteúdo,
+//                             alinhamento por :--- / :--: / ---: ou automático
+//                             (coluna só de valores → direita). Sessão de manutenção 2026-09-16.
+// ::quadro ... ::            → caixa de destaque (visual law): parágrafos justificados
+//                             em fundo cinza-claro com filete laranja à esquerda.
+// ::cronologia [legenda] ... :: → linha do tempo (visual law): linhas "hora | ator | evento [| valor]";
+//                             faixa colorida por ator (paleta fixa, na ordem de aparição),
+//                             hora em negrito, "!" no início da linha destaca o evento;
+//                             legenda de cores ao final. Sessão de manutenção 2026-09-16.
+// ::barras [legenda] ... ::  → gráfico de barras horizontais (visual law): linhas "rótulo | valor";
+//                             barra proporcional ao maior valor, "!" no início pinta de laranja.
+//                             É tabela, não imagem. Sessão de manutenção 2026-09-18.
 // **negrito** e *itálico*   → runs inline (pMixed)
 // linha inteira em **...**  → parágrafo bold (não usar como rótulo meta-textual — ver SKILL.md)
 // Parágrafo comum: linhas contíguas são unidas com espaço; linha em branco separa.
@@ -45,8 +59,12 @@ const PMA = require(path.join(__dirname, '..'));
 const {
   p, pMixed, pQuote, pCentered, titulo, subtitulo,
   endereco, quebra, pageBreak, assinatura, buildDoc, validarTimbrado, validarConteudo, docx,
+  FONT, SIZE_BODY, LINE, MARGIN_3CM,
 } = PMA;
-const { AlignmentType } = docx;
+const {
+  AlignmentType, Paragraph, TextRun, Table, TableRow, TableCell,
+  WidthType, BorderStyle, ShadingType, VerticalAlign, TableLayoutType,
+} = docx;
 
 // ── Rastro do pipeline (2026-09-04): a peça só compila com o ciclo gravado ──
 //
@@ -208,6 +226,314 @@ function parseFrontMatter(lines) {
   return { meta, body: lines.slice(end) };
 }
 
+// ── ::tabela e ::quadro (visual law dentro do dialeto, 2026-09-16) ───────────
+//
+// Antes, tabela exigia gerar_*.js próprio, fora dos portões. Agora a peça escreve
+// a tabela em GFM dentro de ::tabela ... :: e o quadro de destaque em
+// ::quadro ... ::, e o md2docx monta as Table do docx com o mesmo padrão visual
+// (Montserrat, largura útil de 8504 twips = A4 menos 3 cm de cada lado). O
+// lint-docx continua valendo: as células não declaram entrelinha (para não
+// deslocar a moda de 312 DXA do corpo) e nenhum run fica abaixo de 6 pt.
+const LARGURA_UTIL = 11906 - 2 * MARGIN_3CM; // twips
+const SIZE_TABELA = 20; // 10 pt — tamanho canônico de "rodape_notas" em perfil/marca.json
+const COR_BORDA = 'BFBFBF';
+const COR_FUNDO_CABECALHO = 'E7E6E6';
+const COR_FUNDO_QUADRO = 'F2F2F2';
+const COR_FILETE = 'F5A623'; // mesmo laranja do rodapé institucional
+
+function runsInline(text, extra = {}) {
+  return parseInline(text).map((r) => new TextRun({
+    text: r.text, font: FONT, size: extra.size || SIZE_BODY,
+    bold: !!r.bold || !!extra.bold, italics: !!r.italics,
+  }));
+}
+
+// Lê as linhas de um bloco "::cmd ... ::" a partir de i (linha do ::cmd).
+// Devolve { linhas, fim } com fim = índice logo após o "::" de fechamento.
+function lerBloco(body, i, cmd) {
+  const linhas = [];
+  let j = i + 1;
+  while (j < body.length && body[j].trim() !== '::') { linhas.push(body[j]); j++; }
+  if (j >= body.length) throw new Error(`md2docx: bloco ::${cmd} aberto na linha ${i + 1} sem "::" de fechamento`);
+  return { linhas, fim: j + 1 };
+}
+
+const borda = (style, size, color) => ({ style, size, color });
+const bordasTabela = () => {
+  const b = borda(BorderStyle.SINGLE, 4, COR_BORDA);
+  return { top: b, bottom: b, left: b, right: b, insideHorizontal: b, insideVertical: b };
+};
+const semBorda = () => {
+  const b = borda(BorderStyle.NONE, 0, 'auto');
+  return { top: b, bottom: b, left: b, right: b, insideHorizontal: b, insideVertical: b };
+};
+
+// Célula "—", "R$ 1.234,56", "−R$ 999,00", "+3,5%", "12" → coluna numérica (alinha à direita).
+const VALOR_RE = /^[−–+-]?\s*(R\$\s*)?[\d.]+(,\d+)?\s*%?$|^[—–-]$/;
+
+function parseTabela(linhas, linhaDiretiva) {
+  const rows = linhas.map((l) => l.trim()).filter(Boolean);
+  const onde = `::tabela (linha ${linhaDiretiva})`;
+  const split = (l) => l.replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, '|').trim());
+  const ehSeparador = (l) => /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(l);
+  if (rows.length < 3 || !rows[0].startsWith('|') || !ehSeparador(rows[1])) {
+    throw new Error(`md2docx: ${onde} precisa de cabeçalho "| a | b |", separador "|---|---|" e ao menos uma linha de dados`);
+  }
+  const cabecalho = split(rows[0]);
+  const n = cabecalho.length;
+  const alinhDecl = split(rows[1]).map((s) => {
+    if (s.startsWith(':') && s.endsWith(':')) return AlignmentType.CENTER;
+    if (s.endsWith(':')) return AlignmentType.RIGHT;
+    if (s.startsWith(':')) return AlignmentType.LEFT;
+    return null;
+  });
+  const corpo = rows.slice(2).map((l, k) => {
+    const cels = split(l);
+    if (cels.length !== n) throw new Error(`md2docx: ${onde} — linha de dados ${k + 1} tem ${cels.length} coluna(s); o cabeçalho tem ${n}`);
+    return cels;
+  });
+  const alinh = cabecalho.map((_, c) => {
+    if (alinhDecl[c]) return alinhDecl[c];
+    const vals = corpo.map((r) => r[c]).filter(Boolean);
+    return vals.length && vals.every((v) => VALOR_RE.test(v)) ? AlignmentType.RIGHT : AlignmentType.LEFT;
+  });
+  // Largura proporcional ao texto mais longo de cada coluna, entre 6 e 40 caracteres.
+  const pesos = cabecalho.map((h, c) => Math.min(40, Math.max(6, h.length, ...corpo.map((r) => r[c].length))));
+  const soma = pesos.reduce((a, b) => a + b, 0);
+  const larguras = pesos.map((w) => Math.round((LARGURA_UTIL * w) / soma));
+  larguras[n - 1] += LARGURA_UTIL - larguras.reduce((a, b) => a + b, 0);
+  return { cabecalho, corpo, alinh, larguras };
+}
+
+function celula(texto, { largura, alinhamento, cabecalho = false }) {
+  return new TableCell({
+    width: { size: largura, type: WidthType.DXA },
+    margins: { top: 40, bottom: 40, left: 80, right: 80 },
+    verticalAlign: VerticalAlign.CENTER,
+    shading: cabecalho ? { fill: COR_FUNDO_CABECALHO, type: ShadingType.CLEAR, color: 'auto' } : undefined,
+    children: [new Paragraph({
+      alignment: cabecalho ? AlignmentType.CENTER : alinhamento,
+      spacing: { before: 0, after: 0 },
+      children: runsInline(texto, { size: SIZE_TABELA, bold: cabecalho }),
+    })],
+  });
+}
+
+function tabela(linhas, legenda, linhaDiretiva) {
+  const { cabecalho, corpo, alinh, larguras } = parseTabela(linhas, linhaDiretiva);
+  const out = [];
+  if (legenda) out.push(pMixed([{ text: legenda, bold: true }], { alignment: AlignmentType.LEFT, spaceAfter: 120 }));
+  const rows = [
+    new TableRow({
+      tableHeader: true, cantSplit: true,
+      children: cabecalho.map((h, c) => celula(h, { largura: larguras[c], cabecalho: true })),
+    }),
+    ...corpo.map((r) => new TableRow({
+      cantSplit: true,
+      children: r.map((t, c) => celula(t, { largura: larguras[c], alinhamento: alinh[c] })),
+    })),
+  ];
+  out.push(new Table({
+    width: { size: LARGURA_UTIL, type: WidthType.DXA },
+    columnWidths: larguras,
+    layout: TableLayoutType.FIXED,
+    borders: bordasTabela(),
+    rows,
+  }));
+  out.push(quebra(120));
+  return out;
+}
+
+function quadro(linhas, linhaDiretiva) {
+  const paras = []; let b = [];
+  for (const l of linhas) {
+    const t = l.trim();
+    if (!t) { if (b.length) { paras.push(b.join(' ')); b = []; } } else b.push(t);
+  }
+  if (b.length) paras.push(b.join(' '));
+  if (!paras.length) throw new Error(`md2docx: ::quadro (linha ${linhaDiretiva}) vazio`);
+  const children = paras.map((t, k) => new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    spacing: { line: LINE, before: 0, after: k === paras.length - 1 ? 0 : 120 },
+    children: runsInline(t),
+  }));
+  const cell = new TableCell({
+    width: { size: LARGURA_UTIL, type: WidthType.DXA },
+    margins: { top: 160, bottom: 160, left: 240, right: 240 },
+    shading: { fill: COR_FUNDO_QUADRO, type: ShadingType.CLEAR, color: 'auto' },
+    borders: {
+      top: borda(BorderStyle.NONE, 0, 'auto'), bottom: borda(BorderStyle.NONE, 0, 'auto'),
+      right: borda(BorderStyle.NONE, 0, 'auto'), left: borda(BorderStyle.SINGLE, 24, COR_FILETE),
+    },
+    children,
+  });
+  return [
+    new Table({
+      width: { size: LARGURA_UTIL, type: WidthType.DXA },
+      columnWidths: [LARGURA_UTIL],
+      layout: TableLayoutType.FIXED,
+      borders: semBorda(),
+      rows: [new TableRow({ cantSplit: true, children: [cell] })],
+    }),
+    quebra(120),
+  ];
+}
+
+// ── ::cronologia: linha do tempo em tabela, uma faixa de cor por ator ────────
+const PALETA_ATORES = ['FFE699', 'F4B6B6', 'B4E5A2', 'BDD7EE', 'D9D9D9', 'E2C4F0'];
+
+function cronologia(linhas, legenda, linhaDiretiva) {
+  const onde = `::cronologia (linha ${linhaDiretiva})`;
+  const eventos = [];
+  for (const l of linhas) {
+    const t = l.trim();
+    if (!t) continue;
+    const destaque = t.startsWith('!');
+    const cels = t.replace(/^!\s*/, '').split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, '|').trim());
+    if (cels.length < 3) throw new Error(`md2docx: ${onde} — cada linha precisa de "hora | ator | evento [| valor]": "${t.slice(0, 60)}"`);
+    eventos.push({ hora: cels[0], ator: cels[1], evento: cels[2], valor: cels[3] || '', destaque });
+  }
+  if (!eventos.length) throw new Error(`md2docx: ${onde} vazio`);
+  const atores = [...new Set(eventos.map((e) => e.ator))];
+  const cor = (ator) => PALETA_ATORES[atores.indexOf(ator) % PALETA_ATORES.length];
+
+  const W_HORA = 1000, W_FAIXA = 170, W_ATOR = 1500, W_VALOR = 1500;
+  const temValor = eventos.some((e) => e.valor);
+  const W_EVENTO = LARGURA_UTIL - W_HORA - W_FAIXA - W_ATOR - (temValor ? W_VALOR : 0);
+  const larguras = [W_HORA, W_FAIXA, W_ATOR, W_EVENTO, ...(temValor ? [W_VALOR] : [])];
+
+  const nenhuma = borda(BorderStyle.NONE, 0, 'auto');
+  const linhaFina = borda(BorderStyle.SINGLE, 4, COR_BORDA);
+  const cel = (children, largura, extra = {}) => new TableCell({
+    width: { size: largura, type: WidthType.DXA },
+    margins: { top: 60, bottom: 60, left: 80, right: 80 },
+    verticalAlign: VerticalAlign.CENTER,
+    borders: { top: nenhuma, left: nenhuma, right: nenhuma, bottom: linhaFina },
+    ...extra,
+    children,
+  });
+  const par = (texto, opts = {}) => new Paragraph({
+    alignment: opts.alignment || AlignmentType.LEFT,
+    spacing: { before: 0, after: 0 },
+    children: runsInline(texto, { size: SIZE_TABELA, bold: opts.bold }),
+  });
+
+  const rows = eventos.map((e) => new TableRow({
+    cantSplit: true,
+    children: [
+      cel([par(e.hora, { bold: true, alignment: AlignmentType.RIGHT })], W_HORA),
+      cel([new Paragraph({ spacing: { before: 0, after: 0 }, children: [] })], W_FAIXA, {
+        shading: { fill: cor(e.ator), type: ShadingType.CLEAR, color: 'auto' },
+        margins: { top: 0, bottom: 0, left: 0, right: 0 },
+        borders: { top: nenhuma, left: nenhuma, right: nenhuma, bottom: nenhuma },
+      }),
+      cel([par(e.ator, { bold: true })], W_ATOR),
+      cel([par(e.evento, { bold: e.destaque })], W_EVENTO),
+      ...(temValor ? [cel([par(e.valor, { bold: e.destaque, alignment: AlignmentType.RIGHT })], W_VALOR)] : []),
+    ],
+  }));
+
+  const out = [];
+  if (legenda) out.push(pMixed([{ text: legenda, bold: true }], { alignment: AlignmentType.LEFT, spaceAfter: 120 }));
+  out.push(new Table({
+    width: { size: LARGURA_UTIL, type: WidthType.DXA },
+    columnWidths: larguras,
+    layout: TableLayoutType.FIXED,
+    borders: semBorda(),
+    rows,
+  }));
+  // Legenda de cores: um quadrado colorido por ator (run colorido, ≥ 6 pt: o lint-docx aceita).
+  const runsLegenda = [];
+  atores.forEach((a, i) => {
+    if (i) runsLegenda.push(new TextRun({ text: '     ', font: FONT, size: SIZE_TABELA }));
+    runsLegenda.push(new TextRun({ text: '\u25A0 ', font: FONT, size: SIZE_TABELA, color: cor(a) }));
+    runsLegenda.push(new TextRun({ text: a, font: FONT, size: SIZE_TABELA }));
+  });
+  out.push(new Paragraph({ alignment: AlignmentType.LEFT, spacing: { before: 80, after: 240 }, children: runsLegenda }));
+  return out;
+}
+
+// ── ::barras: gráfico de barras horizontais em tabela (sem imagem) ───────────
+// Uma tabela de grade fixa: rótulo | N unidades de barra | valor. A barra de cada
+// linha é uma célula sombreada que ocupa k das N unidades (columnSpan), com k
+// proporcional ao valor; "!" no início da linha pinta a barra de laranja.
+const BARRAS_UNIDADES = 40;
+const COR_BARRA = 'A6A6A6';
+
+function numeroBR(texto) {
+  const m = String(texto).replace(/\s/g, '').match(/-?[\d.]+(,\d+)?/);
+  if (!m) return NaN;
+  return Number(m[0].replace(/\./g, '').replace(',', '.'));
+}
+
+function barras(linhas, legenda, linhaDiretiva) {
+  const onde = `::barras (linha ${linhaDiretiva})`;
+  const itens = [];
+  for (const l of linhas) {
+    const t = l.trim();
+    if (!t) continue;
+    const destaque = t.startsWith('!');
+    const cels = t.replace(/^!\s*/, '').replace(/^\|/, '').replace(/\|$/, '').split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, '|').trim());
+    const n = numeroBR(cels[1]);
+    if (cels.length < 2 || !(n > 0)) throw new Error(`md2docx: ${onde} — cada linha precisa de "rótulo | valor" com valor positivo: "${t.slice(0, 60)}"`);
+    itens.push({ rotulo: cels[0], valor: cels[1], n, destaque });
+  }
+  if (!itens.length) throw new Error(`md2docx: ${onde} vazio`);
+  const max = Math.max(...itens.map((x) => x.n));
+
+  const W_ROTULO = 3000, W_VALOR = 1500;
+  const area = LARGURA_UTIL - W_ROTULO - W_VALOR;
+  const unidade = Math.floor(area / BARRAS_UNIDADES);
+  const unidades = Array(BARRAS_UNIDADES).fill(unidade);
+  unidades[BARRAS_UNIDADES - 1] += area - unidade * BARRAS_UNIDADES;
+  const larguras = [W_ROTULO, ...unidades, W_VALOR];
+  const soma = (a, b) => unidades.slice(a, b).reduce((x, y) => x + y, 0);
+
+  const nenhuma = borda(BorderStyle.NONE, 0, 'auto');
+  const cel = (children, largura, extra = {}) => new TableCell({
+    width: { size: largura, type: WidthType.DXA },
+    margins: { top: 90, bottom: 90, left: 80, right: 80 },
+    verticalAlign: VerticalAlign.CENTER,
+    borders: { top: nenhuma, left: nenhuma, right: nenhuma, bottom: nenhuma },
+    ...extra,
+    children,
+  });
+  const par = (texto, opts = {}) => new Paragraph({
+    alignment: opts.alignment || AlignmentType.LEFT,
+    spacing: { before: 0, after: 0 },
+    keepNext: !opts.ultima, // legenda e barras ficam na mesma página
+    children: texto ? runsInline(texto, { size: SIZE_TABELA, bold: opts.bold }) : [],
+  });
+
+  const rows = itens.map((x, idx) => {
+    const ultima = idx === itens.length - 1;
+    const k = Math.max(1, Math.round((x.n / max) * BARRAS_UNIDADES));
+    const children = [
+      cel([par(x.rotulo, { bold: x.destaque, ultima })], W_ROTULO),
+      cel([par('', { ultima })], soma(0, k), {
+        columnSpan: k,
+        shading: { fill: x.destaque ? COR_FILETE : COR_BARRA, type: ShadingType.CLEAR, color: 'auto' },
+        borders: { top: borda(BorderStyle.SINGLE, 24, 'FFFFFF'), bottom: borda(BorderStyle.SINGLE, 24, 'FFFFFF'), left: nenhuma, right: nenhuma },
+      }),
+    ];
+    if (k < BARRAS_UNIDADES) children.push(cel([par('', { ultima })], soma(k, BARRAS_UNIDADES), { columnSpan: BARRAS_UNIDADES - k }));
+    children.push(cel([par(x.valor, { bold: true, alignment: AlignmentType.RIGHT, ultima })], W_VALOR));
+    return new TableRow({ cantSplit: true, children });
+  });
+
+  const out = [];
+  if (legenda) out.push(new Paragraph({ alignment: AlignmentType.LEFT, keepNext: true, spacing: { line: LINE, before: 0, after: 120 }, children: runsInline(legenda, { bold: true }) }));
+  out.push(new Table({
+    width: { size: LARGURA_UTIL, type: WidthType.DXA },
+    columnWidths: larguras,
+    layout: TableLayoutType.FIXED,
+    borders: semBorda(),
+    rows,
+  }));
+  out.push(quebra(120));
+  return out;
+}
+
 // ── Compilador de blocos ─────────────────────────────────────────────────────
 function compile(body) {
   const out = [];
@@ -252,6 +578,22 @@ function compile(body) {
         }
         i++; // consome o "::" de fechamento
         out.push(...assinatura(adv, localData ? { localData } : {})); continue;
+      }
+      if (cmd === 'tabela') {
+        const { linhas, fim } = lerBloco(body, i, cmd);
+        out.push(...tabela(linhas, resto.trim(), i + 1)); i = fim; continue;
+      }
+      if (cmd === 'quadro') {
+        const { linhas, fim } = lerBloco(body, i, cmd);
+        out.push(...quadro(linhas, i + 1)); i = fim; continue;
+      }
+      if (cmd === 'cronologia') {
+        const { linhas, fim } = lerBloco(body, i, cmd);
+        out.push(...cronologia(linhas, resto.trim(), i + 1)); i = fim; continue;
+      }
+      if (cmd === 'barras') {
+        const { linhas, fim } = lerBloco(body, i, cmd);
+        out.push(...barras(linhas, resto.trim(), i + 1)); i = fim; continue;
       }
       throw new Error(`md2docx: diretiva desconhecida "::${cmd}" (linha ${i + 1})`);
     }
@@ -316,7 +658,7 @@ async function main() {
     outPath,
     semTimbre,
   });
-  console.log(`md2docx: ${conteudo.length} parágrafos → ${saved}`);
+  console.log(`md2docx: ${conteudo.length} blocos (parágrafos e tabelas) → ${saved}`);
   if (semTimbre) {
     console.log('md2docx: timbre removido por decisão declarada no frontmatter (timbre: nao) — lint-docx e validação de timbrado não se aplicam a esta peça.');
   }
@@ -344,7 +686,7 @@ async function main() {
   let emBloco = false;
   for (const l of body) {
     const t = l.trim();
-    if (/^::(endereco|assinatura)\b/.test(t)) { emBloco = true; continue; }
+    if (/^::(endereco|assinatura|tabela|quadro|cronologia|barras)\b/.test(t)) { emBloco = true; continue; }
     if (emBloco) { if (t === '::') emBloco = false; continue; }
     if (!t || /^(::|>|#)/.test(t)) continue;
     textos.push(t.replace(/\*\*|\*/g, '').trim());
@@ -370,4 +712,7 @@ async function main() {
   }
 }
 
-main().catch((e) => { console.error(e.message); process.exit(1); });
+// Executa só quando chamado pela linha de comando; como módulo, expõe o compilador
+// (compile, parseFrontMatter) para teste sem passar pelos portões.
+if (require.main === module) main().catch((e) => { console.error(e.message); process.exit(1); });
+module.exports = { compile, parseFrontMatter };
