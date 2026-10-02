@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const { setTimeout: esperar } = require('timers/promises');
 const { calcularPrazo, feriadosLocais, hojeLocal } = require('../lib/prazo-core.js');
+const { identificarCliente, rotuloCliente } = require('../lib/cliente-djen.js');
 const { classificar } = require('../lib/tipo-documento.js');
 
 const SKILL = path.resolve(__dirname, '..');
@@ -240,7 +241,12 @@ function montarLinha(n, catalogo) {
     flag += ' ⚠ CONFERIR (possível matéria penal — dias corridos)';
   }
 
-  const caso = catalogo.get(String(n.processo).replace(/\D/g, '')) || '?';
+  // Coluna "caso": nome do cliente lido da intimação; se a pasta em clientes/ é
+  // conhecida pelo catálogo, vem junto ("FULANO · pasta"). Só `?` quando nem a API
+  // nem o catálogo dizem nada.
+  const pasta = catalogo.get(String(n.processo).replace(/\D/g, ''));
+  const nome = n.cliente && n.cliente !== '?' ? n.cliente : '';
+  const caso = nome && pasta ? `${nome} · ${pasta}` : nome || pasta || '?';
 
   return (
     `| ABERTA | ${n.processo} | ${n.tribunal} / ${n.orgao} | ${n.disponibilizacao} | ` +
@@ -296,6 +302,9 @@ function atualizarFila(novas, catalogo) {
         processo: item.numeroprocessocommascara || item.numero_processo,
         orgao: item.nomeOrgao,
         oab_monitorada: `${oab.nome} (OAB ${oab.uf} ${oab.numero})`,
+        // Quem é o cliente sai do cabeçalho da própria intimação (parte cujo
+        // advogado tem OAB nossa). A fila deixa de dizer só o número do processo.
+        cliente: rotuloCliente(identificarCliente(item, oabs)),
       });
     }
   }
@@ -353,7 +362,7 @@ function atualizarFila(novas, catalogo) {
     novas
       .map(
         (n) =>
-          `[${carimbo}] NOVA ${n.tipo} — proc. ${n.processo} (${n.tribunal}, ${n.orgao}) — disponibilizada ${n.disponibilizacao} — ${n.documento} — dest.: ${n.oab_monitorada} — id ${n.id}`,
+          `[${carimbo}] NOVA ${n.tipo} — proc. ${n.processo} (${n.tribunal}, ${n.orgao}) — cliente: ${n.cliente || '?'} — disponibilizada ${n.disponibilizacao} — ${n.documento} — dest.: ${n.oab_monitorada} — id ${n.id}`,
       )
       .join('\n') + '\n',
     'utf8',
@@ -363,7 +372,7 @@ function atualizarFila(novas, catalogo) {
   console.log(`${novas.length} intimação(ões) NOVA(S); ${acrescentadas} acrescentada(s) à fila.`);
   console.log(`Fila: ${PENDENTES}`);
   for (const n of novas) {
-    console.log(`  - ${n.processo} (${n.tribunal}) ${n.disponibilizacao} — ${n.documento}`);
+    console.log(`  - ${n.processo} (${n.tribunal}) ${n.disponibilizacao} — ${n.documento} — ${n.cliente || '?'}`);
   }
   process.exit(10);
 })().catch((e) => {

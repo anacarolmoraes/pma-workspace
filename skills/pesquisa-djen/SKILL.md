@@ -138,8 +138,19 @@ nenhum script de vigilância; existe para auditoria.
 
 ### De quem é o prazo (coluna `caso`)
 
-A fila avisa que um prazo vence; sem a coluna `caso` preenchida, não diz de quem. Quem a
-preenche é `clientes/_processos.json`, gerado por:
+A fila avisa que um prazo vence; sem a coluna `caso` preenchida, não diz de quem. Desde
+01/10/2026 o monitor lê o **nome do cliente na própria intimação**: o cabeçalho do DJEN lista
+cada parte com seus advogados, e a parte cujo advogado tem OAB do escritório
+(`perfil/advogados.json`) é o cliente (`lib/cliente-djen.js`). Sem OAB nossa no cabeçalho, a
+coluna traz os destinatários seguidos de `?`. Para linhas antigas que ficaram em `?`:
+
+```powershell
+node skills\pesquisa-djen\scripts\preencher-cliente.js --dry-run   # mostra
+node skills\pesquisa-djen\scripts\preencher-cliente.js             # grava (só ABERTA); --todas inclui TRATADA
+```
+
+Quando a pasta em `clientes/` também é conhecida, a coluna sai `NOME · pasta`. Quem liga
+processo a pasta é `clientes/_processos.json`, gerado por:
 
 ```powershell
 node skills\pesquisa-djen\scripts\mapear-processos.js --dry-run   # mostra o que faria
