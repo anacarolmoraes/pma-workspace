@@ -8,7 +8,7 @@ description: |
   anônima e parecer final com portão de evidência (CONFIRMADO/PLAUSÍVEL) e notas por tese.
   Use ANTES DO PROTOCOLO, na versão pós-lints, para peças dirigidas a tribunal superior
   (REsp, AREsp, AgInt no STJ/STF, EDcl prequestionadores) ou quando o titular pedir.
-  NÃO usar para peças triviais (custo: ~7-11 subagentes) nem após o protocolo (preclusão) —
+  NÃO usar para peças triviais (custo: 7 a 11 revisões independentes, cada uma em sessão ou agente próprio) nem após o protocolo (preclusão) —
   pós-protocolo, o objeto muda para estratégia (memoriais/próximo recurso) e a skill certa
   é a conselheiros. Mecânica herdada do LLM Council (Karpathy); elenco, insumos e portões
   são jurídicos e próprios do escritório.
@@ -59,7 +59,7 @@ Instrução comum a todos: **cada achado deve citar o trecho exato da peça e a 
 ## Protocolo
 
 1. **Preparação (chairman):** confirmar versão pós-lints; montar os 5 pacotes de contexto (paths exatos por assento, conforme tabela); registrar objetivo real do cliente em 1 frase (dado ao assento 5).
-2. **Rodada 1 — assentos em paralelo:** 5 subagentes simultâneos (modelo padrão: sonnet), cada um com seu pacote. Nunca sequencial.
+2. **Rodada 1 — assentos em paralelo:** 5 revisores independentes em paralelo (sessões ou agentes separados, modelo padrão: médio), cada um com seu pacote e sem ver o dos outros. Nunca sequencial.
 3. **Rodada 2 — revisão cruzada anônima:** anonimizar os 5 pareceres (A–E, ordem sorteada); revisor(es) independente(s) respondem: qual o achado mais grave? qual parecer tem o maior ponto cego? o que TODOS deixaram passar? (Economia: 1 revisor único é aceitável; rigor máximo: 5.)
 4. **Rodada 3 — parecer do chairman** (quem orquestra), estrutura fixa:
    - **Checklist regimental** — a tabela do assento 1, completa. Vem primeiro por ser a única parte binária do parecer: falha em cabimento, prazo ou prova do dissídio torna o resto acadêmico.
@@ -75,6 +75,6 @@ Instrução comum a todos: **cada achado deve citar o trecho exato da peça e a 
 ## Limites e honestidade
 
 - Banca simulada ≠ gabinete real. Serve para achar defeito e calibrar aposta, não para prever resultado.
-- Custo alto por desenho (7–11 subagentes): a restrição de uso não é burocracia, é a viabilidade econômica da skill.
+- Custo alto por desenho (7 a 11 revisões independentes): a restrição de uso não é burocracia, é a viabilidade econômica da skill.
 - O chairman é tipicamente o mesmo agente que redigiu a peça — por isso a revisão cruzada anônima e o portão de evidência existem: são as defesas contra o viés de autor e contra o teatro de revisão.
 - Não substitui os portões dos workflows (lints, checklists, leitura integral): pressupõe todos aprovados.

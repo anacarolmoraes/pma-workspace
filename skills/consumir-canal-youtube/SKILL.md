@@ -76,7 +76,7 @@ Seguir `references/pipeline-juridico.md`. Resumo da divisão:
 **Como operar a divisão (dois modos):**
 
 - **Modo A (recomendado, sem intervenção):** sessão única com modelo médio/forte; o agente
-  despacha só o **Extract** para subagentes Haiku em lote (mesmo padrão da
+  despacha só o **Extract** para sessões paralelas com modelo pequeno, em lote (mesmo padrão da
   `radar-jurisprudencia`) e faz Canonicalização e Write ele próprio. A titular não troca nada.
 - **Modo B (sessão no modelo barato):** o agente roda Fetch + Extract e, ao terminar,
   **PARA e avisa a titular**: "Fase 1 concluída (N extrações). As Fases 2–4 (canonicalização,
