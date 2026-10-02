@@ -3,6 +3,16 @@
 Changelog dos planos de evolução do sistema. Saiu do `CLAUDE.md` em 04/09/2026: é registro,
 não instrução, e não precisa ser carregado em toda sessão.
 
+- [`2026-10-02_plano-estado-do-caso-na-fila.md`](2026-10-02_plano-estado-do-caso-na-fila.md)
+  — estado do caso (`ANALISE.md`) ligado ao monitor do DJEN, ao hook de abertura e à memória:
+  Stop que exige `ANALISE.md` atualizada quando a pasta do caso muda, fila lendo `processos:`
+  das ANALISE.md em vez de `_processos.json`, painel cruzando fila e caso, regra de memória, e
+  migração dos ~40 casos hoje na memória do Claude. **Registrado em 02/10/2026 para execução
+  posterior**, nota 9. Também em 01–02/10, sem PRD: prazos vencidos no alerta e data local no
+  `session-start`, corpus do `lint-citacoes` sem texto nosso, `alerta-injecao` sem falso
+  positivo, compilador fail-closed, teste ponta a ponta do `md2docx`, coluna "caso" com nome
+  do cliente e "prazo fixado no ato" na fila, Juizado 10 d.ú., feriados forenses 2026 de seis
+  tribunais, `recalcular-prazos.js`.
 - [`2026-10-01_plano-pasta-de-caso-enxuta.md`](2026-10-01_plano-pasta-de-caso-enxuta.md)
   — pasta de cliente sem rastro de máquina (censo: 5 arquivos gerados por documento real).
   Cinco sugestões com nota. **4 e 5 executadas em 01–02/10** (`ANALISE.md` como único arquivo
