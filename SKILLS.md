@@ -29,7 +29,7 @@
 | [`pre-peticionamento`](skills/pre-peticionamento/SKILL.md) | sim | Executa investigação jurídica pré-peticionamento: lê um notebook NotebookLM já populado pelo advogado, gera perguntas estratégicas cirúrgicas (como advogado sênior), dispara via `n |
 | [`pre-peticionamento-drive`](skills/pre-peticionamento-drive/SKILL.md) | sim | Investigação jurídica pré-peticionamento sobre corpus LOCAL (provas baixadas do Drive + jurisprudência local), SEM NotebookLM. |
 | [`radar-jurisprudencia`](skills/radar-jurisprudencia/SKILL.md) | sim | Busca no DJEN jurisprudência recente e favorável à tese do cliente — 5 decisões por tese (mínimo 2 do STJ quando houver), priorizando o tribunal onde a peça será protocolada. |
-| [`tipografia-pma`](skills/tipografia-pma/SKILL.md) | sim | Aplica o padrão tipográfico e estrutural do escritório PMA a peças jurídicas: hierarquia de títulos, fonte Montserrat, cabeçalho/rodapé com imagens do escritório, espaçamento, cita |
+| [`tipografia-pma`](skills/tipografia-pma/SKILL.md) | sim | Padronização estrutural e visual de peça já redigida: hierarquia de títulos, títulos-tese, ordem dos blocos, destaques, citação em bloco e elementos visuais. |
 | [`validador-extrato-pdf-excel`](skills/validador-extrato-pdf-excel/SKILL.md) | sim | Valida e corrige arquivos Excel gerados a partir de PDFs de extratos bancários. |
 
 `local` = existe só nesta máquina (gitignorada); não faz parte do motor distribuído.

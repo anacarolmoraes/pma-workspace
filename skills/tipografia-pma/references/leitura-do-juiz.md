@@ -31,7 +31,7 @@ peça.
 
 A única sequência inviolável é Fatos → Tutela. O resto se adapta ao caso.
 
-## 3. O que já está no SKILL.md desta skill
+## 3. O que está em outro lugar
 
-Fontes, hierarquia de títulos, entrelinha, margens, citação em bloco, destaques, imagens e o
-checklist operacional. Fonte de verdade legível por máquina: `perfil/marca.json`.
+Hierarquia de títulos, destaques, corte da citação e elementos visuais: `SKILL.md` desta
+skill. Fontes, entrelinha, margens e timbrado: `perfil/marca.json`.
