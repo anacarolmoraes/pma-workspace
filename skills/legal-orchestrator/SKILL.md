@@ -1,17 +1,14 @@
 ---
 name: legal-orchestrator
-version: 4.12.0
+version: 4.12.1
 description: |
-  Orquestra o pipeline completo de geração de peças jurídicas: inventário das fontes e leitura do
-  acervo, análise do caso por caso (ANALISE.md: cronologia, teses candidatas do bundle, mapa
-  probatório, ataques previstos; em contestação, tabela de impugnação especificada do art. 341;
-  em réplica, mapa da contestação em cinco eixos com incontrovérsia, confissões e prazos paralelos), arquitetura da peça aprovada pela titular antes de qualquer prosa (<PECA>.estrutura.md),
-  redação argumentativa (legal-writer), padronização tipográfica (tipografia-pma), validação
-  adversarial (legal-consistency-validator, que grava o veredito ao lado da peça), humanização
-  com análise obrigatória e alteração condicional (humanizer-forense, com guardião de invariantes) e compilação com portões (md2docx). Use sempre que o usuário pedir para criar, 
-  elaborar, redigir ou revisar uma peça processual completa — inicial, contestação, recurso, 
-  manifestação, agravo, embargos ou qualquer documento jurídico formal. Triggers: "faça a petição", 
-  "elabore a inicial", "construa o recurso", "redija a contestação", "monte a peça".
+  Orquestra o pipeline completo de uma peça jurídica: inventário das fontes e do acervo, análise
+  do caso (ANALISE.md), estrutura aprovada pela titular, redação, padronização, validação
+  adversarial, humanização e compilação com portões (md2docx). Use sempre que o usuário pedir
+  para criar, elaborar, redigir ou revisar uma peça processual completa — inicial, contestação,
+  réplica, recurso, manifestação, agravo, embargos ou qualquer documento jurídico formal.
+  Triggers: "faça a petição", "elabore a inicial", "construa o recurso", "redija a contestação",
+  "monte a peça".
 ---
 
 # Legal Orchestrator — Pipeline Adaptativo de Peças Jurídicas
@@ -46,7 +43,7 @@ Cada estágio deixa um rastro que o portão seguinte confere. Sem o rastro, o pa
 | Leitura de `perfil/definicoes.md` e `perfil/usuario.md` | a sessão, antes da primeira gravação da peça | hook `require-leitura` |
 | `bundle: direito/<tema>` no frontmatter e leitura de ao menos um arquivo desse bundle | Estágio 0 | hook `require-leitura` |
 | `clientes/<caso>/ANALISE.md` (cronologia, teses candidatas, mapa probatório, ataques) | Estágio 0, item 4; atualizada a cada peça nova do mesmo caso | Estágio 0.5 (a estrutura aponta para ela) e Estágio 3 |
-| `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência), Estágio 6 e o `md2docx`, que desde 08/09/2026 recusa compilar sem o arquivo com `aprovada: sim` (peça de template declara `estrutura: template` no frontmatter e passa) |
+| `<PECA>.estrutura.md` ao lado da peça, com `aprovada: sim` e data | Estágio 0.5 (o agente grava; a titular aprova) | Estágio 3 (aderência), Estágio 6 e o `md2docx`, que recusa compilar sem o arquivo com `aprovada: sim` (peça de template declara `estrutura: template` no frontmatter e passa) |
 | `<PECA>.validacao.md` ao lado da peça, com `veredito:` no frontmatter | Estágio 3 (o validator grava) | `md2docx`, que recusa compilar sem veredito, com veredito REPROVADO ou com veredito mais antigo que a última edição do `.md` |
 | `humanizer_analisado`, `humanizer_alterou`, `invariantes`, `ritmo_sinais` no frontmatter do `<PECA>.validacao.md` | Estágio 5 (o orchestrator grava, depois da validação ou revalidação); `invariantes` vem do `checar-invariantes.js` | Estágio 6 (checklist) e a titular. Sem hook por enquanto |
 | `pipeline: legal-orchestrator` no frontmatter | Estágio 7, depois de cumprido o ciclo | `md2docx` |
@@ -62,20 +59,18 @@ Não redija com o que está à mão. Levante o que existe, **em dois lugares**, 
 
 **Peças de resposta exigem a peça que respondem.** Para réplica/impugnação, são obrigatórios: a **inicial**, a **contestação** e os **documentos que sustentam os números** (contrato assinado e extrato de pagamento). Redigir uma réplica sem a inicial produz peça que contradiz o próprio pedido; redigir sem o contrato produz afirmação de fato errada.
 
-Lição de 2026-08-04, caso real: a pasta local tinha apenas a contestação em PDF. A réplica foi redigida sem a inicial e sem o contrato, e afirmou que o cliente não pagara sinal — o contrato registrava R$ 1.339,96 no campo "sinal de negócio", e a inicial pedia justamente a devolução dele. Os dois documentos estavam no Drive desde 2018.
-
 **Portão:** se faltar a peça anterior ou o documento que sustenta os valores, **pare e peça** — não redija com placeholder, e não infira o número a partir do que a parte contrária afirma. Quando o tema tiver skill de apuração numérica, rodá-la aqui, antes do Estágio 1, e usar a ficha como fonte dos valores da peça: `ficha-rescisao-lote` para rescisão de lote; `ficha-golpe-bancario` para golpe bancário, consignado fraudulento e negativação (dano material por transação com fonte, dupla contagem, dobro condicionado à data, encargos por verba, dano moral bifásico, valor da causa e teto do Juizado; `--conferir PECA.md` acusa todo `R$` da peça que não sai da ficha).
 
-**Intake da inicial (2026-09-08).** Contestação e réplica geram roteiro de entrevista a partir da peça adversária; a inicial gera o seu a partir do art. 320 e do mapa probatório, pela heurística `direito/pecas/peticao-inicial/heuristicas/matriz-documentos-da-inicial.md` do acervo (Parte A: o que toda inicial junta; Parte B: uma pergunta ao cliente por fato *frágil* ou *a produzir*, com o documento esperado; Parte C: gratuidade pela faixa da ADC 80), mais a matriz do tema quando existir (consignado, golpe). O resultado é a seção 7 (**Documentos**) da `ANALISE.md`, com estado `presente | pendente | dispensado`; os `presente` viram o rol `documentos:` do frontmatter da peça. A qualificação das partes (art. 319, II) vem do bloco ```` ```json caso ```` da seção 0 da `ANALISE.md` (schema em `skills/legal-orchestrator/references/caso.schema.json`) e o preâmbulo sai de `node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/ANALISE.md`, que também lista o que falta (`--checar`). Não se cria `DOCUMENTOS.md` nem `caso.json` (decisão de 01/10/2026: um arquivo de estado por caso). Nove dos doze despachos de emenda minerados no DJEN em 09/09/2026 pediam documento de gratuidade ou comprovante de endereço em nome próprio: é coleta, e se resolve aqui.
+**Intake da inicial.** Contestação e réplica geram roteiro de entrevista a partir da peça adversária; a inicial gera o seu a partir do art. 320 e do mapa probatório, pela heurística `direito/pecas/peticao-inicial/heuristicas/matriz-documentos-da-inicial.md` do acervo (Parte A: o que toda inicial junta; Parte B: uma pergunta ao cliente por fato *frágil* ou *a produzir*, com o documento esperado; Parte C: gratuidade pela faixa da ADC 80), mais a matriz do tema quando existir (consignado, golpe). O resultado é a seção 7 (**Documentos**) da `ANALISE.md`, com estado `presente | pendente | dispensado`; os `presente` viram o rol `documentos:` do frontmatter da peça. A qualificação das partes (art. 319, II) vem do bloco ```` ```json caso ```` da seção 0 da `ANALISE.md` (schema em `skills/legal-orchestrator/references/caso.schema.json`) e o preâmbulo sai de `node skills/legal-orchestrator/scripts/qualificacao.js clientes/<caso>/ANALISE.md`, que também lista o que falta (`--checar`). Não se cria `DOCUMENTOS.md` nem `caso.json` (um arquivo de estado por caso). Despacho de emenda costuma pedir documento de gratuidade ou comprovante de endereço em nome próprio: é coleta, e se resolve aqui.
 
 3. **Acervo (arsenal-juridico).** Abrir `<bundles>/index.md` (o roteador), escolher o bundle da matéria e ler, dentro dele, `index.md`, `jurisprudencia/`, `teses/`, `heuristicas/` e `casos_decididos/`; depois `direito/pecas/<tipo>/` para a técnica da peça. Em petição inicial, também `direito/pecas/peticao-inicial/perfis/` quando houver perfil da vara ou comarca de destino (gratuidade, tutela no despacho inicial, causas de emenda já recebidas daquele juízo). O caminho de `<bundles>` está em `perfil/ambiente.json`. O nome do bundle escolhido vai para o frontmatter da peça (`bundle: direito/<tema>`) antes da primeira gravação: o hook `require-leitura` bloqueia a gravação se o campo falta ou se nenhum arquivo daquele bundle foi lido na sessão.
 
 **Portão:** toda tese empregada tem página no bundle. Se o acervo não cobre o ponto, a peça diz que não cobre; não se cita precedente de memória (AGENTS.md, regra dura 3). Página `status: em_teste` não foi conferida contra a fonte oficial: citá-la exige `cita_em_teste: sim` no frontmatter ou a promoção da página a `vigente` depois da conferência.
 
-4. **Análise do caso** → `clientes/<caso>/ANALISE.md`. Uma por caso, não por peça: a análise feita para a inicial serve à réplica e à apelação; a cada peça nova, atualiza-se em vez de refazer. **É o único arquivo de estado do caso** (decisão de 01/10/2026, modelo em `references/ANALISE.template.md`): dados das partes (seção 0, bloco ```` ```json caso ````), prazos (`prazos:` no frontmatter, uma linha `AAAA-MM-DD | ato | nota` por prazo), documentos (seção 7), radar de jurisprudência (seção 8) e decisões da titular (seção 9) moram nela. Não se cria `ANALISE_<data>.md`, `cronologia.md`, `DOCUMENTOS.md`, `caso.json` nem `radar-jurisprudencia_<data>.md`: quem abre a pasta sem ser agente vê PDF, DOCX e esta análise. `node scripts/caso.js <caso>` mostra o painel lido daqui. Não tem portão de aprovação; a estrutura da peça (Estágio 0.5) aponta para ela. Seções de análise:
+4. **Análise do caso** → `clientes/<caso>/ANALISE.md`. Uma por caso, não por peça: a análise feita para a inicial serve à réplica e à apelação; a cada peça nova, atualiza-se em vez de refazer. **É o único arquivo de estado do caso** (modelo em `references/ANALISE.template.md`): dados das partes (seção 0, bloco ```` ```json caso ````), prazos (`prazos:` no frontmatter, uma linha `AAAA-MM-DD | ato | nota` por prazo), documentos (seção 7), radar de jurisprudência (seção 8) e decisões da titular (seção 9) moram nela. Não se cria `ANALISE_<data>.md`, `cronologia.md`, `DOCUMENTOS.md`, `caso.json` nem `radar-jurisprudencia_<data>.md`: quem abre a pasta sem ser agente vê PDF, DOCX e esta análise. `node scripts/caso.js <caso>` mostra o painel lido daqui. Não tem portão de aprovação; a estrutura da peça (Estágio 0.5) aponta para ela. Seções de análise:
 
    1. **Cronologia.** Todo fato datado, em ordem, com a fonte (`Doc. N`, p. X). Partes e papel de cada uma. O problema jurídico em uma frase. O que ainda precisa ser esclarecido. **Prescrição e decadência:** para cada pretensão, o termo inicial, o prazo, a norma e a data-limite; se houver causa de interrupção ou suspensão, a data e a prova. Pretensão prescrita não vira pedido.
-   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Antes de listar, quatro decisões que mudam a fundamentação inteira, cada uma com o fato que a sustenta: **regime** (CDC ou Código Civil), **regime temporal** (a lei que vigia na data do contrato ou do fato: Lei 13.786/2018 só para contrato de 28/12/2018 em diante; Lei 14.181/2021 para o superendividamento; a data vem da cronologia com `Doc. N`, e sem ela a decisão vai para "falta saber", não se presume), **responsabilidade** (contratual ou extracontratual; objetiva ou subjetiva) e **ônus da prova** (regra do art. 373 ou inversão, pelo §1º ou pelo art. 6º, VIII, do CDC). Lição de 01/10/2026: uma réplica afirmou regime pós-lei sem a data do contrato no texto, e a data só existia numa minuta fora dos autos. Se cabe tutela provisória, dizer qual (urgência, art. 300, ou evidência, art. 311) e qual fato concreto a justifica. **Audiência de conciliação (art. 334), em inicial e em contestação:** registrar a decisão de interesse ou desinteresse e o fato que a motiva (histórico de tratativas, réu que nunca responde, matéria que não admite autocomposição). Na inicial, o desinteresse vai na própria peça (art. 319, VII, e art. 334, § 5º). Na contestação, se a audiência já está designada, o desinteresse do réu é **petição avulsa até dez dias antes da audiência** (art. 334, § 5º): é um terceiro prazo, anotado ao lado do da contestação e do agravo, e a decisão é da titular. Se a pasta e o Drive não dizem se a audiência foi designada, isso vai para "falta saber" da estrutura, e o agente pergunta antes de contar o prazo. **Autocomposição** (art. 319, VII, c/c 334, § 5º): interesse ou desinteresse, decidido pelo réu e pelo histórico (banco e plataforma raramente transacionam na audiência; loteadora e particular às vezes sim); nenhum template ou peça-ouro fixa o padrão. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
+   2. **Teses candidatas.** Só as que têm página em `teses/` ou `heuristicas/` do bundle. Para cada uma: requisitos, fatos da cronologia que os preenchem, fragilidade e risco. Antes de listar, quatro decisões que mudam a fundamentação inteira, cada uma com o fato que a sustenta: **regime** (CDC ou Código Civil), **regime temporal** (a lei que vigia na data do contrato ou do fato: Lei 13.786/2018 só para contrato de 28/12/2018 em diante; Lei 14.181/2021 para o superendividamento; a data vem da cronologia com `Doc. N`, e sem ela a decisão vai para "falta saber", não se presume), **responsabilidade** (contratual ou extracontratual; objetiva ou subjetiva) e **ônus da prova** (regra do art. 373 ou inversão, pelo §1º ou pelo art. 6º, VIII, do CDC). Se cabe tutela provisória, dizer qual (urgência, art. 300, ou evidência, art. 311) e qual fato concreto a justifica. **Audiência de conciliação (art. 334), em inicial e em contestação:** registrar a decisão de interesse ou desinteresse e o fato que a motiva (histórico de tratativas, réu que nunca responde, matéria que não admite autocomposição). Na inicial, o desinteresse vai na própria peça (art. 319, VII, e art. 334, § 5º). Na contestação, se a audiência já está designada, o desinteresse do réu é **petição avulsa até dez dias antes da audiência** (art. 334, § 5º): é um terceiro prazo, anotado ao lado do da contestação e do agravo, e a decisão é da titular. Se a pasta e o Drive não dizem se a audiência foi designada, isso vai para "falta saber" da estrutura, e o agente pergunta antes de contar o prazo. **Autocomposição** (art. 319, VII, c/c 334, § 5º): interesse ou desinteresse, decidido pelo réu e pelo histórico (banco e plataforma raramente transacionam na audiência; loteadora e particular às vezes sim); nenhum template ou peça-ouro fixa o padrão. Terminar com a escolha (principal e subsidiárias) e o motivo; a tese que a titular já trouxe entra como candidata e é confrontada com as outras, não aceita de ofício.
    3. **Mapa probatório.** Para cada fato relevante, um de três estados: **comprovado** (documento nos autos, `Doc. N`), **frágil** (só declaração da parte, print sem metadado, documento de terceiro sem assinatura) ou **a produzir** (testemunha, perícia, ofício, exibição). Fato de tese sem prova comprovada ou a produzir é fato que a tese não pode afirmar.
    4. **Ataques previstos.** Os três melhores argumentos do advogado da parte contrária contra a tese escolhida, cada um com a prova que ele atacaria e a resposta disponível (ou a constatação de que não há resposta, o que muda a escolha da tese).
 
@@ -154,16 +149,6 @@ analise: ANALISE.md
 Em peça com template ou estrutura canônica (`inicial-rescisao-lote`, apelação pelo `direito/pecas/apelacao/workflows/apelacao.md` do arsenal, cumprimento de sentença), a estrutura é o modelo: gravar o arquivo apontando o template, listar só os desvios e seguir sem parar. Desvio grande do modelo (seção nova, tese fora do template) volta a exigir aprovação.
 
 Aprovação sem leitura é rastro falso, pior que nenhum. O arquivo existe para ser lido.
-
----
-
-## Regra de Compatibilidade
-
-O legal-writer produz argumentos em fluxo contínuo. A tipografia-pma estrutura visualmente esse fluxo. As duas operações são complementares e não devem criar atrito:
-
-- A estrutura visual (titulação, hierarquia) deve revelar o argumento, nunca fragmentá-lo.
-- Um parágrafo argumentativo não deve ser quebrado para criar subtópico onde não há transição lógica.
-- Ritmo e variação de sentença produzidos pelo legal-writer devem sobreviver à padronização tipográfica.
 
 ---
 
@@ -247,7 +232,7 @@ Execute se o Estágio 3 retornar REPROVADO (há fraqueza CRÍTICA ou ALTA) ou AP
 
 ## Estágio 5 — Humanização (SEMPRE ANALISA; ALTERA SÓ COM SINAL)
 
-Até 08/09/2026 este estágio era condicional e o AGENTS.md dizia que toda peça passa pelo humanizer; a divergência levava ora a pular a revisão, ora a mexer em prosa que já estava boa. A regra agora é uma só: **a análise é obrigatória em toda peça; a alteração, condicional; a conferência de invariantes e a revalidação, obrigatórias sempre que houve alteração.**
+**A análise é obrigatória em toda peça; a alteração, condicional; a conferência de invariantes e a revalidação, obrigatórias sempre que houve alteração.**
 
 **1. Medir (sempre):**
 
@@ -260,7 +245,7 @@ O `lint-ia` é portão (reprova acima dos limites). O `ritmo.js` é diagnóstico
 
 **2. Decidir.** Há sinal se o `lint-ia` reprovou, se o `ritmo.js` apontou sinal, ou se a leitura acusa prosa de modelo.
 - **Sem sinal:** não alterar. Gravar o registro (item 4) com `humanizer_alterou: nao` e seguir ao Estágio 6.
-- **Com sinal:** acionar a skill **`humanizer-forense`** (a do escritório: protege transcrições, títulos-tese e BLUF, traz o `lint-ia.js`, o `ritmo.js` e o guardião de invariantes). As instruções do modo jurídico abaixo valem como fallback se a skill não estiver no ambiente.
+- **Com sinal:** acionar a skill **`humanizer-forense`** (a do escritório: protege transcrições, títulos-tese e BLUF, traz o `lint-ia.js`, o `ritmo.js` e o guardião de invariantes).
 
 **3. Alterar entre snapshot e guardião.** Antes de tocar na prosa, `checar-invariantes.js --snapshot PECA.md`; depois da passada, `checar-invariantes.js PECA.md`. Violação (exit 1: número, data, dispositivo, julgado, transcrição, título-tese, BLUF, modalidade, negação ou pedido alterado) desfaz a alteração correspondente; não se justifica nem se contorna. Depois, `--limpar`. **Calibração de voz proporcional:** peça curta, `perfil/voz-forense.md` basta; peça longa (mais de 6 capítulos), recurso ou peça estratégica, o perfil e uma peça humana próxima, da qual se imita o ritmo e nunca se copia fato ou trecho.
 
@@ -275,27 +260,7 @@ invariantes: n/a                  # preservados | preservados com avisos | viola
 ritmo_sinais: 0                   # número de sinais do ritmo.js na versão final
 ```
 
-### Humanizer em Modo Jurídico
-
-O humanizer genérico foi projetado para texto geral. Para petições, aplique com estas restrições:
-
-**Ative:**
-- Variação de comprimento de sentença
-- Remoção de conectivos redundantes
-- Substituição de paralelismos artificiais
-- Inserção de conectivos de transição entre parágrafos onde ausentes (ex: "Esse cenário se agrava quando...", "A decisão, no entanto, ignorou...", "O que o laudo revela é diferente:")
-- Conversão de enumerações `(a)/(b)/(c)` em prosa encadeada quando estiverem em seções argumentativas (não de pedidos)
-- Variação dos fechos de parágrafo quando há repetição do padrão `"Isso é [X]"` na mesma seção
-
-**Desative (nunca aplique em texto jurídico):**
-- Primeira pessoa ("I keep coming back to...")
-- Linguagem coloquial ("stuff", "things")
-- "Add soul" / tangentes e pensamentos incompletos
-- Qualquer instrução de "deixar a bagunça entrar"
-- Eliminação de dois pontos quando eles introduzem prosa contínua (elimine apenas quando precedem lista enumerada)
-- Qualquer mudança de mérito disfarçada de estilo: modalidade ("ainda que" virando afirmação), polaridade ("não nega" virando "nega"), verbo de pedido, título-tese despido, conclusão do capítulo movida para baixo. O `checar-invariantes.js` reprova; a regra vale antes dele.
-
-O texto jurídico pode e deve ser humano — mas é humanidade formal, não coloquial.
+A humanização é sempre a da `humanizer-forense`; o humanizer genérico (coloquial, primeira pessoa) não se aplica a peça.
 
 ---
 
