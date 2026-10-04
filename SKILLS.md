@@ -26,7 +26,7 @@
 | [`peca-pma-builder`](skills/peca-pma-builder/SKILL.md) | sim | Biblioteca Node compartilhada para geração de peças jurídicas .docx no padrão PMA. |
 | [`pedido_justica_gratuita`](skills/pedido_justica_gratuita/SKILL.md) | sim | Analisa, avalia e elabora pedidos de gratuidade da justiça (CPC, arts. 98 a 102) e a resposta à impugnação. |
 | [`pesquisa-djen`](skills/pesquisa-djen/SKILL.md) | sim | Consulta pública de comunicações processuais (DJEN — Diário de Justiça Eletrônico Nacional, via API Comunica/PJe) e de metadados/movimentos de processos (API Pública DataJud/CNJ). |
-| [`pre-peticionamento`](skills/pre-peticionamento/SKILL.md) | sim | Executa investigação jurídica pré-peticionamento: lê um notebook NotebookLM já populado pelo advogado, gera perguntas estratégicas cirúrgicas (como advogado sênior), dispara via `n |
+| [`pre-peticionamento`](skills/pre-peticionamento/SKILL.md) | sim | Investigação pré-peticionamento sobre um notebook do NotebookLM já populado: auditoria de risco da tese, perguntas cirúrgicas via `notebooklm ask`, dossiê salvo como nota no notebo |
 | [`pre-peticionamento-drive`](skills/pre-peticionamento-drive/SKILL.md) | sim | Investigação jurídica pré-peticionamento sobre corpus LOCAL (provas baixadas do Drive + jurisprudência local), SEM NotebookLM. |
 | [`radar-jurisprudencia`](skills/radar-jurisprudencia/SKILL.md) | sim | Busca no DJEN jurisprudência recente e favorável à tese do cliente — 5 decisões por tese (mínimo 2 do STJ quando houver), priorizando o tribunal onde a peça será protocolada. |
 | [`tipografia-pma`](skills/tipografia-pma/SKILL.md) | sim | Padronização estrutural e visual de peça já redigida: hierarquia de títulos, títulos-tese, ordem dos blocos, destaques, citação em bloco e elementos visuais. |

@@ -1,14 +1,14 @@
 ---
 name: pre-peticionamento
-version: 2.1.0
+version: 2.1.1
 description: |
-  Executa investigação jurídica pré-peticionamento: lê um notebook NotebookLM já populado pelo advogado,
-  gera perguntas estratégicas cirúrgicas (como advogado sênior), dispara via `notebooklm ask`, 
-  consolida as respostas em um dossiê jurídico estruturado e salva como nota no notebook.
-  NÃO redige petição. Produz insumo estratégico para a legal-writer/legal-orchestrator.
-  Use quando o advogado disser: "investigue o notebook", "faça o pré-peticionamento", "pesquise as fontes",
-  "prepare o dossiê", "analise o material", "extraia provas do notebook", "valide minha tese antes de peticionar",
-  ou qualquer variante de querer preparar material estratégico antes de redigir uma peça processual.
+  Investigação pré-peticionamento sobre um notebook do NotebookLM já populado: auditoria de
+  risco da tese, perguntas cirúrgicas via `notebooklm ask`, dossiê salvo como nota no notebook.
+  NÃO redige petição: produz insumo para o legal-orchestrator.
+  Use SOMENTE quando o pedido mencionar NotebookLM ou um notebook ("investigue o notebook",
+  "extraia provas do notebook", "faça o pré-peticionamento no NotebookLM"). Sem essa menção,
+  provas no Drive ou em pasta local são da skill `pre-peticionamento-drive`, e pedido de peça é
+  do `legal-orchestrator`.
 ---
 
 # Pré-Peticionamento — Investigação Jurídica Estratégica
