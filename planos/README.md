@@ -3,6 +3,11 @@
 Changelog dos planos de evolução do sistema. Saiu do `CLAUDE.md` em 04/09/2026: é registro,
 não instrução, e não precisa ser carregado em toda sessão.
 
+- [`2026-10-03_prd-calibracao-voz-forense.md`](2026-10-03_prd-calibracao-voz-forense.md)
+  — redução empírica da aparência de IA nas petições: fechamento da revisão DOCX → MD,
+  aprendizado a partir das edições reais da titular, título-síntese formal, diagnóstico de
+  períodos curtos e teste cego antes de alterar skill ou portão. **Rascunho aguardando
+  aprovação da titular; nenhuma fase executada.**
 - [`2026-10-02_plano-estado-do-caso-na-fila.md`](2026-10-02_plano-estado-do-caso-na-fila.md)
   — estado do caso (`ANALISE.md`) ligado ao monitor do DJEN, ao hook de abertura e à memória:
   Stop que exige `ANALISE.md` atualizada quando a pasta do caso muda, fila lendo `processos:`
