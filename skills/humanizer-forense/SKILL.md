@@ -1,6 +1,6 @@
 ---
 name: humanizer-forense
-version: 1.2.0
+version: 1.3.0
 description: |
   Remove sinais de escrita de IA de peças processuais em português jurídico brasileiro,
   SEM tocar na estrutura AI-first invisível (BLUF, títulos-conclusão, transcrições).
@@ -111,6 +111,16 @@ Violação não se "explica": desfaz-se a alteração ou se leva à titular. Exi
 | Parágrafo inteiro em negrito como efeito dramático | 0 | Devolver a frase ao corpo do parágrafo; a ênfase vem do argumento |
 | Cadência de tabela na impugnação ("O autor alega X. Não procede, porque Y." em sequência; "o autor alega" ou "não procede" repetidos) | ≤ 1 cada por capítulo | Fundir as linhas em blocos temáticos com a versão do réu como fio; abrir cada bloco por ângulo diferente (documento, data, contradição interna do autor); manter cada fato identificável pela narrativa, não pela enumeração (playbook da contestação, capítulo V) |
 | Dois-pontos em série na prosa (preferência da titular, 12/08/2026) | ≤ 1 de prosa por capítulo (aviso do `ritmo.js`) | Reservar para citação em bloco, síntese e "requer-se:"; na argumentação, ponto, ponto e vírgula ou conjunção |
+| Frase curta de efeito (≤ 10 palavras, sentenciosa, simétrica, abrindo ou fechando parágrafo) | ≤ 1 por peça, **por leitura** (não é lint: o corpus aprovado tem mais frases curtas que a peça de IA; o que denuncia é a função, `voz-forense.md` §8.1) | Integrar ao período vizinho com "porque", "de maneira que"; cortar quando só repete a conclusão |
+| Quiasmo / espelho ("o que X fez, fez…; o que Y fez, fez…") | 0 (`lint-ia`) | Subordinar: um sujeito, um verbo, uma oração relativa |
+| Contraste "não se trata de X, e sim Y" / "não X, e sim Y" | ≤ 1 por leitura; `lint-ia` reprova acima de 2 | Afirmar Y com a prova; o X fica implícito |
+| Anáfora de artigo + palavra ("o único…, o único…, o único…") | 0 (`lint-ia`, extensão da tríade) | Cada item com verbo e documento próprios, ou fundir num período |
+| Gancho de cena na abertura de capítulo (hora, minutos, dia da semana) | 0 (aviso do `ritmo.js`) | Abrir pelo sujeito e pela conclusão; a hora vai para a cronologia |
+| Motivo repetido (mesma locução 2× no capítulo ou 3× na peça como refrão) | por leitura (4-grama repetido é quase sempre termo técnico) | Dizer de outro modo ou cortar; manter só onde a prova exige o fato |
+| Fila de 3+ frases curtas seguidas (uma por critério) | aviso do `ritmo.js` | Um período subordinado que reúne os critérios e a prova |
+| Enumeração seca no fecho do parágrafo | por leitura | Fecho com verbo e consequência |
+| Molde uniforme (afirmação, prova, frase de efeito em série; checklist de um parágrafo por critério) | aviso existente do `ritmo.js` (tamanhos) + leitura | Variar ordem e tamanho conforme o peso do argumento; fundir critérios |
+| Subtítulo-manchete ("O banco viu e não fez nada") | por leitura (`voz-forense.md` §8.10) | Construção nominal que resume a conclusão ("Da responsabilidade do banco pela validação de operação fora do perfil") |
 
 Os limites acima com número são os do `lint-ia.js` (portão). Frequência estilística que o lint não conta (ritmo, aberturas, conectivos) é aviso do `ritmo.js`, não reprovação: indício para a passada humana, não prova de prosa ruim. Não se acrescenta palavra proibida à tabela para "pegar mais": o retorno é baixo e o custo é empobrecer o vocabulário jurídico.
 
@@ -124,7 +134,7 @@ Os limites acima com número são os do `lint-ia.js` (portão). Frequência esti
 
 ## Processo de aplicação
 
-1. **Medir.** `node scripts/lint-ia.js caminho/peca.md` (portão: conta os padrões fora de citação e falha acima dos limites, inclusive rótulos meta-textuais) e `node scripts/ritmo.js caminho/peca.md` (diagnóstico: frases de tamanho uniforme, parágrafos do mesmo tamanho em série, aberturas repetidas, conectivo em cada parágrafo, norma→aplicação→conclusão em série, fecho "Isso é X", enumeração fora dos pedidos, dois-pontos em série, capítulo raso; nunca reprova). O `md2docx.js` já roda o `lint-ia` como portão de compilação.
+1. **Medir.** `node scripts/lint-ia.js caminho/peca.md` (portão: conta os padrões fora de citação e falha acima dos limites, inclusive rótulos meta-textuais) e `node scripts/ritmo.js caminho/peca.md` (diagnóstico: frases de tamanho uniforme, parágrafos do mesmo tamanho em série, aberturas repetidas, conectivo em cada parágrafo, norma→aplicação→conclusão em série, fecho "Isso é X", enumeração fora dos pedidos, dois-pontos em série, capítulo raso, gancho de cena na abertura, fila de frases curtas; e informa a densidade de frases curtas sem veredito; nunca reprova). Linhas de tabela, de cronologia e subtítulos `##` ficam fora da prosa medida (correção de 15/10/2026). O `md2docx.js` já roda o `lint-ia` como portão de compilação.
 
    **O travessão é medido POR CAPÍTULO, não no total** (correção de 2026-08-04). O relatório nomeia o pior capítulo.
 
