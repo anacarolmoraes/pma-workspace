@@ -177,8 +177,22 @@ if (capsA.length !== capsD.length) {
 }
 
 // ── 7. Modalidade (concessão, hipótese, subsidiariedade) ─────────────────────
-const MODAIS = ['ainda que', 'mesmo que', 'mesmo se', 'caso ', 'acaso', 'se ', 'subsidiariamente', 'eventualmente', 'ad argumentandum', 'por hipótese', 'admitindo-se', 'admita-se', 'supondo', 'na hipótese de', 'na remota hipótese', 'em tese', 'quando muito', 'sucessivamente', 'alternativamente'];
-const contaModais = (t) => { const s = ' ' + norm(t) + ' '; const m = {}; for (const w of MODAIS) { const n = (s.match(new RegExp(`[\\s,;(]${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g')) || []).length; if (n) m[w.trim()] = n; } return m; };
+const MODAIS = ['ainda que', 'mesmo que', 'mesmo se', 'acaso', 'subsidiariamente', 'eventualmente', 'ad argumentandum', 'por hipótese', 'admitindo-se', 'admita-se', 'supondo', 'na hipótese de', 'na remota hipótese', 'em tese', 'quando muito', 'sucessivamente', 'alternativamente'];
+// "caso" e "se" (manutenção 2026-10-15): até aqui contavam por simples ocorrência, e "é o caso de
+// escola" e "não se trata" viraram aviso de hipótese numa peça real. "caso" só conta como conjunção
+// condicional: não precedido de artigo, preposição ou demonstrativo, nem seguido de complemento
+// nominal ("caso concreto", "caso dos autos"). "se" só conta em início de oração (depois de
+// pontuação ou de conjunção coordenativa) e não quando é pronome colado a verbo pronominal
+// frequente do gênero ("se trata", "se refere", "se limita", "se aplica"…).
+const RX_CASO = /(?<![\wà-ú])(?<!\b(?:o|a|no|na|do|da|ao|em|este|esse|neste|nesse|presente|mesmo|qualquer|cada|nenhum|um|tal)\s)caso\s+(?!(?:concreto|dos autos|em exame|vertente|presente|sub|de|dos|das|do|da|em)\b)/g;
+const RX_SE = /(?:(?<=[.,;:(])\s*|(?<=\b(?:e|mas|ou|pois|porque|ainda|mesmo)\s))se\s+(?!(?:trata|tratava|tratam|refere|referem|limita|limitou|aplica|aplicam|segue|seguiu|seguiram|repete|verifica|impõe|extrai|revela|mostra|vê|confere|cuida|pede|requer|insurge|insurgiu|apresenta|apresentou|presume|resume|deu|dá|afasta|põe|pôs|esgotou|agrava|discute|conhece|sabe|exige|busca|pretende|tem|há|faz|fez|mede|prolongou|equipara|situa|esgota|reduz|amolda|confunde|distingue|sustenta|funda|baseia)\b)/g;
+const contaModais = (t) => {
+  const s = ' ' + norm(t) + ' '; const m = {};
+  for (const w of MODAIS) { const n = (s.match(new RegExp(`[\\s,;(]${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g')) || []).length; if (n) m[w.trim()] = n; }
+  const nCaso = (s.match(RX_CASO) || []).length; if (nCaso) m.caso = nCaso;
+  const nSe = (s.match(RX_SE) || []).length; if (nSe) m.se = nSe;
+  return m;
+};
 const modA = contaModais(prosaA); const modD = contaModais(prosaD);
 const perdidos = []; const ganhos = [];
 for (const k of new Set([...Object.keys(modA), ...Object.keys(modD)])) {

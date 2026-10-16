@@ -58,6 +58,22 @@ caso('"não é X, é Y" duas vezes reprova como paralelismo negativo', 'patched'
   return r.status === 1 && /✘ Paralelismo negativo/.test(r.out) ? 1 : 0;
 });
 
+// ── manutenção 2026-10-15: quiasmo, contraste "e sim", anáfora de artigo + palavra ─────────
+caso('quiasmo ("o que X fez, fez…") reprova', 'sempre', 1, () => {
+  const r = rodar(LIMPA.replace('Texto suficiente para o capítulo.', 'O que o autor pagou, pagou por engano; o que a ré cobrou, cobrou sem título.'));
+  return r.status === 1 && /✘ Quiasmo/.test(r.out) ? 1 : 0;
+});
+caso('três "não se trata de X, e sim Y" reprovam', 'sempre', 1, () => {
+  const r = rodar(LIMPA.replace('Texto suficiente para o capítulo.', 'Não se trata de cobrança, e sim de restituição. Não se trata de atraso, e sim de inadimplemento. Não se trata de mora, e sim de recusa.'));
+  return r.status === 1 && /✘ Contraste/.test(r.out) ? 1 : 0;
+});
+caso('dois "não se trata de X, e sim Y" passam', 'sempre', 0, () => rodar(LIMPA.replace('Texto suficiente para o capítulo.', 'Não se trata de cobrança, e sim de restituição. Não se trata de atraso, e sim de inadimplemento.')).status);
+caso('anáfora "o único…, o único…, o único…" reprova como tríade', 'sempre', 1, () => {
+  const r = rodar(LIMPA.replace('Texto suficiente para o capítulo.', 'Houve o único contrato assinado, o único pagamento feito, o único aviso enviado, e o único prazo cumprido.'));
+  return r.status === 1 && /✘ Tríade anafórica/.test(r.out) ? 1 : 0;
+});
+caso('enumeração de dispositivos ("…, inciso II, 226, inciso II, …") não é anáfora', 'sempre', 0, () => rodar(LIMPA.replace('Texto suficiente para o capítulo.', 'Ficam prequestionados os artigos 2º, 4º, 139, inciso II, 226, inciso II, 489 e 805 do Código de Processo Civil.')).status);
+
 let falhas = 0;
 let pulados = 0;
 console.log(`_teste-lint-ia — ${path.relative(RAIZ, LINT)} (${PATCHED ? 'com' : 'sem'} a manutenção 2026-09-08)\n`);

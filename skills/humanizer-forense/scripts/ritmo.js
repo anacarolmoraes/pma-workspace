@@ -43,12 +43,19 @@ const RX_CAP_PEDIDO = /pedido|requer|conclus/i;
 const aberturasPeca = new Map();
 let totalPars = 0;
 const conectivosPeca = new Map();
+// Linha de tabela (`| … |`, inclusive a de alinhamento `|:--:|`), de cronologia (`!16:32`,
+// `16:52 | …`) e subtítulo (`##`) não são prosa: o segmentador as devolve como parágrafo, e
+// até 15/10/2026 a linha `|:--:|` da tabela de documentos contava como dois dois-pontos.
+const ehLinhaNaoProsa = (p) => /^(#|\||!|\d{1,2}:\d{2})/.test(p.trim());
+const RX_CURTA_EFEITO = (f) => S.contarPalavras(f) <= 10 && !/\d|\(Doc|art\.|§|Súmula|REsp|Rel\.|Min\.|:\s*$/.test(f) && !/requer|protesta|pede|termos em que|deferimento/i.test(f);
+let curtasPeca = 0;
 
 for (const cap of caps) {
   const onde = curto(cap.titulo, 45);
-  const pars = cap.paragrafos.filter((p) => S.contarPalavras(p) >= 8);
+  const prosaPars = cap.paragrafos.filter((p) => !ehLinhaNaoProsa(p));
+  const pars = prosaPars.filter((p) => S.contarPalavras(p) >= 8);
   totalPars += pars.length;
-  const prosa = cap.paragrafos.join('\n');
+  const prosa = prosaPars.join('\n');
 
   // 1. Frases de comprimento uniforme
   const fr = S.frases(prosa).map(S.contarPalavras).filter((n) => n >= 3);
@@ -106,12 +113,32 @@ for (const cap of caps) {
   }
 
   // 8. Dois-pontos na prosa (preferência da titular, 12/08/2026)
-  const dp = (prosa.match(/:(?!\d)/g) || []).length - cap.paragrafos.filter((p) => /:\s*$/.test(p)).length; // ":" que introduz blockquote não conta
+  const dp = (prosa.match(/:(?!\d)/g) || []).length - prosaPars.filter((p) => /:\s*$/.test(p)).length; // ":" que introduz blockquote não conta
   if (dp > 1) sinal('Dois-pontos em série na prosa', onde, `${dp} dois-pontos fora de introdução de citação; reservar para citação em bloco, síntese e "requer-se:"`);
 
   // 9. Capítulo raso
   const nPal = S.contarPalavras(prosa);
   if (nPal > 0 && nPal < 50 && !RX_CAP_PEDIDO.test(cap.titulo)) sinal('Capítulo com pouca prosa', onde, `${nPal} palavras próprias; título demais para argumento de menos`);
+
+  // 10. Gancho de cena na abertura do capítulo (2026-10-15): "Em oitenta minutos da tarde de
+  // uma sexta-feira, …" é abertura de reportagem; capítulo abre pelo sujeito e pela conclusão.
+  const abre = S.frases(pars[0] || '')[0] || '';
+  if (/^(em|na|no|às|naquel[ae]|durante)\b[^.]{0,70}?\b(\d{1,2}h\d{0,2}|\d{1,2}:\d{2}|minutos|tarde|manhã|noite|madrugada|segunda|terça|quarta|quinta|sexta|sábado|domingo)\b/i.test(abre)) {
+    sinal('Gancho de cena na abertura', onde, `abre por circunstância de hora ou dia ("${curto(abre, 60)}"); abrir pelo sujeito e pela conclusão, a hora vai para a cronologia`);
+  }
+
+  // 11. Fila de frases curtas (2026-10-15): três ou mais frases de até 12 palavras seguidas no
+  // mesmo parágrafo, uma por critério, é lista disfarçada. Peça aprovada também tem; é aviso.
+  for (const p of pars) {
+    const fr = S.frases(p);
+    let s = 0; let ms = 0;
+    for (const f of fr) { if (S.contarPalavras(f) <= 12) { s++; ms = Math.max(ms, s); } else s = 0; }
+    if (ms >= 3) { sinal('Fila de frases curtas', onde, `${ms} frases de até 12 palavras seguidas ("${curto(fr.find((f) => S.contarPalavras(f) <= 12) || '', 50)}")`); break; }
+  }
+
+  // Densidade de frase curta de efeito: só informação. O corpus aprovado do escritório tem
+  // mais frases curtas que a peça de IA; o que denuncia o modelo é a função (voz-forense §8.1).
+  for (const p of pars) { const fr = S.frases(p); if (fr.length >= 2) curtasPeca += [fr[0], fr[fr.length - 1]].filter(RX_CURTA_EFEITO).length; }
 }
 
 // Peça inteira
@@ -126,11 +153,12 @@ for (const s of sinais) porNome.set(s.nome, (porNome.get(s.nome) || 0) + 1);
 const veredito = sinais.length ? 'humanizar' : 'sem sinal';
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ arquivo, capitulos: caps.length, palavras: totalPal, veredito, sinais }, null, 2));
+  console.log(JSON.stringify({ arquivo, capitulos: caps.length, palavras: totalPal, veredito, frasesCurtasEfeito: curtasPeca, paragrafos: totalPars, sinais }, null, 2));
 } else {
   console.log(`ritmo — ${path.basename(arquivo)} (${caps.length} capítulo(s), ${totalPal} palavras de prosa própria)\n`);
   if (!sinais.length) console.log('Sem sinal de ritmo mecânico nos medidores. Isso não dispensa a leitura: o medidor pega frequência, não voz.');
   for (const s of sinais) console.log(`⚠ ${s.nome} — ${s.onde}: ${s.detalhe}`);
+  console.log(`ℹ Frases curtas abrindo ou fechando parágrafo (≤ 10 palavras, sem número): ${curtasPeca} em ${totalPars} parágrafos. Informativo: a leitura decide quais são sentenciosas (voz-forense §8.1).`);
   console.log(`\n${sinais.length} sinal(is) em ${porNome.size} tipo(s). Diagnóstico para a passada humana; nada aqui reprova.` +
     (sinais.length ? ' Estágio 5: humanização recomendada.' : ' Estágio 5: análise registrada, alteração dispensável.'));
 }

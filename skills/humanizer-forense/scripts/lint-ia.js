@@ -5,6 +5,9 @@
 // Saída: relatório + exit 0 (passou) / 1 (falhou) / 2 (uso).
 // lint-ia v1.2 (manutenção 2026-09-08): título com verbo fora do aviso; contagens
 // globais só na prosa argumentativa; "não é X, é Y" conta como paralelismo negativo.
+// lint-ia v1.3 (manutenção 2026-10-15): quiasmo (limite 0), contraste "não se trata de X,
+// e sim Y" (limite 2) e anáfora de artigo + palavra ("o único…, o único…") na tríade. Limites
+// calibrados contra 26 peças aprovadas: nenhuma reprova.
 'use strict';
 
 const fs = require('fs');
@@ -82,6 +85,17 @@ checks.push({
 add('Paralelismo negativo ("e não" contrastivo)', contar(/[,—(]\s*e não\b|\bnão em\b.{0,25}—|(?<![\wÀ-ÿ])não (?:é|são|era|foi|se trata de)(?![\wÀ-ÿ])[^.;:]{2,60}?,\s*(?:é|são|era|foi|trata-se de|mas)(?![\wÀ-ÿ])/gi), 1,
   'Afirmar direto; o contraste fica implícito.');
 
+// Contraste "não se trata de X, e sim Y" / "não X, e sim Y" (2026-10-15): mesma figura do
+// "X, e não Y", contada à parte. Em 26 peças aprovadas, 7 têm 1 ou 2 ocorrências; com limite
+// 1 duas reprovariam, com limite 2 nenhuma.
+add('Contraste "não se trata de X, e sim Y"', contar(/\bnão se trata de[^.;]{2,100}?,?\s*(?:e sim|mas sim|mas de|senão)\b|\b(?:não|nem|nunca|jamais)\b[^.;]{2,90}?,\s*e sim\b/gi), 2,
+  'Afirmar Y com a prova; o X fica implícito.');
+
+// Quiasmo / espelho (2026-10-15): "o que o autor fez, fez induzido; o que as rés fizeram,
+// fizeram por conta própria". Figura de discurso, não de petição. Zero no corpus aprovado.
+add('Quiasmo ("o que X fez, fez…")', contar(/\bo que (?:\S+ ){1,5}?([a-zà-ú]{3,}), \1\b/gi), 0,
+  'Subordinar: um sujeito, um verbo, uma oração relativa.');
+
 add('Pergunta retórica (?) na prosa própria', contar(/\?/g), 0,
   'Converter em afirmação numerada.');
 
@@ -123,13 +137,30 @@ for (const frase of prosaLint.split(/(?<=[.!?])\s+/)) {
     if (n >= 3) { triades.push(frase.slice(0, 90)); break; }
   }
 }
+// Abridor comparado entre orações vizinhas (2026-10-15): a palavra inicial ou, quando ela é
+// artigo/determinante, artigo + palavra ("o único…, o único…, o único…"). Oração que começa
+// por número ou por "inciso", "artigo", "item", "alínea" é enumeração legal, não anáfora, e
+// quebra a sequência (eliminou os 3 falsos positivos do corpus).
+const DETERMINANTES = new Set(['o', 'a', 'os', 'as', 'um', 'uma', 'cada', 'todo', 'toda', 'nenhum', 'nenhuma', 'esse', 'essa', 'este', 'esta']);
+const NAO_ANAFORA = /^(inciso|incisos|artigo|artigos|alínea|alíneas|parágrafo|item|itens)$/;
+const abridor = (oracao) => {
+  if (/^[\d(]/.test(oracao)) return '';
+  const ws = oracao.toLowerCase().replace(/^[^a-zà-ú]+/, '').split(/\s+/);
+  const w0 = (ws[0] || '').replace(/[^a-zà-ú]/g, '');
+  const w1 = (ws[1] || '').replace(/[^a-zà-ú]/g, '');
+  if (DETERMINANTES.has(w0) && w1.length >= 3) return `${w0} ${w1}`;
+  if (w0.length >= 3 && !CORRELATIVAS.has(w0) && !NAO_ANAFORA.test(w0)) return w0;
+  return '';
+};
 for (const frase of prosaLint.split(/(?<=[.!?])\s+/)) {
-  const partes = frase.split(/,\s*(?:e\s+)?|;\s*/).map((p) => p.trim()).filter(Boolean);
+  // Só a vírgula (ou ponto e vírgula) separa oração: separar também por " e " sem vírgula
+  // acusou enumeração de pedido ("a suspensão…, a abstenção… e a abstenção…") em peça aprovada.
+  const partes = frase.split(/,\s*(?:e\s+|ou\s+)?|;\s*/).map((p) => p.trim()).filter(Boolean);
   let seq = 1;
   for (let i = 1; i < partes.length; i++) {
-    const a = (partes[i - 1].split(/\s+/)[0] || '').toLowerCase().replace(/[^a-zà-ú]/gi, '');
-    const b = (partes[i].split(/\s+/)[0] || '').toLowerCase().replace(/[^a-zà-ú]/gi, '');
-    if (a && a === b && a.length >= 3 && !CORRELATIVAS.has(a)) {
+    const a = abridor(partes[i - 1]);
+    const b = abridor(partes[i]);
+    if (a && a === b) {
       seq++; if (seq >= 3) { triades.push(frase.slice(0, 90)); break; }
     } else seq = 1;
   }

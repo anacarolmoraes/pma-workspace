@@ -161,6 +161,57 @@ caso('ritmo --json parseável', 0, () => {
   try { const j = JSON.parse(r.out); return j.veredito === 'humanizar' && Array.isArray(j.sinais) ? 0 : 5; } catch { return 6; }
 });
 
+// ── manutenção 2026-10-15: modalidade sem falso positivo de "caso" substantivo e "se" pronome ──
+const MODAL = BASE.replace(
+  'Não há, portanto, controvérsia sobre o valor pago.',
+  'Não há, portanto, controvérsia sobre o valor pago. A requerida sabia do cancelamento, e não se trata de hipótese nova; é o caso de escola em que o vendedor recebe e segue cobrando.',
+);
+const antesModal = grava('antes-modal.md', MODAL);
+caso('"é o caso de escola" (substantivo) removido → 0', 0, () => rodar(INV, [antesModal, grava('caso-subst.md', MODAL.replace('é o caso de escola em que', 'é a situação em que'))]).status);
+caso('"não se trata" (pronome) reescrito → 0', 0, () => rodar(INV, [antesModal, grava('se-pron.md', MODAL.replace('e não se trata de hipótese nova;', 'e a hipótese não é nova;'))]).status);
+caso('"caso se entenda" (conjunção) removido → 1', 1, () => {
+  const r = rodar(INV, [antesModal, grava('caso-conj.md', MODAL.replace('Subsidiariamente, caso se entenda', 'Subsidiariamente, quando se entenda'))]);
+  return r.status === 1 && /Modalidade/.test(r.out) ? 1 : r.status + 10;
+});
+caso('"se o juízo entender" (condicional) removido → 1', 1, () => {
+  const COND = MODAL.replace('requer-se que os juros corram', 'requer-se, se o juízo entender devido, que os juros corram');
+  const r = rodar(INV, [grava('antes-cond.md', COND), grava('cond.md', MODAL)]);
+  return r.status === 1 && /Modalidade/.test(r.out) ? 1 : r.status + 10;
+});
+
+// ── manutenção 2026-10-15: ritmo sem falso positivo de tabela; gancho de cena; fila de curtas ──
+const TABELA = `---
+titulo: X
+processo: 0000000-00.0000.8.27.2729
+bundle: nenhum
+---
+
+# I. A tese do capítulo está provada
+
+A requerida não impugnou o pagamento, de maneira que a controvérsia se reduz ao quanto deve ser devolvido ao consumidor, conforme o contrato e os recibos que instruem a inicial.
+
+::tabela
+| Doc. | Descrição |
+|:--:|---|
+| 1 | Procuração |
+| 2 | Contrato de compra e venda |
+::
+`;
+caso('ritmo: linha de alinhamento de tabela não conta dois-pontos', 0, () => {
+  const r = rodar(RITMO, [grava('tabela.md', TABELA)]);
+  return r.status === 0 && !/Dois-pontos em série/.test(r.out) ? 0 : 7;
+});
+const GANCHO = TABELA.replace('A requerida não impugnou o pagamento,', 'Em quarenta minutos da tarde de uma sexta-feira, a requerida validou tudo. A requerida não impugnou o pagamento,');
+caso('ritmo: abertura por hora e dia da semana → "Gancho de cena"', 0, () => {
+  const r = rodar(RITMO, [grava('gancho.md', GANCHO)]);
+  return r.status === 0 && /Gancho de cena/.test(r.out) ? 0 : 7;
+});
+const FILA = TABELA.replace('conforme o contrato e os recibos que instruem a inicial.', 'conforme o contrato. O valor destoa. O horário destoa. O destino também destoa do histórico.');
+caso('ritmo: três frases curtas seguidas → "Fila de frases curtas"', 0, () => {
+  const r = rodar(RITMO, [grava('fila.md', FILA)]);
+  return r.status === 0 && /Fila de frases curtas/.test(r.out) ? 0 : 7;
+});
+
 // ── execução ─────────────────────────────────────────────────────────────────
 let falhas = 0;
 for (const c of casos) {
