@@ -1,8 +1,9 @@
 ---
 titulo: Perfil da voz forense do escritório
 status: rascunho
-versao: 0.1.0
+versao: 0.2.0
 criado: 2026-09-08
+atualizado: 2026-10-15
 revisar: titular valida ou corrige cada traço antes de promover a `vigente`
 ---
 
@@ -104,3 +105,65 @@ oração, e nenhuma ênfase que o documento não sustente.
 Nada aqui relativiza os invariantes do humanizer: transcrição, número, data, dispositivo,
 julgado, título-tese, posição da conclusão e modalidade das formulações não mudam para
 "soar melhor". O `checar-invariantes.js` confere isso mecanicamente depois de cada passada.
+
+## 8. Retórica que denuncia o modelo (decisão da titular, 15/10/2026)
+
+Uma inicial passou no `lint-ia` e ainda assim foi lida como texto de IA, porque o que a
+denunciava não era vocabulário, era **estrutura retórica**. Os nove padrões abaixo saíram dessa
+leitura. Três deles são contados por máquina (`lint-ia`: quiasmo, contraste "e sim", anáfora;
+`ritmo.js`: gancho de cena, fila de curtas); os demais só a leitura pega, porque o corpus de peças
+aprovadas do escritório mostrou que a titular também usa frase curta e repete termo técnico. O que
+distingue é a função, não a contagem. Exemplos fictícios.
+
+- **8.1 Frase de efeito.** A frase curta que abre ou fecha parágrafo tem de fazer trabalho
+  próprio: fixar consequência, marcar virada, encerrar questão demonstrada. O que denuncia o
+  modelo é a frase simétrica, citável, que repete em forma de máxima o que o parágrafo já provou.
+  Uma por peça, no ponto em que o argumento vira; mais de três é assinatura de modelo.
+  > *Modelo:* "A notificação não chegou. E o prazo não correu." *Escritório:* "Como a notificação
+  > não chegou ao endereço do contrato, o prazo do art. 32 não começou a correr."
+- **8.2 Espelho e quiasmo.** "O que o comprador fez, fez induzido; o que a loteadora fez, fez
+  por conta própria" é figura de discurso, não de petição. Dissolver em subordinação: "O comprador
+  agiu induzido pela loteadora, que, por sua vez, agiu por conta própria".
+- **8.3 Contraste montado.** "Não se trata de atraso, e sim de inadimplemento" e "não é X, é Y"
+  são a mesma figura do "X, e não Y" que a tabela do humanizer limita. Afirmar direto: "Houve
+  inadimplemento, porque a obra não foi entregue no prazo da cláusula 5ª".
+- **8.4 Anáfora em série.** "A única parcela paga, a única notificação enviada, a única
+  resposta dada" é tríade e vale a regra da tabela (zero). Na prosa do escritório cada item vem
+  com seu verbo e seu documento.
+- **8.5 Gancho de cena.** Capítulo não abre como reportagem ("Em quarenta minutos de uma
+  sexta-feira…"). Abre pelo sujeito jurídico e pela conclusão: "A loteadora registrou o
+  cancelamento quatro dias antes de expirar o prazo que ela própria fixou". A hora vai para a
+  cronologia.
+- **8.6 Motivo repetido.** A mesma locução ("tem número", "em quarenta minutos", "conta
+  parada") não volta duas vezes no mesmo capítulo nem três na peça como refrão. O fato se repete
+  quando a prova exige; a expressão, não.
+- **8.7 Fila de frases curtas.** Um critério por frase curta ("O valor destoa. O horário destoa.
+  O destino destoa.") é lista disfarçada. Um período subordinado reúne os critérios e a prova:
+  "O valor, o horário e o destino destoam do histórico da conta, como mostra o extrato".
+- **8.8 Enumeração seca no fecho.** Parágrafo não termina em inventário ("chave nova, crédito
+  acima do saldo, sete boletos, saldo zero."). O fecho é oração com verbo e consequência.
+- **8.9 Molde uniforme.** Parágrafos consecutivos no molde "afirmação, prova, frase de efeito"
+  denunciam geração em série ainda que cada um esteja correto. Tamanho e ordem variam porque o
+  peso do argumento varia; o checklist que percorre critérios de um precedente, um parágrafo por
+  critério, se funde em dois ou três períodos.
+- **8.10 Título-síntese formal** (PRD de calibração, §4.1, adotado em 15/10/2026). Subtítulo é
+  construção nominal que resume a conclusão do bloco: "Da inexistência da mora por ausência de
+  notificação válida". Não é manchete ("O banco viu e não fez nada") nem rótulo ("Do mérito").
+  Frase finita continua possível quando a precisão jurídica exigir. Os títulos de capítulo da
+  inicial seguem `definicoes.md` §5.
+
+## 9. Como a narrativa da inicial se arma (lições de 15/10/2026)
+
+- **Abrir pela prova documental mais forte**, não pelo relato do cliente: extrato, registro
+  oficial, cronologia reconstruída de documento. O relato entra depois, como o que o documento
+  confirma; boletim de ocorrência é relato do cliente, não prova do fato.
+- **Nunca citar documento próprio que contradiga a tese.** Se o boletim ou a reclamação
+  administrativa diz coisa diversa do que a peça sustenta naquele ponto, a peça não o invoca ali,
+  e explica a divergência onde ela for inevitável (valores "de memória" contra extrato, por
+  exemplo).
+- **Gravidade do dano moral com os fatos concretos do caso, cada um com o seu Doc.**, não com
+  adjetivo: o modo do golpe, a resposta de cada ré, a cobrança que se seguiu, a condição das
+  partes.
+- **Pedido de exibição com um parágrafo por ré**, cada um enumerando os registros que só aquela
+  ré detém e o dever regulatório de guarda que os sustenta; períodos de até 45 palavras, um por
+  grupo de registros.
