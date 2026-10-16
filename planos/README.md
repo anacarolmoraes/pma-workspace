@@ -7,7 +7,18 @@ não instrução, e não precisa ser carregado em toda sessão.
   — redução empírica da aparência de IA nas petições: fechamento da revisão DOCX → MD,
   aprendizado a partir das edições reais da titular, título-síntese formal, diagnóstico de
   períodos curtos e teste cego antes de alterar skill ou portão. **Rascunho aguardando
-  aprovação da titular; nenhuma fase executada.**
+  aprovação da titular; nenhuma fase executada.** Em **15/10/2026**, fora das fases e por
+  decisão expressa da titular depois de avaliar uma inicial (6,5 em "foge do padrão de IA" com
+  `lint-ia` verde): nove padrões retóricos (frase de efeito, quiasmo, contraste "e sim",
+  anáfora, gancho de cena, motivo repetido, fila de curtas, enumeração seca, molde uniforme)
+  entraram em `perfil/voz-forense.md` §8–9, na tabela do `humanizer-forense` 1.3.0 e, só os três
+  com zero falso positivo num corpus de 26 peças compiladas, no `lint-ia` 1.3 (quiasmo, "não se
+  trata de X, e sim Y" ≤ 2, anáfora de artigo + palavra); `ritmo.js` perdeu o falso positivo da
+  tabela e ganhou gancho de cena e fila de curtas como aviso; `checar-invariantes` deixou de
+  contar "caso" substantivo e "se" pronome. O título-síntese formal do §4.1 foi adotado na
+  prática, como decisão da titular e não como resultado da F4. Achado: frase curta não é
+  mensurável (corpus aprovado tem mediana 6, máximo 36 por peça). Primeiro dado do conjunto B:
+  o par antes/depois dessa inicial, em `tmp/`. Commits 50a7302, 3fe4c62, 866c50d.
 - [`2026-10-02_plano-estado-do-caso-na-fila.md`](2026-10-02_plano-estado-do-caso-na-fila.md)
   — estado do caso (`ANALISE.md`) ligado ao monitor do DJEN, ao hook de abertura e à memória:
   Stop que exige `ANALISE.md` atualizada quando a pasta do caso muda, fila lendo `processos:`
@@ -41,7 +52,7 @@ não instrução, e não precisa ser carregado em toda sessão.
   órgãos (`orgaos-frequentes.js`), sem perfil escrito ainda. Também: skill `ficha-golpe-bancario`,
   template de golpe, matriz de documentos transversal e de golpe, `caso.json` + `qualificacao.js`,
   modo grupo de casos do radar. Portões (estrutura aprovada no `md2docx`, `lint-inicial` v2)
-  **aplicados** (patch em `planos/aplicados/`). A inicial João Marcos x Five Senses (01/10/2026) rodou o pipeline central em caso real; o intake foi redesenhado em 01/10 (um só `ANALISE.md` por caso) e ainda não rodou em caso novo. O que
+  **aplicados** (patch em `planos/aplicados/`). A inicial João Marcos x Five Senses (01/10/2026) rodou o pipeline central em caso real; o intake foi redesenhado em 01/10 (um só `ANALISE.md` por caso) e ainda não rodou em caso novo. **Intake rodou em caso real (Welson, retrofit), 15/10/2026**, sobre inicial já escrita e não protocolada: seção 0 e seção 7 montadas pelas duas matrizes, `qualificacao.js --checar` e `caso.js` contra a peça como gabarito. *Achou:* conflito de estado civil, profissão e endereço entre a procuração e a peça; sede de duas rés na peça sem fonte na pasta; quinta ré (PicPay Bank) que o polo declarado não tinha; consulta de negativação, contracheque e exportação do WhatsApp nunca pedidos; documento de cobrança que pertence a cartão excluído do caso. *Deixou passar (defeitos a corrigir em manutenção):* `--checar` dá verde com `[[a conferir]]` no campo e com dado em conflito, e ainda fala em "caso.json"; `qualificacao.js` escreve "com sede na Núcleo…" (preposição fixa) e omite "documentos pessoais (Doc. 2)"; schema sem `terceiros` (terceiro do art. 401 fica fora do preâmbulo); `caso.js` não lê a seção 7 (não mostra pendência bloqueante nem diz "não protocolar"); a Parte B da matriz só deriva da seção 3, e o que mora em "A esclarecer" (aplicativo de acesso remoto, push do Open Finance) escapa; nenhuma matriz gera Registrato CCS/SCR nem poupança; as duas matrizes ainda mandam criar `DOCUMENTOS.md`/`dados_caso.json`, contra a decisão de 01/10. O
   já saiu sem PRD em 04/09: `ANALISE.md` por caso e `<PECA>.estrutura.md` no orchestrator,
   checklist de saída do 319/320 em `direito/pecas/peticao-inicial/`, três divergências de
   técnica (valor da causa, autocomposição, posição da tutela) resolvidas nas skills.
