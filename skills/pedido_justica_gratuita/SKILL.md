@@ -96,6 +96,13 @@ acima de R$ 5.000,00, o agravo não invoca a presunção: sustenta que a prova f
 juízo a achou insuficiente, que devia intimar (99, § 2º) — a ADC 80 tirou a presunção, não o
 dever de intimar.
 
+**Gratuidade revogada com o recurso já interposto** (relator ou colegiado, antes do
+julgamento): o regime é o do art. 101, § 2º (custas em 5 dias, valor simples), não o dobro do
+art. 1.007, § 4º, que pressupõe falta de comprovação no ato. Regra do escritório: recolher em
+dobro por cautela, declarar isso na petição de juntada, ratificar o entendimento e pedir a
+devolução do excesso; avaliar agravo interno no mesmo dia. Roteiro, portão e redação em
+`gratuidade/heuristicas/gratuidade-revogada-apos-interposicao-preparo.md`.
+
 **Acórdão que cita a Lei 1.060/50** (art. 4º, art. 2º, p. ú.): norma revogada pelo art.
 1.072, III. Três frases, nesta ordem: o dispositivo está revogado; o regime é o do 99, §§ 2º
 e 3º; a consequência do regime vigente não foi aplicada.

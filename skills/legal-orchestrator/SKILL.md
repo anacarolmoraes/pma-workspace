@@ -146,6 +146,8 @@ analise: ANALISE.md
 
 **Portão humano.** Em peça argumentativa livre (contestação, réplica, apelação, agravo, REsp, embargos, manifestação de mérito), **pare e aguarde a aprovação da titular**. Ajuste pedido por ela é feito no arquivo, não na conversa; a versão com `aprovada: sim` e a data no frontmatter é a que o Estágio 1 recebe, e é vinculante: o legal-writer não cria seção, não reordena e não muda o destaque. Se durante a redação a estrutura se mostrar errada, voltar aqui e reapresentar; não improvisar.
 
+Em peça contra decisão (apelação, EDcl, contrarrazões, agravo), antes deste estágio roda-se `node scripts/conferir-decisao.js <caso> <decisao.md>`: toda data, valor, percentual, cláusula, documento e nome que a decisão afirma e nenhum `.md` do caso contém sai listado, e cada item é conferido no PDF antes de virar vício ou capítulo (método: `direito/pecas/apelacao/heuristicas/sentenca-contra-os-autos.md` do arsenal).
+
 Em peça com template ou estrutura canônica (`inicial-rescisao-lote`, apelação pelo `direito/pecas/apelacao/workflows/apelacao.md` do arsenal, cumprimento de sentença), a estrutura é o modelo: gravar o arquivo apontando o template, listar só os desvios e seguir sem parar. Desvio grande do modelo (seção nova, tese fora do template) volta a exigir aprovação.
 
 Aprovação sem leitura é rastro falso, pior que nenhum. O arquivo existe para ser lido.

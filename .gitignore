@@ -176,3 +176,4 @@ tmp/
 # Handoff de caso foi commitado aqui em 09/2026 e purgado do historico em 02/10/2026.
 # Documento de caso mora em clientes/; esta pasta nao volta ao git.
 /docs/
+novas_ideias/
