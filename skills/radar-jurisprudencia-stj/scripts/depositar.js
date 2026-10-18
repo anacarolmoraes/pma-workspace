@@ -220,6 +220,9 @@ function tituloDaEmenta(ementa = '') {
 const PASTAS_BUNDLE = ['jurisprudencia', 'teses', 'raw', 'heuristicas', 'playbooks', 'casos_decididos', 'legislacao'];
 const ehBundle = (d) => fs.existsSync(path.join(d, 'index.md')) && PASTAS_BUNDLE.some((p) => fs.existsSync(path.join(d, p)));
 function prefixoNoBundle(raizBundles, dir) {
+  // ambiente.json traz barra normal; path.join devolve a do sistema. Comparar resolvidos.
+  raizBundles = path.resolve(raizBundles);
+  dir = path.resolve(dir);
   let raiz = dir;
   for (let d = path.dirname(dir); d.startsWith(raizBundles) && d !== raizBundles; d = path.dirname(d)) {
     if (ehBundle(d)) raiz = d;
