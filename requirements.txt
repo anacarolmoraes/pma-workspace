@@ -17,7 +17,8 @@ faster-whisper==1.2.1
 
 # --- pesquisa e automação ---
 notebooklm-py==0.3.4
-playwright==1.59.0
+playwright==1.64.0         # scrapling 0.5 exige >= 1.62; notebooklm aceita >= 1.40
+scrapling[fetchers]==0.5   # radar-jurisprudencia-stj: SCON/STJ atrás da Cloudflare
 
 # --- OCR (reconhecimento de texto em PDF digitalizado) ---
 # O pacote Python abaixo depende do programa Tesseract, instalado

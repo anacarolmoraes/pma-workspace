@@ -8,7 +8,8 @@ description: Busca no DJEN jurisprudência recente e favorável à tese do clien
 Radar de decisões **recentes e locais** que sustentam a tese do cliente. Não substitui a
 pesquisa oficial de jurisprudência (para precedente qualificado do STJ/STF, o bundle do tema
 e as fontes oficiais são melhores) — o valor daqui é descobrir **o que o tribunal da peça e o
-STJ estão decidindo agora** sobre o assunto.
+STJ estão decidindo agora** sobre o assunto. Para STJ com espelho e inteiro teor oficiais
+(SCON), a skill é a `radar-jurisprudencia-stj`.
 
 Divisão de trabalho, para não queimar token:
 

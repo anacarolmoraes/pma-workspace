@@ -189,6 +189,16 @@ function instalarBibliotecas() {
   ok('bibliotecas instaladas');
 }
 
+// O radar-jurisprudencia-stj usa o Scrapling, que dirige um Chromium do Playwright.
+// O navegador não vem pelo pip: baixa à parte (idempotente; ~150 MB na primeira vez).
+function instalarNavegador() {
+  titulo('Instalando o navegador da pesquisa no STJ (Chromium)');
+
+  const r = rodar(PY_VENV, ['-m', 'playwright', 'install', 'chromium']);
+  if (r.status === 0) ok('Chromium pronto');
+  else alertar('não consegui baixar o Chromium', 'confira a internet e rode o setup de novo');
+}
+
 // ---------------------------------------------------------- 5. conversor
 
 function instalarPdfmd() {
@@ -353,6 +363,7 @@ verificarSistema();
 const python = acharPython();
 montarAmbiente(python);
 instalarBibliotecas();
+instalarNavegador();
 instalarPdfmd();
 conferirTesseract();
 instalarNode();
