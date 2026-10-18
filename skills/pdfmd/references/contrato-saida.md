@@ -90,3 +90,5 @@ autoriza apagar a ocorrência ou sua página.
 8. O hook `block-md-integral` bloqueia leitura acidental do canônico com mais de 300 linhas e
    manifesto irmão; leitura integral deliberada ocorre pelo leitor com `--completo`.
 9. A recuperação é literal e não corta parágrafo, lista ou tabela para caber no orçamento.
+10. Item de lista em letra (`a)`, `b.`) mantém a letra: em texto jurídico ela é a alínea. Até
+    18/10/2026 o render a trocava por `-`; `.md` convertido antes disso pode ter perdido alíneas.

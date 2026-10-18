@@ -205,10 +205,10 @@ def _normalize_list_line(ln: str) -> str:
         s = re.sub(r"^\d+[\.\)]\s+", f"{num}. ", s)
         return s
 
-    # Lettered outlines: "A. text" or "a) text" → bullet
+    # Lettered outlines ("a) text", "A. text") keep their letter: in legal text
+    # the letter is the alínea, and dropping it breaks "art. 3º, I, a" citations.
     if re.match(r"^[A-Za-z][\.\)]\s+", s):
-        s = re.sub(r"^[A-Za-z][\.\)]\s+", "- ", s)
-        return s
+        return s.rstrip()
 
     return ln.strip()
 

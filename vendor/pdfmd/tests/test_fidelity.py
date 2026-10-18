@@ -335,6 +335,13 @@ class FidelityTests(unittest.TestCase):
         )
         self.assertEqual([s["kind"] for s in page.suppressed_repeated], ["duplicate_layer"] * 2)
 
+    def test_lettered_item_keeps_its_letter(self) -> None:
+        from pdfmd.render import _normalize_list_line
+
+        self.assertEqual(_normalize_list_line("a) o Tribunal Pleno;"), "a) o Tribunal Pleno;")
+        self.assertEqual(_normalize_list_line("B. a Corregedoria"), "B. a Corregedoria")
+        self.assertEqual(_normalize_list_line("• item"), "- item")
+
 
 if __name__ == "__main__":
     unittest.main()
