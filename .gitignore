@@ -37,6 +37,8 @@ relatorios/
 # Inteiro teor do STJ baixado pela skill radar-jurisprudencia-stj: traz nome de parte
 # (regra dura 6). Vai ao acervo só pseudonimizado, pela página do bundle.
 jurisprudencia-stj/
+# Idem para o TJSP (skill buscar-jurisprudencia-tjsp).
+jurisprudencia-tjsp/
 # Pipeline de RESP arquivado em _arquivo/2026-09/ (decisao de 29/08/2026); nao volta ao git.
 resp-stj-pipeline/
 

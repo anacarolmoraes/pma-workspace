@@ -9,6 +9,7 @@
 |---|---|---|
 | [`analise-perfil`](skills/analise-perfil/SKILL.md) | sim | Gera relatório judicial de PERFIL DE CONSUMO em casos de fraude bancária, contrastando o padrão habitual do correntista (baseline real dos extratos) com o cluster de operações frau |
 | [`banca-revisora`](skills/banca-revisora/SKILL.md) | sim | Banca simulada de revisão de peças processuais de alto valor: 5 assentos jurídicos (assessor de gabinete, advogado da parte contrária, relator pragmático, processualista, estrategi |
+| [`buscar-jurisprudencia-tjsp`](skills/buscar-jurisprudencia-tjsp/SKILL.md) | sim | Pesquisa jurisprudência do TJSP na Consulta Completa do e-SAJ (CJSG: acórdãos, decisões monocráticas e homologações de 2º grau e Colégio Recursal), por tema ou pelo número do proce |
 | [`conselheiros`](skills/conselheiros/SKILL.md) | sim | Run any question, idea, or decision through a council of 5 AI advisors who independently analyze it, peer-review each other anonymously, and synthesize a final verdict. |
 | [`consumir-canal-youtube`](skills/consumir-canal-youtube/SKILL.md) | sim | Consome canal jurídico do YouTube e monta uma KB de canal (camada de consumo) em D:\GITHUB\kb-youtube\<canal>, com curadoria anti-repetição — um conceito = uma página sintetizando  |
 | [`desmonetizacao-plataforma`](skills/desmonetizacao-plataforma/SKILL.md) | sim | Playbook para ações contra plataformas digitais (YouTube/Google, Meta/Facebook/Instagram, TikTok) por desmonetização, bloqueio ou suspensão de canais/contas/páginas usados como fon |
