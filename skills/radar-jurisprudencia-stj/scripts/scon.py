@@ -87,7 +87,8 @@ def enviar_form(c, por_pagina, inicio=1):
     return acao
 
 
-RX_TOTAL = re.compile(r"([\d.]+)\s+(?:acórdãos?|decis(?:ão|ões) monocráticas?)", re.I)
+# Começa por dígito: com `[\d.]+`, um ponto solto antes de "acórdãos" virava int('') e derrubava a busca.
+RX_TOTAL = re.compile(r"(\d[\d.]*)\s+(?:acórdãos?|decis(?:ão|ões) monocráticas?)", re.I)
 RX_TEOR = re.compile(r"GetInteiroTeorDoAcordao\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
 RX_MONO = re.compile(r"monocraticas/decisoes/\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
 
