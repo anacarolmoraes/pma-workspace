@@ -5,6 +5,7 @@ Não chamar direto: usar scripts/cjsg.js, que acha o Python do adv_env e convert
     buscar   <consultas.json> <pasta_saida> [retomar]
     teor     <itens.json>
     extrair  <pagina.html> [tipo]          (teste do parser, sem rede)
+    periodos <consulta-json>               (teste da divisão do período, sem rede)
 
 O formulário da consulta completa leva um token reCAPTCHA v3 invisível: POST sem ele volta
 para o formulário. O token nasce sozinho num navegador comum, por isso a busca roda numa
@@ -22,6 +23,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime, timedelta
 
 from scrapling.fetchers import StealthySession
 from scrapling.parser import Selector
@@ -83,6 +85,12 @@ def enviar_form(c):
 
 
 RX_CITACAO = re.compile(r"\(TJSP;.*\)\s*$", re.S)
+
+
+def mensagens_retorno(html):
+    """Aviso de validação que o CJSG devolve no lugar do resultado (ex.: "A faixa entre data de
+    inicio e data de fim deve ser de no máximo 1 ano."). Sem lê-lo, a recusa parecia SECA."""
+    return [limpar(li.get_all_text()) for li in Selector(html).css("#spwTabelaMensagem #mensagemRetorno li")]
 
 
 def extrair(html, tipo="A"):
@@ -157,8 +165,55 @@ def completar_periodos(c):
     return c
 
 
+def _data(s):
+    return datetime.strptime(s, "%d/%m/%Y").date()
+
+
+def _mais_um_ano(d):
+    try:
+        return d.replace(year=d.year + 1)
+    except ValueError:  # 29/02
+        return d.replace(year=d.year + 1, day=28)
+
+
+def janelas(ini, fim):
+    """Fatia [ini, fim] em janelas de até um ano. O CJSG recusa faixa maior com o aviso "A faixa
+    entre data de inicio e data de fim deve ser de no máximo 1 ano" (testado em 18/10/2026:
+    01/01/2026–18/10/2026 traz 876; 01/01/2025–18/10/2026 traz o aviso e zero)."""
+    a, b = _data(ini), _data(fim)
+    if a > b:
+        sys.exit(f"período invertido: {ini} depois de {fim}")
+    saida = []
+    while True:
+        limite = _mais_um_ano(a) - timedelta(days=1)
+        if b <= limite:
+            saida.append((a, b))
+            return saida
+        saida.append((a, limite))
+        a = limite + timedelta(days=1)
+
+
+def expandir_periodos(c):
+    """Completa as pontas e divide o período longo em consultas de até um ano, com id
+    `<id>@<n>`. A triagem junta as janelas por cdAcordao; o BUSCAS.md registra cada uma."""
+    subs = [completar_periodos(c)]
+    for ini, fim in (("dtj1", "dtj2"), ("dtp1", "dtp2")):
+        novas = []
+        for s in subs:
+            js = janelas(s[ini], s[fim]) if s.get(ini) else []
+            if len(js) <= 1:
+                novas.append(s)
+                continue
+            print(f"{s['id']}: {ini} {s[ini]} a {s[fim]} dividido em {len(js)} janelas de até 1 ano "
+                  "(limite do CJSG)", file=sys.stderr, flush=True)
+            for n, (a, b) in enumerate(js, 1):
+                novas.append({**s, "id": f"{s['id']}@{n}", ini: a.strftime("%d/%m/%Y"), fim: b.strftime("%d/%m/%Y")})
+        subs = novas
+    return subs
+
+
 def buscar(arq, pasta, retomar=False):
-    consultas = [completar_periodos(c) for c in json.load(io.open(arq, encoding="utf-8"))]
+    consultas = [x for c in json.load(io.open(arq, encoding="utf-8")) for x in expandir_periodos(c)]
     arq_res = f"{pasta}/resultados.json"
     anteriores = {}
     if retomar and os.path.exists(arq_res):
@@ -176,7 +231,12 @@ def buscar(arq, pasta, retomar=False):
 
             def pesquisar(page, c=c, tipo=tipo, paginas=paginas, estado=estado):
                 enviar_form(c)(page)
-                total, docs = extrair(page.content(), tipo)
+                html = page.content()
+                msgs = mensagens_retorno(html)
+                if msgs:
+                    estado.update(total=0, docs=[], mensagens=msgs)
+                    return
+                total, docs = extrair(html, tipo)
                 for n in range(2, paginas + 1):
                     if len(docs) >= total:
                         break
@@ -200,6 +260,10 @@ def buscar(arq, pasta, retomar=False):
                 erros.append(c["id"])
                 print(f"{c['id']}: ERRO, a consulta não rodou ({TENTATIVAS} tentativas). "
                       "Fica fora do resultados.json; rodar de novo com --retomar", flush=True)
+                continue
+            if estado.get("mensagens"):
+                erros.append(c["id"])
+                print(f"{c['id']}: ERRO, o CJSG recusou a consulta: {'; '.join(estado['mensagens'])}", flush=True)
                 continue
             total, docs = estado["total"], estado["docs"]
             if total == 0:
@@ -252,8 +316,11 @@ if __name__ == "__main__":
     elif cmd == "teor":
         teor(sys.argv[2])
     elif cmd == "extrair":
-        total, docs = extrair(io.open(sys.argv[2], encoding="utf-8").read(), sys.argv[3] if len(sys.argv) > 3 else "A")
-        print(json.dumps({"total": total, "docs": docs}, ensure_ascii=False))
+        html = io.open(sys.argv[2], encoding="utf-8").read()
+        total, docs = extrair(html, sys.argv[3] if len(sys.argv) > 3 else "A")
+        print(json.dumps({"total": total, "docs": docs, "mensagens": mensagens_retorno(html)}, ensure_ascii=False))
+    elif cmd == "periodos":
+        print(json.dumps(expandir_periodos(json.loads(sys.argv[2])), ensure_ascii=False))
     else:
         print(__doc__)
         sys.exit(2)

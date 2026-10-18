@@ -53,7 +53,7 @@ Campos de cada consulta:
 | `livre` | Pesquisa livre (inteiro teor) |
 | `ementa` | Ementa |
 | `processo` / `registro` | Nº de origem / Nº de registro do acórdão |
-| `dtj1`, `dtj2` · `dtp1`, `dtp2` | julgamento · publicação, `dd/mm/aaaa`. O CJSG só filtra com as duas pontas: só o início devolve zero sem aviso. O script completa o fim com hoje e recusa fim sem início |
+| `dtj1`, `dtj2` · `dtp1`, `dtp2` | julgamento · publicação, `dd/mm/aaaa`. O CJSG só filtra com as duas pontas (só o início devolve zero sem aviso) e **recusa faixa maior que 1 ano**. O script completa o fim com hoje, recusa fim sem início e divide período longo em janelas de até 1 ano, com id `<id>@1`, `<id>@2`…; a triagem junta as janelas |
 | `tipo` | `acordaos` (padrão), `monocraticas`, `homologacoes` |
 | `origem` | `2grau` ou `recursal` (Colégio Recursal); omitido = os dois |
 | `sinonimos` | `false` desliga "pesquisar com sinônimos", que vem ligado |
@@ -72,7 +72,9 @@ pela consulta. O órgão e o relator vêm em cada resultado: filtrar depois, na 
 - Sinônimos vêm ligados: a busca já se alarga sozinha. Desligar quando o termo técnico importa.
 
 Saída: `resultados.json` e `triagem.md` (ementa recortada), consulta a consulta. O console
-marca **SECA** (0) e **LARGA** (mais do que veio): o CJSG ordena por data de publicação, então
+marca **ERRO** quando o CJSG devolve aviso de validação no lugar do resultado (o texto do
+aviso vem junto; a consulta fica fora do `resultados.json` e roda de novo com `--retomar`),
+**SECA** (0) e **LARGA** (mais do que veio): o CJSG ordena por data de publicação, então
 uma frente LARGA trouxe só os mais recentes. Estreitar com termo distintivo ou data, ou subir
 `paginas` (5 s por página). O TJSP julga muito mais que o STJ: 3.751 acórdãos para
 `instagram E desativada` (18/10/2026). Frente sem recorte de data raramente é útil.

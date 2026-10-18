@@ -63,6 +63,38 @@ if (!py || !fs.existsSync(py)) {
     ok(d.citacao.startsWith('TJSP; Apelação Cível 0000001-00.2026.8.26.0100;') && d.citacao.endsWith('01/02/2026'), 'parser: citação oficial', d.citacao);
   }
   fs.rmSync(path.dirname(arq), { recursive: true, force: true });
+
+  const rodar = (args) => spawnSync(py, [path.join(__dirname, '..', 'scripts', 'cjsg.py'), ...args],
+    { encoding: 'utf8', env: { ...process.env, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' } });
+
+  // Aviso de validação do CJSG (layout de 18/10/2026): recusa, não SECA.
+  const AVISO = `<html><body><div id="spwTabelaMensagem"><table class="tabelaMensagem"><tbody>
+<tr><td class="alert"></td><td class="tituloMensagem"><b>Atenção</b></td></tr>
+<tr><td class="alert">&nbsp;</td><td role="alert" id="mensagemRetorno">
+<li>A faixa entre data de inicio e data de fim deve ser de no máximo 1 ano.</li></td></tr>
+</tbody></table></div></body></html>`;
+  const arqAviso = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'cjsg-')), 'aviso.html');
+  fs.writeFileSync(arqAviso, AVISO);
+  let av = null;
+  const ra = rodar(['extrair', arqAviso]);
+  try { av = JSON.parse(ra.stdout); } catch { /* cai no ok abaixo */ }
+  ok(av && av.total === 0 && av.mensagens.length === 1 && av.mensagens[0].startsWith('A faixa entre data'),
+    'parser: aviso de validação do CJSG é lido', ra.stderr || ra.stdout);
+  ok(res && Array.isArray(res.mensagens) && res.mensagens.length === 0, 'parser: página de resultado sem aviso');
+  fs.rmSync(path.dirname(arqAviso), { recursive: true, force: true });
+
+  // Período maior que 1 ano vira janelas de até 1 ano.
+  const per = (c) => { const r2 = rodar(['periodos', JSON.stringify(c)]); try { return JSON.parse(r2.stdout); } catch { return r2.stderr || r2.stdout; } };
+  const p1 = per({ id: 'A', livre: 'x', dtj1: '01/01/2026', dtj2: '18/10/2026' });
+  ok(Array.isArray(p1) && p1.length === 1 && p1[0].id === 'A', 'período: até 1 ano fica inteiro', JSON.stringify(p1));
+  const p2 = per({ id: 'A', livre: 'x', dtj1: '01/01/2024', dtj2: '18/10/2026' });
+  ok(Array.isArray(p2) && p2.length === 3
+    && p2[0].id === 'A@1' && p2[0].dtj1 === '01/01/2024' && p2[0].dtj2 === '31/12/2024'
+    && p2[1].dtj1 === '01/01/2025' && p2[1].dtj2 === '31/12/2025'
+    && p2[2].dtj1 === '01/01/2026' && p2[2].dtj2 === '18/10/2026', 'período: 2024–2026 vira 3 janelas contíguas', JSON.stringify(p2));
+  const p3 = per({ id: 'B', livre: 'x', dtp1: '29/02/2024', dtp2: '01/03/2025' });
+  ok(Array.isArray(p3) && p3.length === 2 && p3[0].dtp2 === '27/02/2025' && p3[1].dtp1 === '28/02/2025',
+    'período: 29/02 não quebra a janela', JSON.stringify(p3));
 }
 
 console.log(falhas ? `\n${falhas} falha(s)` : '\ntodos ok');
