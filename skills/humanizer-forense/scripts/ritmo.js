@@ -147,17 +147,39 @@ for (const [c, n] of conectivosPeca) if (n >= 3) sinal('Conectivo de abertura re
 const totalPal = caps.reduce((a, c) => a + S.contarPalavras(c.paragrafos.join('\n')), 0);
 if (caps.length >= 4 && totalPal && caps.length / (totalPal / 1000) > 6) sinal('Densidade de títulos', '(peça)', `${caps.length} capítulos para ${totalPal} palavras (${(caps.length / (totalPal / 1000)).toFixed(1)} por mil)`);
 
+// ── Extensão (decisão da titular, 17/10/2026) ────────────────────────────────
+// Contrarrazões a EDcl de 5 páginas contra despacho de 1 saíram com 13 páginas e
+// 16 transcrições, lint verde. O orçamento mora no playbook do acervo
+// (direito/pecas/embargos-declaracao, seção "Extensão"); aqui só se mede. Calibração:
+// ~300 palavras do .md (prosa + transcrições) por página do .docx no padrão PMA.
+// Peça de EDcl ou contrarrazões a EDcl (pelo `titulo:` do frontmatter) tem teto de
+// 6 páginas e 6 transcrições; `orcamento_paginas:` no frontmatter sobrescreve o teto.
+const bruto = fs.readFileSync(arquivo, 'utf8');
+const fm = (bruto.match(/^---\r?\n([\s\S]*?)\r?\n---/) || [])[1] || '';
+const corpo = bruto.replace(/^---\r?\n[\s\S]*?\r?\n---/, '');
+const palavrasTotais = corpo.split(/\s+/).filter(Boolean).length;
+const paginasEst = Math.round(palavrasTotais / 300);
+const transcricoes = (corpo.match(/(^|\n\s*\n)\s*>/g) || []).length;
+const tituloFm = (fm.match(/^titulo:\s*(.+)$/m) || [])[1] || '';
+const orcamentoFm = Number((fm.match(/^orcamento_paginas:\s*(\d+)/m) || [])[1]);
+const ehEdcl = /embargos\s+de\s+declara/i.test(tituloFm);
+const tetoPaginas = orcamentoFm || (ehEdcl ? 6 : 0);
+const tetoTranscricoes = ehEdcl || orcamentoFm ? 6 : 0;
+if (tetoPaginas && paginasEst > tetoPaginas) sinal('Extensão acima do orçamento', '(peça)', `~${paginasEst} páginas (${palavrasTotais} palavras) para um teto de ${tetoPaginas}; voltar à estrutura, não cortar depois (playbook EDcl, "Extensão")`);
+if (tetoTranscricoes && transcricoes > tetoTranscricoes) sinal('Transcrições em excesso', '(peça)', `${transcricoes} blocos para um teto de ${tetoTranscricoes}; lei, quadro de contrato e fato incontroverso vão em prosa com remissão`);
+
 // ── Relatório ────────────────────────────────────────────────────────────────
 const porNome = new Map();
 for (const s of sinais) porNome.set(s.nome, (porNome.get(s.nome) || 0) + 1);
 const veredito = sinais.length ? 'humanizar' : 'sem sinal';
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ arquivo, capitulos: caps.length, palavras: totalPal, veredito, frasesCurtasEfeito: curtasPeca, paragrafos: totalPars, sinais }, null, 2));
+  console.log(JSON.stringify({ arquivo, capitulos: caps.length, palavras: totalPal, palavrasTotais, paginasEstimadas: paginasEst, transcricoes, veredito, frasesCurtasEfeito: curtasPeca, paragrafos: totalPars, sinais }, null, 2));
 } else {
   console.log(`ritmo — ${path.basename(arquivo)} (${caps.length} capítulo(s), ${totalPal} palavras de prosa própria)\n`);
   if (!sinais.length) console.log('Sem sinal de ritmo mecânico nos medidores. Isso não dispensa a leitura: o medidor pega frequência, não voz.');
   for (const s of sinais) console.log(`⚠ ${s.nome} — ${s.onde}: ${s.detalhe}`);
+  console.log(`ℹ Extensão: ~${paginasEst} página(s) estimada(s) (${palavrasTotais} palavras com transcrições), ${transcricoes} transcrição(ões) em bloco${tetoPaginas ? ` · teto desta peça: ${tetoPaginas} p. e ${tetoTranscricoes} blocos` : ''}.`);
   console.log(`ℹ Frases curtas abrindo ou fechando parágrafo (≤ 10 palavras, sem número): ${curtasPeca} em ${totalPars} parágrafos. Informativo: a leitura decide quais são sentenciosas (voz-forense §8.1).`);
   console.log(`\n${sinais.length} sinal(is) em ${porNome.size} tipo(s). Diagnóstico para a passada humana; nada aqui reprova.` +
     (sinais.length ? ' Estágio 5: humanização recomendada.' : ' Estágio 5: análise registrada, alteração dispensável.'));

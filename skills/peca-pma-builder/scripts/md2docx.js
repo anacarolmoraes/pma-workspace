@@ -168,6 +168,7 @@ function rodarLints(mdPath) {
     { nome: 'lint-placeholder', script: path.join(__dirname, 'lint-placeholder.js') },
     { nome: 'lint-injecao', script: path.join(__dirname, 'lint-injecao.js') },
     { nome: 'lint-inicial', script: path.join(__dirname, 'lint-inicial.js') },
+    { nome: 'lint-extensao', script: path.join(__dirname, 'lint-extensao.js') },
     { nome: 'lint-citacoes', script: path.join(__dirname, 'lint-citacoes.js') },
   ];
   for (const l of lints) {
@@ -196,7 +197,7 @@ function rodarLints(mdPath) {
       process.exit(1);
     }
   }
-  console.log('md2docx: lints OK (remissões + anti-IA + placeholder + injeção + inicial + citações)');
+  console.log('md2docx: lints OK (remissões + anti-IA + placeholder + injeção + inicial + extensão + citações)');
 }
 
 // ── Inline: **bold**, *italic*, ***bold+italic*** → runs de pMixed ───────────

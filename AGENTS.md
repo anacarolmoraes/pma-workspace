@@ -92,6 +92,7 @@ que a peça e diferente de `REPROVADO`. Depois roda quatro lints, nenhum opciona
 | `lint-remissoes` | remissões internas da peça | exit 1 — bloqueia |
 | `lint-ia` | cacoetes de IA na prosa própria | exit 1 — bloqueia |
 | `lint-injecao` | *prompt injection*, texto oculto ou caractere invisível (regra dura 7) | exit 1 — bloqueia |
+| `lint-extensao` | EDcl e contrarrazões a EDcl (pelo `titulo:`) com mais de 6 páginas estimadas ou 6 transcrições em bloco (decisão da titular, 17/10/2026; regra em `direito/pecas/embargos-declaracao`, playbook, "Extensão"). `orcamento_paginas: N` no frontmatter registra a decisão de escrever mais | exit 1 — bloqueia |
 | **`lint-citacoes`** | **toda transcrição existe literalmente na fonte citada, na voz do julgado certo, e o número do precedente confere** | exit 1 — bloqueia · **exit 3 — exige aprovação** |
 
 **Exit 3** = a peça cita página `status: em_teste`. Ou se confere a fonte e se promove a página

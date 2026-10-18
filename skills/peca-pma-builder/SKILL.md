@@ -116,7 +116,9 @@ pipeline (abaixo) e roda sozinho o `lint-remissoes.js`, o `lint-ia.js`
 (humanizer-forense), o `lint-placeholder.js` (peça com `[[slot]]`, `[VERIFICAR ...]`
 ou `[NOME]` fora de citação em bloco não compila: o que falta volta como "falta saber",
 não vai para o texto), o `lint-inicial.js` (só com `tipo: inicial` no frontmatter:
-checklist mecânico do art. 319 e do §5 das definições) e o `lint-citacoes.js` — se
+checklist mecânico do art. 319 e do §5 das definições), o `lint-extensao.js` (EDcl e
+contrarrazões a EDcl acima de 6 páginas estimadas ou 6 transcrições não compilam, salvo
+`orcamento_paginas: N` declarado; decisão da titular, 17/10/2026) e o `lint-citacoes.js` — se
 algum falhar, o .docx NÃO é gerado (`--skip-lint` pula, só para emergências). Após compilar, ele
 valida o timbrado do arquivo gerado (`validarTimbrado`: extent da imagem,
 pgMar 708/708, rodapé institucional) e falha se houver regressão. Para
