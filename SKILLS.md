@@ -29,7 +29,7 @@
 | [`pre-peticionamento`](skills/pre-peticionamento/SKILL.md) | sim | Investigação pré-peticionamento sobre um notebook do NotebookLM já populado: auditoria de risco da tese, perguntas cirúrgicas via `notebooklm ask`, dossiê salvo como nota no notebo |
 | [`pre-peticionamento-drive`](skills/pre-peticionamento-drive/SKILL.md) | sim | Investigação jurídica pré-peticionamento sobre corpus LOCAL (provas baixadas do Drive + jurisprudência local), SEM NotebookLM. |
 | [`radar-jurisprudencia`](skills/radar-jurisprudencia/SKILL.md) | sim | Busca no DJEN jurisprudência recente e favorável à tese do cliente — 5 decisões por tese (mínimo 2 do STJ quando houver), priorizando o tribunal onde a peça será protocolada. |
-| [`radar-jurisprudencia-stj`](skills/radar-jurisprudencia-stj/SKILL.md) | sim | Pesquisa jurisprudência do STJ direto no SCON (scon.stj.jus.br), a partir de um tema, de uma tese ou de um julgado-semente, montando as consultas com os operadores oficiais do STJ, |
+| [`radar-jurisprudencia-stj`](skills/radar-jurisprudencia-stj/SKILL.md) | sim | Pesquisa jurisprudência do STJ no SCON (acórdãos e decisões monocráticas) a partir de tema, tese ou julgado-semente, com os operadores oficiais, triagem pelo sentido, inteiro teor  |
 | [`tipografia-pma`](skills/tipografia-pma/SKILL.md) | sim | Padronização estrutural e visual de peça já redigida: hierarquia de títulos, títulos-tese, ordem dos blocos, destaques, citação em bloco e elementos visuais. |
 | [`validador-extrato-pdf-excel`](skills/validador-extrato-pdf-excel/SKILL.md) | sim | Valida e corrige arquivos Excel gerados a partir de PDFs de extratos bancários. |
 

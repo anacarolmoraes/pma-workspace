@@ -33,9 +33,19 @@ Do mais estreito ao mais largo: `adj` < `prox` < `com` < `mesmo` < `e`.
 ## Campos da pesquisa avançada que o `scon.py` preenche
 
 `ementa` (procura em ementa, informações complementares e termos auxiliares) · `classe`
-(sigla ou extenso) · `uf` · `processo` (número de registro ou da classe) · `dtpb1`/`dtpb2`
-(publicação, `dd/mm/aaaa`) · `dtde1`/`dtde2` (julgamento). Órgão julgador, ministro e Notas
-são seletores da página e o script não os preenche: filtrar depois, pela triagem.
+(sigla ou extenso) · `uf` · `processo` (número da classe, sem ponto: `805919`; com `classe`
+acha o acórdão exato, e é o que o atalho `acordao` usa) · `dtpb1`/`dtpb2` (publicação,
+`dd/mm/aaaa`) · `dtde1`/`dtde2` (julgamento). Órgão julgador, ministro e Notas são
+seletores da página e o script não os preenche: filtrar depois, pela triagem.
+
+Campos ocultos do formulário que o script injeta: `l` (documentos por página, 50), `i`
+(primeiro documento da página: `paginas: 2` na consulta pede `i=51`) e `b` (base: `ACOR`
+acórdãos, `DTXT` decisões monocráticas; `base: monocraticas` na consulta). A monocrática vem
+com o texto integral no espelho ("Decisão"), sem PDF.
+
+**A pesquisa livre lê também "Jurisprudência Citada".** `REsp 805919` na livre devolve o
+acórdão e todos os que o citam (testado: 7 documentos, 6 citantes). Serve para o snowball
+(`scon.js citados`); para achar o acórdão em si, usar `processo` + `classe`.
 
 ## O que o espelho traz e serve à triagem
 

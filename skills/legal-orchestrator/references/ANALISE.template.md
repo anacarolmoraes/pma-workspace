@@ -98,7 +98,10 @@ Os três melhores argumentos da parte contrária, a prova que atacariam, a respo
 ## 8. Radar de jurisprudência
 
 Uma subseção por rodada (`### Radar — AAAA-MM-DD — <tese>`), no formato da skill
-`radar-jurisprudencia`. Amostra do DJEN, não censo: nada entra em peça sem o inteiro teor conferido.
+`radar-jurisprudencia` (DJEN, todos os tribunais, recente) ou `radar-jurisprudencia-stj`
+(SCON, inteiro teor e semáforo de alteração posterior; é o caminho para recurso, apelação,
+contrarrazões e EDcl que precisem de STJ). Amostra, não censo: nada entra em peça sem o
+inteiro teor conferido, e precedente do STJ só chega à peça depositado no bundle.
 
 ## 9. Decisões da titular
 

@@ -2,16 +2,22 @@
 
 Não chamar direto: usar scripts/scon.js, que acha o Python do adv_env e converte o inteiro teor.
 
-    buscar    <consultas.json> <pasta_saida> [por_pagina]
-    teor      <itens.json> <pasta_saida>
-    processo  <itens.json> <pasta_saida>
+    buscar    <consultas.json> <pasta_saida> [por_pagina] [retomar]
+    teor      <itens.json>
+    processo  <itens.json>
 
 O SCON fica atrás de desafio da Cloudflare; o Scrapling (StealthySession) passa como navegador
 comum. Ritmo deliberadamente baixo: uma requisição a cada PAUSA segundos, numa sessão só.
+
+Cada consulta aceita, além de `livre` e dos campos avançados: `base` ("acordaos", padrão, ou
+"monocraticas") e `paginas` (quantas páginas de `por_pagina` trazer; padrão 1). O resultado é
+gravado consulta a consulta, para a queda da sessão não perder o que já veio; `retomar` pula
+as consultas que já estão no resultados.json da pasta.
 """
 import io
 import json
 import logging
+import os
 import re
 import sys
 import time
@@ -24,11 +30,13 @@ logging.getLogger("scrapling").setLevel(logging.WARNING)
 BASE = "https://scon.stj.jus.br/SCON/"
 PAUSA = 6
 TIMEOUT = 90000
+BASES = {"acordaos": "ACOR", "monocraticas": "DTXT"}
 
 ROTULOS = {
-    "Processo": "processo", "Relator": "relator", "Relatora": "relator",
+    "Processo": "processo", "Relator": "relator", "Relatora": "relator", "Relator(a)": "relator",
     "Órgão Julgador": "orgao", "Data do Julgamento": "julgamento",
-    "Data da Publicação/Fonte": "publicacao", "Ementa": "ementa", "Acórdão": "acordao",
+    "Data da Publicação/Fonte": "publicacao", "Data da Publicação": "publicacao",
+    "Ementa": "ementa", "Acórdão": "acordao", "Decisão": "decisao",
     "Notas": "notas", "Informações Complementares à Ementa": "info_compl",
     "Referência Legislativa": "ref_leg", "Jurisprudência Citada": "jurisp_citada",
 }
@@ -40,24 +48,38 @@ def limpar(t):
     return re.sub(r"\s+", " ", t or "").strip()
 
 
-def enviar_form(c, por_pagina):
+def rotulo_de(titulo):
+    """O `.docTitulo` traz o nome do campo e, às vezes, o texto de ajuda do ícone (?).
+    Fica o rótulo que começa o texto; o mais longo primeiro ("Data da Publicação/Fonte")."""
+    nome = limpar(titulo)
+    for k in sorted(ROTULOS, key=len, reverse=True):
+        if nome.startswith(k):
+            return ROTULOS[k]
+    return None
+
+
+def enviar_form(c, por_pagina, inicio=1):
     """O SCON só aceita a busca vinda do formulário da home; GET direto em pesquisar.jsp
-    volta para ela (307). `l` não existe no formulário: é injetado para vir N por página."""
+    volta para ela (307). `l` não existe no formulário: é injetado para vir N por página.
+    `b` escolhe a base (ACOR acórdãos, DTXT monocráticas) e `i` o primeiro documento da página."""
     def acao(page):
         page.fill("#pesquisaLivre", c.get("livre", ""))
         # Os campos da pesquisa avançada ficam numa seção recolhida: `fill` esperaria que
         # ficassem visíveis. O valor vai direto no elemento.
         campos = {k: c[k] for k in CAMPOS_TEXTO if c.get(k)}
-        page.evaluate("""([campos, l]) => {
+        ocultos = {"l": str(por_pagina), "i": str(inicio), "b": BASES.get(c.get("base", "acordaos"), "ACOR")}
+        page.evaluate("""([campos, ocultos]) => {
             const f = document.getElementById('frmConsulta');
             for (const [k, v] of Object.entries(campos)) {
                 const el = f.querySelector('[name="' + k + '"]');
                 if (el) { el.value = v; el.dispatchEvent(new Event('change', {bubbles: true})); }
             }
-            let e = f.querySelector('[name="l"]');
-            if (!e) { e = document.createElement('input'); e.type = 'hidden'; e.name = 'l'; f.appendChild(e); }
-            e.value = l;
-        }""", [campos, str(por_pagina)])
+            for (const [k, v] of Object.entries(ocultos)) {
+                let e = f.querySelector('[name="' + k + '"]');
+                if (!e) { e = document.createElement('input'); e.type = 'hidden'; e.name = k; f.appendChild(e); }
+                e.value = v;
+            }
+        }""", [campos, ocultos])
         with page.expect_navigation(timeout=60000):
             page.focus("#pesquisaLivre")
             page.keyboard.press("Enter")
@@ -65,20 +87,29 @@ def enviar_form(c, por_pagina):
     return acao
 
 
+RX_TOTAL = re.compile(r"([\d.]+)\s+(?:acórdãos?|decis(?:ão|ões) monocráticas?)", re.I)
+RX_TEOR = re.compile(r"GetInteiroTeorDoAcordao\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
+RX_MONO = re.compile(r"monocraticas/decisoes/\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
+
+
 def extrair(page):
-    total = re.search(r"([\d.]+)\s+acórdãos", page.get_all_text())
+    total = RX_TOTAL.search(page.get_all_text())
     docs = []
     for d in page.css("div.documento"):
         reg = {}
         for t in d.css(".docTitulo"):
-            nome = limpar(t.get_all_text())
+            campo = rotulo_de(t.get_all_text())
             irmao = t.xpath("following-sibling::*[1]")
-            if nome in ROTULOS and irmao:
-                reg[ROTULOS[nome]] = limpar(irmao[0].get_all_text())
-        m = re.search(r"GetInteiroTeorDoAcordao\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)",
-                      d.html_content)
+            if campo and irmao:
+                reg[campo] = limpar(irmao[0].get_all_text())
+        m = RX_TEOR.search(d.html_content)
         if m:
-            reg["num_registro"], reg["dt_publicacao"] = m.group(1), m.group(2)
+            reg["num_registro"], reg["dt_publicacao"], reg["tipo"] = m.group(1), m.group(2), "acordao"
+        else:
+            m = RX_MONO.search(d.html_content)
+            if m:
+                reg["num_registro"], reg["dt_publicacao"], reg["tipo"] = m.group(1), m.group(2), "monocratica"
+                reg.setdefault("ementa", reg.get("decisao", "")[:2600])
         if reg:
             docs.append(reg)
     return int(total.group(1).replace(".", "")) if total else 0, docs
@@ -97,11 +128,12 @@ def gravar_triagem(resultados, arq):
             k = d.get("num_registro") or d.get("processo")
             vistos.setdefault(k, [d, []])[1].append(q["id"])
     with io.open(arq, "w", encoding="utf-8") as f:
-        f.write(f"# Triagem SCON — {len(vistos)} acórdãos distintos\n\n")
+        f.write(f"# Triagem SCON — {len(vistos)} documentos distintos\n\n")
         f.write("Ementa recortada em 700 caracteres. É resumo oficial, não razão de decidir: "
                 "nada aqui vira citação sem o inteiro teor.\n\n")
         for k, (d, qs) in vistos.items():
-            f.write(f"## {citacao_curta(d)} — {d.get('orgao', '')} — j. {d.get('julgamento', '')}"
+            tipo = " — DECISÃO MONOCRÁTICA" if d.get("tipo") == "monocratica" else ""
+            f.write(f"## {citacao_curta(d)}{tipo} — {d.get('orgao', '')} — j. {d.get('julgamento', '')}"
                     f" — {d.get('publicacao', '')}\n")
             f.write(f"registro `{k}` · dt_publicacao `{d.get('dt_publicacao', '')}` · "
                     f"{d.get('relator', '')} · consultas: {', '.join(dict.fromkeys(qs))}\n\n")
@@ -109,32 +141,53 @@ def gravar_triagem(resultados, arq):
     return len(vistos)
 
 
-def buscar(arq, pasta, por_pagina=50):
+def gravar_resultados(resultados, pasta):
+    io.open(f"{pasta}/resultados.json", "w", encoding="utf-8").write(
+        json.dumps(resultados, ensure_ascii=False, indent=1))
+
+
+def buscar(arq, pasta, por_pagina=50, retomar=False):
     consultas = json.load(io.open(arq, encoding="utf-8"))
+    arq_res = f"{pasta}/resultados.json"
+    anteriores = {}
+    if retomar and os.path.exists(arq_res):
+        anteriores = {q["id"]: q for q in json.load(io.open(arq_res, encoding="utf-8"))}
     resultados = []
     with StealthySession(headless=True, solve_cloudflare=True, network_idle=True) as s:
         s.fetch(BASE, timeout=TIMEOUT)
         for c in consultas:
-            time.sleep(PAUSA)
-            p = s.fetch(BASE, page_action=enviar_form(c, por_pagina), timeout=TIMEOUT)
-            total, docs = extrair(p)
+            if c["id"] in anteriores:
+                resultados.append(anteriores[c["id"]])
+                print(f"{c['id']}: retomado ({anteriores[c['id']]['total']} docs já gravados)", flush=True)
+                continue
+            paginas = max(1, int(c.get("paginas") or 1))
+            docs, total = [], 0
+            for n in range(paginas):
+                time.sleep(PAUSA)
+                p = s.fetch(BASE, page_action=enviar_form(c, por_pagina, n * por_pagina + 1), timeout=TIMEOUT)
+                total, pagina = extrair(p)
+                docs.extend(pagina)
+                if not pagina or len(docs) >= total:
+                    break
             if total == 0:
                 aviso = "SECA: reformular (variantes com ou, $, operador mais frouxo)"
             elif total > len(docs):
-                aviso = f"LARGA: só os {len(docs)} mais recentes vieram; estreitar"
+                aviso = f"LARGA: só os {len(docs)} mais recentes vieram; estreitar ou `paginas`"
             else:
                 aviso = ""
-            print(f"{c['id']}: {total} acórdãos, {len(docs)} lidos  {aviso}", flush=True)
+            print(f"{c['id']}: {total} documentos, {len(docs)} lidos  {aviso}", flush=True)
             resultados.append({**c, "total": total, "docs": docs})
-    io.open(f"{pasta}/resultados.json", "w", encoding="utf-8").write(
-        json.dumps(resultados, ensure_ascii=False, indent=1))
+            gravar_resultados(resultados, pasta)  # consulta a consulta: queda não perde o feito
+    gravar_resultados(resultados, pasta)
     n = gravar_triagem(resultados, f"{pasta}/triagem.md")
-    print(f"\n{n} acórdãos distintos -> {pasta}/triagem.md", flush=True)
+    print(f"\n{n} documentos distintos -> {pasta}/triagem.md", flush=True)
 
 
-def teor(arq, pasta):
-    """O inteiro teor vem como PDF; navegar até ele só mostraria o visualizador do Chromium,
-    então os bytes saem por page.request, que herda os cookies da sessão."""
+def teor(arq):
+    """Cada item traz nome, num_registro, dt_publicacao e a pasta de destino. Acórdão vem como
+    PDF (navegar até ele só mostraria o visualizador do Chromium; os bytes saem por
+    page.request, que herda os cookies). Monocrática não tem PDF: o texto já veio no espelho
+    (`decisao`) e o scon.js o grava; aqui só o acórdão é baixado."""
     itens = json.load(io.open(arq, encoding="utf-8"))
     falhas = []
 
@@ -149,7 +202,8 @@ def teor(arq, pasta):
                 falhas.append(it["nome"])
                 print(f"{it['nome']}: FALHOU (status {r.status}, não veio PDF)", flush=True)
                 continue
-            io.open(f"{pasta}/{it['nome']}.pdf", "wb").write(corpo)
+            os.makedirs(it["pasta"], exist_ok=True)
+            io.open(os.path.join(it["pasta"], f"{it['nome']}.pdf"), "wb").write(corpo)
             print(f"{it['nome']}.pdf  {len(corpo) // 1024} KB", flush=True)
 
     with StealthySession(headless=True, solve_cloudflare=True, network_idle=True) as s:
@@ -161,7 +215,7 @@ PROCESSO = ("https://processo.stj.jus.br/processo/pesquisa/?aplicacao=processos.
             "&tipoPesquisa=tipoPesquisaNumeroRegistro&termo=")
 
 
-def processo(arq, pasta):
+def processo(arq):
     """Acompanhamento processual pelo número de registro: partes e advogados (aba Detalhes,
     que alimenta a pseudonimização do depósito) e fases (que acendem o semáforo de alteração
     posterior). O DataJud não serve aqui: indexa o STJ pelo número CNJ, não pelo registro."""
@@ -187,7 +241,8 @@ def processo(arq, pasta):
                 falhas += 1
                 print(f"{it['nome']}: FALHOU (acompanhamento sem Detalhes nem Fases)", flush=True)
                 continue
-            io.open(f"{pasta}/{it['nome']}.processo.json", "w", encoding="utf-8").write(json.dumps(
+            os.makedirs(it["pasta"], exist_ok=True)
+            io.open(os.path.join(it["pasta"], f"{it['nome']}.processo.json"), "w", encoding="utf-8").write(json.dumps(
                 {"registro": it["num_registro"], "url": PROCESSO + it["num_registro"],
                  "lido_em": time.strftime("%Y-%m-%d"), "detalhes": detalhes, "fases": fases},
                 ensure_ascii=False, indent=1))
@@ -198,11 +253,12 @@ def processo(arq, pasta):
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "buscar":
-        buscar(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 50)
+        buscar(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 50,
+               len(sys.argv) > 5 and sys.argv[5] == "retomar")
     elif cmd == "teor":
-        teor(sys.argv[2], sys.argv[3])
+        teor(sys.argv[2])
     elif cmd == "processo":
-        processo(sys.argv[2], sys.argv[3])
+        processo(sys.argv[2])
     else:
         print(__doc__)
         sys.exit(2)

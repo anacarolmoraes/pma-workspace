@@ -56,7 +56,14 @@ const PAPEIS = {
 const RX_ROTULO = new RegExp(`\\b(${Object.keys(PAPEIS).map((k) => k.replace('.', '\\.')).join('|')})\\s*:`, 'g');
 const RX_OAB = /\s+-\s+[A-Z]{2}\d{3,7}[A-Z]?\b/g;
 const RX_SOC_ADV = /\b(ADVOCACIA|ADVOGADOS|ADVOGADAS|ADVOGADOS ASSOCIADOS|SOCIEDADE (INDIVIDUAL )?DE ADVOGAD|S\/S)\b/i;
-const RX_PJ = /\b(LTDA|S\.?\s?\/?A\.?|EIRELI|EPP|BANCO|COOPERATIVA|ASSOCIA[CÇ][AÃ]O|FUNDA[CÇ][AÃ]O|FUNDO|SINDICATO|CONDOM[IÍ]NIO|MUNIC[IÍ]PIO|ESTADO D|UNI[AÃ]O|INSTITUTO|EMPREENDIMENTOS|INCORPORA|COMPANHIA|CIA\b|CONSTRUTORA|SEGURADORA|SEGUROS|IMOBILI[AÁ]RIA|IND[UÚ]STRIA|COM[EÉ]RCIO|MINIST[EÉ]RIO P[UÚ]BLICO|FAZENDA|INSS|CAIXA ECON|EMPRESA|ENERGIA|TELEF|SANEAMENTO|PREVID[EÊ]NCIA|PLANO DE SA[UÚ]DE|UNIMED|HOSPITAL|UNIVERSIDADE|IGREJA|PARTIDO)\b/i;
+// Sociedade anônima só com pontuação ("S.A.", "S/A", "S. A."): "SA" solto é o sobrenome Sá
+// sem acento, como o acompanhamento processual grafa ("JOSE DE SA"), e pessoa não fica.
+const RX_PJ = /\b(LTDA|S\.\s?A\.?|S\/A|EIRELI|EPP|BANCO|COOPERATIVA|ASSOCIA[CÇ][AÃ]O|FUNDA[CÇ][AÃ]O|FUNDO|SINDICATO|CONDOM[IÍ]NIO|MUNIC[IÍ]PIO|ESTADO D|UNI[AÃ]O|INSTITUTO|EMPREENDIMENTOS|INCORPORA|COMPANHIA|CIA\b|CONSTRUTORA|SEGURADORA|SEGUROS|IMOBILI[AÁ]RIA|IND[UÚ]STRIA|COM[EÉ]RCIO|MINIST[EÉ]RIO P[UÚ]BLICO|FAZENDA|INSS|CAIXA ECON|EMPRESA|ENERGIA|TELEF|SANEAMENTO|PREVID[EÊ]NCIA|PLANO DE SA[UÚ]DE|UNIMED|HOSPITAL|UNIVERSIDADE|IGREJA|PARTIDO)\b/i;
+// Rótulos da aba Detalhes que NÃO são pessoa: tudo o que não está aqui é parte, representante
+// ou advogado e entra no plano de troca, mesmo papel que o mapa acima não previu
+// (LITISCONSORTE, ASSISTENTE, PROCURADOR, DEFENSOR, PACIENTE, EXEQUENTE...).
+const RX_ROTULO_NAO_PESSOA = /^(PROCESSO|LOCALIZA|TIPO|AUTUA|N[UÚ]MERO|RELATOR|RAMO|ASSUNTO|TRIBUNAL|[UÚ]LTIMA FASE|CLASSE|ORIGEM|DATA|SITUA|FASE|SEGREDO|PRIORIDADE)/i;
+const RX_ROTULO_ADV = /^(ADVOG|PROCURADOR|DEFENSOR|CURADOR)/i;
 
 function limpo(s) {
   return String(s || '').replace(RX_OAB, '').replace(/\s+/g, ' ').replace(/[\s.,;]+$/, '').trim();
@@ -97,8 +104,10 @@ function nomesDoCabecalho(md) {
 function nomesDoProcesso(proc) {
   const achados = [];
   for (const { rotulo, valor } of proc?.detalhes || []) {
-    const papel = PAPEIS[rotulo.toUpperCase()] || PAPEIS[`${rotulo.toUpperCase()}.`];
-    if (!papel) continue;
+    const rot = (rotulo || '').toUpperCase().trim();
+    if (!rot || RX_ROTULO_NAO_PESSOA.test(rot) || !valor || !/\p{L}/u.test(valor)) continue;
+    const papel = PAPEIS[rot] || PAPEIS[`${rot}.`]
+      || (RX_ROTULO_ADV.test(rot) ? 'ADVOGADO' : rot.replace(/[.:]+$/, '').replace(/S$/, ''));
     const nomes = papel === 'ADVOGADO' ? dividirAdvogados(valor) : [limpo(valor)];
     for (const n of nomes) if (n) achados.push({ papel, nome: n });
   }
@@ -191,6 +200,20 @@ function slugDe(doc) {
     .normalize('NFD').replace(/\p{M}/gu, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Título da página sem `--tese`: a ementa padronizada (2024 em diante) traz "Tese de
+// julgamento: ..."; sai dali, em frase. Sem ela, os itens do cabeçalho depois do primeiro,
+// que é a classe ("RECURSO ESPECIAL."), em caixa normal.
+function tituloDaEmenta(ementa = '') {
+  const m = /Tese de julgamento:\s*"?\s*(?:1\.\s*)?([^"]+?)(?:\s*2\.\s|"|\s*Dispositivos relevantes|$)/i.exec(ementa);
+  if (m && m[1].trim().length > 20) {
+    const t = m[1].trim().replace(/\.$/, '');
+    return t.length <= 200 ? t : `${t.slice(0, 200).replace(/\s+\S*$/, '')}…`;
+  }
+  const itens = ementa.split(/\.\s/).slice(1, 4).join('. ') || ementa;
+  const frase = itens.slice(0, 140).toLowerCase();
+  return frase.charAt(0).toUpperCase() + frase.slice(1);
+}
+
 function main() {
   const o = opcoes(process.argv.slice(2));
   if (!o.registro || !o.bundle) sair('uso: depositar.js --registro <reg> --bundle direito/<tema> [--slug s] [--tese "..."] [--forcar]');
@@ -198,14 +221,17 @@ function main() {
   const bundle = path.join(amb.bundles, o.bundle);
   if (!fs.existsSync(path.join(bundle, 'index.md'))) sair(`bundle não encontrado: ${bundle}`);
 
-  const base = (fs.existsSync(BIBLIOTECA) ? fs.readdirSync(BIBLIOTECA) : [])
-    .find((f) => f.startsWith(`${o.registro}_`) && f.endsWith('.scon.json'))?.replace(/\.scon\.json$/, '');
-  if (!base) sair(`registro ${o.registro} não está na biblioteca — rode scon.js teor antes`);
-  const arqMd = path.join(BIBLIOTECA, `${base}.md`);
+  // Biblioteca em pastas: <registro>_<classe>/<base>.{pdf,md,scon.json,processo.json}.
+  const base = (fs.existsSync(BIBLIOTECA) ? fs.readdirSync(BIBLIOTECA, { withFileTypes: true }) : [])
+    .filter((e) => e.isDirectory() && e.name.startsWith(`${o.registro}_`) && !e.name.endsWith('_mono'))
+    .map((e) => e.name).find((b) => fs.existsSync(path.join(BIBLIOTECA, b, `${b}.scon.json`)));
+  if (!base) sair(`registro ${o.registro} não está na biblioteca — rode scon.js teor antes (decisão monocrática não se deposita)`);
+  const pasta = path.join(BIBLIOTECA, base);
+  const arqMd = path.join(pasta, `${base}.md`);
   if (!fs.existsSync(arqMd)) sair(`${arqMd} não existe — o PDF não foi convertido`);
-  const meta = JSON.parse(fs.readFileSync(path.join(BIBLIOTECA, `${base}.scon.json`), 'utf8'));
+  const meta = JSON.parse(fs.readFileSync(path.join(pasta, `${base}.scon.json`), 'utf8'));
   const doc = meta.doc;
-  const arqProc = path.join(BIBLIOTECA, `${base}.processo.json`);
+  const arqProc = path.join(pasta, `${base}.processo.json`);
   const proc = fs.existsSync(arqProc) ? JSON.parse(fs.readFileSync(arqProc, 'utf8')) : null;
   if (!proc) console.log('AVISO: sem acompanhamento processual — a lista de nomes vem só do cabeçalho. Rode scon.js verificar antes.');
 
@@ -236,9 +262,7 @@ function main() {
     + texto);
 
   const sem = proc?.semaforo;
-  const titulo = (o.tese ? `${cit} — ${o.tese}`
-    : `${cit} — ${(ementa.split(/\.\s/).slice(1, 4).join('. ') || ementa).slice(0, 140)}`)
-    .replace(/\s+\./g, '.').trim();
+  const titulo = (o.tese ? `${cit} — ${o.tese}` : `${cit} — ${tituloDaEmenta(ementa)}`).replace(/\s+\./g, '.').trim();
   const fm = [
     '---', 'type: acordao', `title: ${yaml(titulo)}`,
     `description: ${yaml(`STJ, ${orgao}, ${relator}. ${ementa.slice(0, 280)}…`)}`,
@@ -292,4 +316,6 @@ function main() {
   console.log(`\ngit status do acervo:\n${st.stdout.trim() || '(limpo)'}`);
 }
 
-main();
+module.exports = { pseudonimizar, planoDeTroca, nomesDoProcesso, nomesDoCabecalho, residuos, tituloDaEmenta, slugDe, citacao, dividirAdvogados };
+
+if (require.main === module) main();

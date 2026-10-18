@@ -1,0 +1,29 @@
+{
+  "skill_name": "radar-jurisprudencia-stj",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "preciso de STJ para a apelação do caso de cobrança de honorários: o juiz julgou improcedente porque o mandato foi revogado antes do fim e o contrato era de êxito. me traz o que sustenta e o que o outro lado vai usar",
+      "expected_output": "Lê as peças do caso e confere nos autos os fatos da tese; enuncia a tese e as frentes (inclusive a contrária) à titular antes de buscar; consultas com operadores do SCON (`com`, `ou`, `$`) em tmp/radar-stj/<caso>/consultas.json; triagem por cabeçalhos com marcação gravada em triagem-marcada.txt e conferida; inteiro teor só dos finalistas, lido no voto (tese no voto, voz STJ x TJ transcrito); `verificar` antes do dossiê; dossiê na seção 8 da ANALISE.md com Sustentam e Contrários e distinção; nenhuma ementa lida integralmente fora dos pré-selecionados.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "traga o inteiro teor do REsp 805.919/MG",
+      "expected_output": "Usa o atalho `scon.js acordao --numero \"REsp 805.919/MG\" --verificar` (campos processo + classe, não a pesquisa livre); entrega o caminho da pasta na biblioteca jurisprudencia-stj/<registro>_<classe>/, a ementa e o semáforo; avisa que, para citar em peça, o julgado precisa ser depositado no bundle (depositar.js) e a peça declarar cita_em_teste: sim enquanto a página for em_teste.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "o STJ tem algo recente sobre honorários de êxito quando o cliente faz acordo direto com a parte contrária sem o advogado?",
+      "expected_output": "Vocabulário do STJ (aquiesc$, anuencia, 'à revelia do patrono'), não a palavra da pergunta; se a primeira rodada vier SECA, afrouxa e roda de novo antes de dizer que não há; uma frente de monocráticas com filtro de data só se o colegiado vier seco, dizendo que é monocrática; busca registrada em BUSCAS.md; resposta diz que é amostra, não censo, e não afirma 'jurisprudência pacífica'.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "deposita o REsp 2.084.975/MT no bundle de cobrança de honorários pra eu citar na apelação",
+      "expected_output": "Roda `verificar` antes (lista oficial de partes e advogados) e depois `depositar.js --registro <reg> --bundle direito/cobranca-honorarios`; não inventa `--tese` (só se a titular der o enunciado conferido no voto); lê o relatório de trocas e os sobrenomes residuais e confere o raw/ antes de seguir; avisa que a página nasce em_teste, que o commit no acervo é da titular e que a peça precisa de cita_em_teste: sim.",
+      "files": []
+    }
+  ]
+}

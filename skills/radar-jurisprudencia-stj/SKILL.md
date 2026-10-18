@@ -1,6 +1,6 @@
 ---
 name: radar-jurisprudencia-stj
-description: Pesquisa jurisprudência do STJ direto no SCON (scon.stj.jus.br), a partir de um tema, de uma tese ou de um julgado-semente, montando as consultas com os operadores oficiais do STJ, triando as ementas pelo sentido e trazendo o inteiro teor dos finalistas. Usar quando a titular pedir "julgado do STJ", "o que o STJ decide sobre X", precedente para sustentar recurso, apelação, contrarrazões ou EDcl, ou quando a peça precisar de STJ que o bundle do tema não tem. Traz favoráveis e contrários, porque o contrário diz de quem a peça precisa se distinguir. Usar também quando a titular pedir o inteiro teor de um acórdão específico do STJ ("traga o REsp 805.919/MG", "baixe o acórdão do AgInt no AREsp X"). Para decisões recentes de outros tribunais, o caminho é o radar-jurisprudencia (DJEN).
+description: Pesquisa jurisprudência do STJ no SCON (acórdãos e decisões monocráticas) a partir de tema, tese ou julgado-semente, com os operadores oficiais, triagem pelo sentido, inteiro teor lido no voto e semáforo de alteração posterior. Usar quando a titular pedir "julgado do STJ", "o que o STJ decide sobre X", precedente para recurso, apelação, contrarrazões ou EDcl, STJ que o bundle não tem, ou o inteiro teor de um acórdão específico ("traga o REsp 805.919/MG"). Traz favoráveis e contrários. Outros tribunais e decisões recentes: radar-jurisprudencia (DJEN).
 ---
 
 # Radar de jurisprudência do STJ (SCON)
@@ -21,18 +21,21 @@ o contrário entra no dossiê como o argumento que o outro lado vai usar.
 Quando a titular já sabe qual acórdão quer, nada de frentes nem triagem:
 
 ```bash
-node skills/radar-jurisprudencia-stj/scripts/scon.js acordao --numero "REsp 805.919/MG" --verificar
+node skills/radar-jurisprudencia-stj/scripts/scon.js acordao --numero "REsp 805.919/MG" --caso <caso> --verificar
 ```
 
-- **A citação entra como se escreve.** O script monta a consulta como o SCON exige,
-  `REsp 805919`: sem ponto no número e sem UF, porque o SCON não acha o número com ponto.
+- **A citação entra como se escreve.** O script busca pelos campos `processo` e `classe` da
+  pesquisa avançada, não pela pesquisa livre: a livre lê "Jurisprudência Citada" e devolve
+  também quem cita o acórdão, e para precedente muito citado a página de 50 nem traz o
+  pedido. Se os campos não acharem, cai na livre (`REsp 805919`, sem ponto e sem UF).
 - **A mesma consulta traz o REsp, o AgRg, o AgInt e os EDcl daquele processo.** Fica o que
   bate com classe, número e UF digitados. Se nenhum bater exatamente, ou mais de um, o
   script lista os encontrados com o registro, para escolher e rodar `teor`.
-- **Baixa para a biblioteca e registra a busca.** `--verificar` acende o semáforo.
+- **Baixa para a biblioteca e registra a busca.** `--verificar` acende o semáforo. `--caso`
+  é o que o `INDICE.md` mostra em "Achado em".
 - **Para um recurso interno, digitar a classe inteira:** `"AgInt no AREsp 1.907.838/SP"`.
 
-Entregar à titular o caminho do PDF na biblioteca (`jurisprudencia-stj/<registro>_<classe>.pdf`),
+Entregar à titular o caminho do PDF na biblioteca (`jurisprudencia-stj/<registro>_<classe>/`),
 a ementa (`scon.js ementas`) e a situação. Para citar em peça, seguir a etapa 8.
 
 ## 1. Entender o caso antes de buscar
@@ -64,33 +67,42 @@ Operadores, campos e vocabulário do STJ: [`references/operadores-scon.md`](refe
 ```json
 [
  {"id": "A1-exito-revogacao", "livre": "(revoga$ ou destitu$) com mandato com (exito ou \"ad exitum\") com honorario$"},
- {"id": "C1-contrario-culpa", "livre": "honorario$ com revoga$ com mandato com (culpa ou desidia)", "dtpb1": "01/01/2015"}
+ {"id": "C1-contrario-culpa", "livre": "honorario$ com revoga$ com mandato com (culpa ou desidia)", "dtpb1": "01/01/2015"},
+ {"id": "M1-monocraticas-recentes", "livre": "honorario$ adj2 contrat$ com revoga$", "base": "monocraticas", "dtpb1": "01/01/2025"}
 ]
 ```
 
 Campos opcionais por consulta: `ementa`, `classe`, `uf`, `processo`, `dtpb1`/`dtpb2`
-(publicação) e `dtde1`/`dtde2` (julgamento), em `dd/mm/aaaa`.
+(publicação) e `dtde1`/`dtde2` (julgamento), em `dd/mm/aaaa`; `base` (`acordaos`, padrão,
+ou `monocraticas`); `paginas` (quantas páginas de 50 trazer; padrão 1).
+
+**Monocráticas** valem menos (etapa 5) e não têm PDF: o texto integral vem no espelho e vira
+o `.md` da biblioteca. Servem para matéria recente, em que ainda não há colegiado, e para
+ver como o relator decide. Uma frente de monocráticas por caso, com filtro de data, basta.
 
 ## 3. Buscar
 
 ```bash
-node skills/radar-jurisprudencia-stj/scripts/scon.js buscar --consultas tmp/radar-stj/<caso>/consultas.json --saida tmp/radar-stj/<caso>
+node skills/radar-jurisprudencia-stj/scripts/scon.js buscar --consultas tmp/radar-stj/<caso>/consultas.json --saida tmp/radar-stj/<caso> [--paginas 2] [--retomar]
 ```
 
 Grava `resultados.json` (tudo) e `triagem.md` (deduplicado entre consultas, ementa
-recortada). Saída em `tmp/`, **nunca** na pasta do cliente. Uma busca leva ~15 s; o
-navegador roda fora do sandbox do Bash.
+recortada). Saída em `tmp/`, **nunca** na pasta do cliente. Uma página leva ~15 s; o
+navegador roda fora do sandbox do Bash. O resultado é gravado **consulta a consulta**: se a
+sessão cair, o que já veio fica, e `--retomar` continua de onde parou sem repetir.
 
 Toda busca fica registrada em **`jurisprudencia-stj/BUSCAS.md`**: data, caso, consulta
-exata, filtros e quantos acórdãos vieram. É por ali que a titular confere e refaz a busca,
+exata, filtros e quantos documentos vieram. É por ali que a titular confere e refaz a busca,
 colando a consulta no campo "Pesquisa" do SCON. Link direto não existe: a URL de resultado,
 aberta fora da sessão, volta para a home.
 
 O console marca cada consulta:
 
 - **SECA** (0): afrouxar. Trocar `adj` por `com`, acrescentar variantes, tirar termo.
-- **LARGA** (mais que a página, 50 por padrão): vieram só os mais recentes. Estreitar com
-  mais um termo distintivo, `adj` no lugar de `com` ou filtro de data.
+- **LARGA** (mais que a página, 50 por padrão): vieram só os mais recentes. Ou estreitar
+  (mais um termo distintivo, `adj` no lugar de `com`, filtro de data), ou, se a frente é
+  legitimamente larga, `--paginas 2` ou `3`: custa 15 s por página e é mais barato que uma
+  rodada de reformulação.
 
 Até três rodadas por frente. Seguiu seco? Dizer que o STJ não tem material com aquele
 recorte, sem forçar resultado.
@@ -114,18 +126,30 @@ Medido num caso real (177 acórdãos, 12 julgados de referência confirmados no 
 node skills/radar-jurisprudencia-stj/scripts/scon.js cabecalhos --saida tmp/radar-stj/<caso>
 ```
 
-Uma linha por acórdão principal: registro, classe, frentes em que apareceu, órgão, data e o
+Uma linha por documento principal: registro, classe, frentes em que apareceu, órgão, data e o
 **cabeçalho em maiúsculas da ementa**, que no STJ enumera o tema, a súmula aplicada e o
-resultado ("RECURSO ESPECIAL PROVIDO", "SÚMULA 83"). `--frente <id>` filtra uma frente. Ler
-a lista inteira, marcar F, C ou I por linha e levar os F e C para a etapa 5.
+resultado ("RECURSO ESPECIAL PROVIDO", "SÚMULA 83"). `--frente <id>` filtra uma frente.
+
+**A marcação deixa rastro.** Ler a lista inteira e gravar em
+`tmp/radar-stj/<caso>/triagem-marcada.txt` uma linha por principal, no mesmo formato do
+triador (`registro | F, C ou I | ÓBICE ou MÉRITO | frente | motivo`). Depois:
+
+```bash
+node skills/radar-jurisprudencia-stj/scripts/scon.js conferir --saida tmp/radar-stj/<caso>
+```
+
+Imprime só as linhas F e C, acusa principal sem marca (sai com 1) e grava
+`triagem-marcada.md`, a lista legível do que foi descartado e por quê, para a titular
+conferir o descarte e não só os finalistas.
 
 Ordem da lista e dos lotes:
 
 - **Rodízio entre frentes:** a 1ª de cada consulta, depois a 2ª de cada. Ranking global
   deixaria a frente contrária, que costuma ser estreita, no fim.
 - **Sem corte.** Um corte em 90 deixou de fora o melhor julgado de um caso real.
-- **Similares** (mesmo relator, mesmo órgão, mesma abertura de ementa) saem e apontam para
-  o principal. `--incluir-similares` nos lotes, para procurar divergência.
+- **Similares** (mesmo relator, mesmo órgão, mesma ementa depois do cabeçalho) saem da
+  lista, e a linha do principal diz quantos agrupa (`(+3 similares)`): série de casos
+  idênticos conta como um. `--incluir-similares` nos lotes, para procurar divergência.
 
 ### Busca muito grande (acima de ~300 principais): lotes Haiku
 
@@ -138,14 +162,9 @@ node skills/radar-jurisprudencia-stj/scripts/scon.js lotes --saida tmp/radar-stj
 Monta o `candidatos.json` no formato do `radar-jurisprudencia` e fatia com o `lotes.js` de
 lá, ementa longa compactada (abertura e fecho). Disparar um triador `model: haiku` por lote,
 **todos na mesma mensagem**. O triador grava a resposta em arquivo, e o orquestrador lê só o
-resultado do `conferir`:
-
-```bash
-node skills/radar-jurisprudencia-stj/scripts/scon.js conferir --saida tmp/radar-stj/<caso>
-```
-
-Imprime só as linhas F e C e **lista o que ficou sem resposta** (sai com código 1). Item sem
-resposta volta para um triador; nunca se fecha a triagem com falta.
+resultado do mesmo `conferir` da etapa anterior, que neste modo cruza cada lote com a
+resposta gravada pelo triador e **lista o que ficou sem resposta**. Item sem resposta volta
+para um triador; nunca se fecha a triagem com falta.
 
 Prompt do triador:
 
@@ -184,9 +203,23 @@ node skills/radar-jurisprudencia-stj/scripts/scon.js ementas --saida tmp/radar-s
 - **Provido** vale mais que desprovido: o STJ corrigiu o tribunal de origem.
 - **Notas** indicando repetitivo, IAC ou tese revisada: ler antes de usar.
 - Peso: Corte Especial/Seção > Turma colegiada > monocrática. Empate: o mais recente.
+  Monocrática só entra no dossiê quando não há colegiado sobre o ponto, e dizendo que é
+  monocrática.
 
 Finalistas: de 6 a 10 por caso, cobrindo cada frente, mais **todos os C relevantes**. Frente
 sem nenhum F na triagem: reformular a consulta (etapa 2) antes de declarar que não há.
+
+### Snowball: o finalista aponta os próximos
+
+```bash
+node skills/radar-jurisprudencia-stj/scripts/scon.js citados --registro <registro da biblioteca>
+```
+
+Lista os precedentes do STJ que o acórdão cita (a ementa padronizada traz "Jurisprudência
+relevante citada"; o voto traz o resto), com o comando `acordao` pronto para cada um, e a
+consulta livre que acha **quem cita** o finalista (`REsp 2084975`, que o SCON lê no campo
+"Jurisprudência Citada" dos outros). É assim que se chega ao leading case e ao julgado que o
+superou. Com `--saida` e `--registros`, lê só a ementa dos candidatos, antes do inteiro teor.
 
 ## 6. Trazer e ler o inteiro teor dos finalistas
 
@@ -196,13 +229,16 @@ node skills/radar-jurisprudencia-stj/scripts/scon.js teor --saida tmp/radar-stj/
 
 O inteiro teor vai para a **biblioteca `jurisprudencia-stj/`**, na raiz do workspace:
 
-- Um acórdão por registro (`<registro>_<classe>.pdf`), com o `.md` do `pdfmd`
-  (`--no-tables`) ao lado.
+- **Uma pasta por documento**, `<registro>_<classe>/` (monocrática: sufixo `_mono`), com o
+  PDF, o `.md` do `pdfmd` (`--no-tables`) e seus sidecars, o espelho (`.scon.json`) e o
+  acompanhamento (`.processo.json`).
 - Compartilhada entre casos: o acórdão que já está lá **não é baixado nem convertido de
   novo**.
-- `INDICE.md` com uma linha por acórdão, para a titular abrir o PDF e conferir. A coluna
-  "Achado em" diz o caso e as frentes da busca (no `BUSCAS.md`) que trouxeram o acórdão.
+- `INDICE.md` na raiz da biblioteca, uma linha por documento, para a titular abrir o PDF e
+  conferir. A coluna "Achado em" diz o caso e as frentes da busca (no `BUSCAS.md`) que
+  trouxeram o acórdão.
 - Fora do git (`.gitignore`), porque o inteiro teor traz nome de parte (regra dura 6).
+- Biblioteca do formato antigo (arquivos soltos): `scon.js migrar` leva tudo para pastas.
 
 Ler pelo `ler-pdfmd.js` com `--buscar "<termo da tese>"` ou `--paginas`, nunca o `.md`
 inteiro: o trecho da tese, mais o dispositivo e o resultado, bastam.
@@ -227,16 +263,18 @@ um acolhimento posterior pode mudar o resultado:
 node skills/radar-jurisprudencia-stj/scripts/scon.js verificar --registros 202302406926,202503141132
 ```
 
-- **VERDE:** transitou ou baixou sem recurso nem decisão posterior. Não dispensa ler o voto.
-- **AMARELO:** houve EDcl, AgInt, EREsp, RE, acolhimento ou provimento depois da
-  publicação. Ler a decisão posterior antes de citar. Num caso real, pegou EDcl pendentes
-  justamente contra o julgado mais útil da apelação.
+- **VERDE:** transitou ou baixou. Se houve recurso posterior, ele foi rejeitado, não
+  conhecido ou desprovido antes do trânsito, e o motivo diz qual. Não dispensa ler o voto.
+- **AMARELO, duas causas, ditas no motivo:** *possível alteração* (fase posterior com
+  acolhimento, provimento, reconsideração, anulação: ler a decisão posterior antes de citar)
+  ou *recurso posterior pendente* (EDcl, AgInt, EREsp, RE sem trânsito depois dele). Num
+  caso real, pegou EDcl pendentes justamente contra o julgado mais útil da apelação.
 - **CINZA:** ainda sem trânsito (prazo em curso) ou acompanhamento não lido.
 
-Grava `<base>.processo.json` na biblioteca (partes, advogados, número CNJ, fases) e a
+Grava `<base>.processo.json` na pasta do acórdão (partes, advogados, número CNJ, fases) e a
 coluna "Situação" do `INDICE.md`. O DataJud não serve aqui: indexa o STJ pelo número CNJ,
 não pelo registro. No contrário, o AMARELO também é argumento: entendimento ainda sob
-recurso.
+recurso. Rodar `verificar --todos` de tempos em tempos: o semáforo é de uma data.
 
 ## 7. Dossiê
 
@@ -246,7 +284,7 @@ Gravar como subseção da seção **8. Radar de jurisprudência** da `clientes/<
 ```markdown
 # Radar STJ — <data> — <tese> (representamos <lado>)
 > Fonte: SCON/STJ, inteiro teor lido no voto. Amostra das consultas abaixo, não censo:
-> não autoriza "jurisprudência pacífica".
+> não autoriza "jurisprudência pacífica". Triagem completa em `tmp/radar-stj/<caso>/triagem-marcada.md`.
 
 ## Consultas
 (registro completo em `jurisprudencia-stj/BUSCAS.md`)
@@ -258,7 +296,7 @@ Gravar como subseção da seção **8. Radar de jurisprudência** da `clientes/<
 - **Por que serve:** <1–2 frases suas>
 - **Trecho:** > "<literal>" — voz: STJ | TJ<x> transcrito no voto
 - **Cuidado:** <limite do precedente, se houver>
-- **Inteiro teor:** `jurisprudencia-stj/<registro>_<classe>.pdf`
+- **Inteiro teor:** `jurisprudencia-stj/<registro>_<classe>/`
 - **Situação:** <VERDE | AMARELO | CINZA> em <data> — <motivo do semáforo>
 
 ## Contrários e distinção
@@ -280,15 +318,24 @@ node skills/radar-jurisprudencia-stj/scripts/depositar.js --registro 20230240692
 Grava, em `<bundles>/direito/<tema>/`:
 
 - `raw/<slug>.md`: inteiro teor **pseudonimizado** (regra dura 6). Saem parte pessoa
-  física, advogado e sociedade de advogados (o nome dela é nome de advogado), CPF, e-mail,
-  telefone e CEP. Ficam ministro, pessoa jurídica parte e número do processo. A troca não
-  distingue acento nem quebra de linha ("CLAUDIO" do acompanhamento pega o "CLÁUDIO" do PDF).
+  física, representante, litisconsorte, advogado, procurador, defensor e sociedade de
+  advogados (o nome dela é nome de advogado), CPF, e-mail, telefone e CEP; qualquer rótulo
+  da aba Detalhes que não seja dado do processo é tratado como pessoa. Ficam ministro,
+  número do processo e **pessoa jurídica parte** (banco, construtora, município): leitura
+  desta skill de que o nome da empresa não identifica pessoa natural; a regra dura 6 não faz
+  a ressalva e a titular ainda não a confirmou por escrito. "S.A." só com pontuação: "SA"
+  solto é o sobrenome Sá sem acento e sai como pessoa. A troca não distingue acento nem
+  quebra de linha ("CLAUDIO" do acompanhamento pega o "CLÁUDIO" do PDF).
 - `raw/<slug>.md.estrutura.json`: sidecar de voz do `segmentar-acordao.py`, que o
   `lint-citacoes` usa para não tomar ementa transcrita por razão de decidir.
 - `jurisprudencia/<slug>.md`: página `status: em_teste`, Espelho do Acórdão completo
   (`natureza`, `fonte_da_tese`, `numero_unico`, `situacao_processual`). `tese:` só entra
-  se vier de `--tese`: o script não inventa enunciado.
+  se vier de `--tese`: o script não inventa enunciado. O título sai da "Tese de julgamento"
+  da ementa padronizada quando ela existe.
 - A linha da página no `jurisprudencia/index.md` (sem ela, o `lint-bundle` acusa E3).
+
+Monocrática não se deposita: não é precedente para o `lint-citacoes` e o acervo só guarda
+acórdão com inteiro teor oficial.
 
 O relatório mostra cada troca e os **sobrenomes que ainda aparecem no texto**. Num caso
 real, pegou uma sociedade de advogados que escapara pela barra de "S/S". Conferir o relatório
@@ -308,6 +355,9 @@ Até a página ser promovida a `vigente` (checklist no fim dela), a peça que a 
 
 - **Ritmo.** Uma requisição a cada 6 s, numa sessão só. Nada de varredura em massa nem de
   paralelizar sessões. O SCON é serviço público; a skill o usa como um pesquisador usaria.
+- **Repetitivos e IAC** não são buscados como base própria: aparecem pela Nota da ementa e
+  pelo `citados`. A base "Precedentes Qualificados" do STJ é outro aplicativo, fora desta
+  skill; para Tema repetitivo, o bundle do tema e a `pesquisa-djen` continuam sendo o caminho.
 - **Cloudflare.** O Scrapling passa o desafio como navegador comum. Se o STJ endurecer e a
   busca voltar vazia em toda consulta, ou com a página "Um momento…", parar e avisar a
   titular. Alternativa: o Chrome da própria titular (Claude in Chrome).
@@ -316,3 +366,5 @@ Até a página ser promovida a `vigente` (checklist no fim dela), a peça que a 
   permissão precisa ser liberada por quem opera.
 - **Site mudou.** Se `extrair` não acha `div.documento` ou o PDF não vem, o SCON mudou o
   HTML: inspecionar a página salva, não insistir.
+- **Testes.** `tests/_teste-scon.js` (no `npm test`) cobre pseudonimização, semáforo,
+  cabeçalho, parser de número e `citados`. Mudança nessas funções passa por ele.
