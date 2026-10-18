@@ -187,7 +187,9 @@ Dois testes valem para todos os padrões acima. **Cada frase tem de trazer algo 
 ainda não tinha**: abertura de capítulo que só repete o título-tese, ou fecho que só repete o
 parágrafo, falha nesse teste. E **escreve-se para quem já leu os autos**: em embargos e
 contrarrazões o juízo conhece o caso, e recontá-lo é o que mais infla a peça (playbook
-`direito/pecas/embargos-declaracao`, "Extensão").
+`direito/pecas/embargos-declaracao`, "Extensão"); na apelação, o relator lê a sentença antes das
+razões, e por isso ela não tem capítulo de fatos nem sentença transcrita além do trecho atacado
+(heurística `direito/pecas/apelacao/heuristicas/apelacao-enxuta.md`, 18/10/2026).
 
 ## 9. Como a narrativa da inicial se arma (lições de 15/10/2026)
 
