@@ -214,11 +214,28 @@ function tituloDaEmenta(ementa = '') {
   return frase.charAt(0).toUpperCase() + frase.slice(1);
 }
 
+// Raiz do bundle mais externo que contém `dir`, pelo critério do lint-bundle (index.md e
+// uma pasta de conteúdo). Devolve o prefixo de `dir` dentro dela: '' para bundle de topo,
+// '/sucumbencia' para direito/pecas/sucumbencia.
+const PASTAS_BUNDLE = ['jurisprudencia', 'teses', 'raw', 'heuristicas', 'playbooks', 'casos_decididos', 'legislacao'];
+const ehBundle = (d) => fs.existsSync(path.join(d, 'index.md')) && PASTAS_BUNDLE.some((p) => fs.existsSync(path.join(d, p)));
+function prefixoNoBundle(raizBundles, dir) {
+  let raiz = dir;
+  for (let d = path.dirname(dir); d.startsWith(raizBundles) && d !== raizBundles; d = path.dirname(d)) {
+    if (ehBundle(d)) raiz = d;
+  }
+  const rel = path.relative(raiz, dir).split(path.sep).filter(Boolean).join('/');
+  return rel ? `/${rel}` : '';
+}
+
 function main() {
   const o = opcoes(process.argv.slice(2));
   if (!o.registro || !o.bundle) sair('uso: depositar.js --registro <reg> --bundle direito/<tema> [--slug s] [--tese "..."] [--forcar]');
   const amb = ambiente();
   const bundle = path.join(amb.bundles, o.bundle);
+  // `/` nos links e no `raw:` é a raiz do bundle MAIS EXTERNO (é assim que o lint-bundle
+  // resolve): em sub-bundle como direito/pecas/sucumbencia, o raw fica em /sucumbencia/raw/.
+  const prefixoRaw = prefixoNoBundle(amb.bundles, bundle);
   if (!fs.existsSync(path.join(bundle, 'index.md'))) sair(`bundle não encontrado: ${bundle}`);
 
   // Biblioteca em pastas: <registro>_<classe>/<base>.{pdf,md,scon.json,processo.json}.
@@ -271,13 +288,13 @@ function main() {
     `tribunal: ${yaml(`STJ - ${orgao}`)}`, `relator: ${yaml(relator)}`,
     `data_julgamento: '${aIso(doc.julgamento)}'`, `data_publicacao: '${aIso(doc.dt_publicacao)}'`,
     numUnico ? `numero_unico: '${numUnico}'` : null,
-    `raw: /raw/${slug}.md`, 'natureza: principal', `fonte_da_tese: ${o.tese ? 'voto' : 'ementa'}`,
+    `raw: ${prefixoRaw}/raw/${slug}.md`, 'natureza: principal', `fonte_da_tese: ${o.tese ? 'voto' : 'ementa'}`,
     o.tese ? `tese: ${yaml(o.tese)}` : null,
     sem ? `situacao_processual: ${yaml(`${sem.cor} em ${proc.lido_em} — ${sem.motivo.slice(0, 200)}`)}` : null,
     '---',
   ].filter(Boolean).join('\n');
   const corpo = `\n\n# ${cit}\n\n**Relator:** ${relator} · **Órgão:** ${orgao} · **Julgamento:** ${doc.julgamento}`
-    + ` · **Publicação:** ${doc.publicacao} · Depósito em [\`raw/\`](/raw/${slug}.md), pseudonimizado.\n\n`
+    + ` · **Publicação:** ${doc.publicacao} · Depósito em [\`raw/\`](${prefixoRaw}/raw/${slug}.md), pseudonimizado.\n\n`
     + `## Ementa\n\n${ementa}\n\n`
     + '## Antes de promover a `vigente`\n\n'
     + '- [ ] Ler o `raw/` e conferir a pseudonimização (o relatório do depósito lista os resíduos).\n'
@@ -316,6 +333,6 @@ function main() {
   console.log(`\ngit status do acervo:\n${st.stdout.trim() || '(limpo)'}`);
 }
 
-module.exports = { pseudonimizar, planoDeTroca, nomesDoProcesso, nomesDoCabecalho, residuos, tituloDaEmenta, slugDe, citacao, dividirAdvogados };
+module.exports = { prefixoNoBundle, pseudonimizar, planoDeTroca, nomesDoProcesso, nomesDoCabecalho, residuos, tituloDaEmenta, slugDe, citacao, dividirAdvogados };
 
 if (require.main === module) main();

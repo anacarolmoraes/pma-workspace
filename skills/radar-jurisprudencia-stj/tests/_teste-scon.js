@@ -100,5 +100,17 @@ const ok = (cond, nome, extra = '') => { console.log(`${cond ? 'ok  ' : 'FALHA'}
   ok(/^[A-Z][a-z]/.test(dep.tituloDaEmenta('RECURSO ESPECIAL. HONORÁRIOS. REVOGAÇÃO IMOTIVADA. PROVIMENTO.')), 'sem tese: frase em caixa normal');
 }
 
+// ── raw: relativo ao bundle mais externo (sub-bundle de pecas) ───────────
+{
+  const fs = require('fs');
+  const os = require('os');
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pma-bundles-'));
+  for (const d of ['direito/pecas/raw', 'direito/pecas/sucumbencia/raw', 'direito/cobranca-honorarios/raw']) fs.mkdirSync(path.join(tmp, d), { recursive: true });
+  for (const d of ['direito/pecas', 'direito/pecas/sucumbencia', 'direito/cobranca-honorarios']) fs.writeFileSync(path.join(tmp, d, 'index.md'), '# i\n');
+  ok(dep.prefixoNoBundle(tmp, path.join(tmp, 'direito', 'cobranca-honorarios')) === '', 'bundle de topo: raw em /raw/');
+  ok(dep.prefixoNoBundle(tmp, path.join(tmp, 'direito', 'pecas', 'sucumbencia')) === '/sucumbencia', 'sub-bundle de pecas: raw em /sucumbencia/raw/');
+  fs.rmSync(tmp, { recursive: true, force: true });
+}
+
 console.log(falhas ? `\n${falhas} falha(s)` : '\ntudo ok');
 process.exit(falhas ? 1 : 0);
