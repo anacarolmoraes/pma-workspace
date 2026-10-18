@@ -8,6 +8,13 @@
 //   node scon.js conferir --saida tmp/radar-stj/<caso>
 //   node scon.js ementas --saida tmp/radar-stj/<caso> --registros 202302406926,202503141132
 //   node scon.js teor    --saida tmp/radar-stj/<caso> --registros 202302406926,202503141132 [--sem-converter]
+//   node scon.js acordao --numero "REsp 805.919/MG" [--saida tmp/radar-stj/<caso>] [--verificar]
+//   node scon.js verificar --registros 202302406926,202503141132 | --todos
+//   (depósito no acervo: depositar.js, ao lado deste)
+//
+// `verificar` lê o acompanhamento processual do STJ de acórdãos que já estão na biblioteca,
+// grava <base>.processo.json (partes, advogados, fases) e acende o semáforo de alteração
+// posterior (VERDE/AMARELO/CINZA), que vai para a coluna Situação do INDICE.md.
 //
 // `buscar` grava <saida>/resultados.json e <saida>/triagem.md. `lotes` monta o
 // candidatos.json no formato do radar-jurisprudencia e o fatia com o lotes.js de lá, para a
@@ -293,28 +300,130 @@ function teor(o) {
         { stdio: ['ignore', 'ignore', 'inherit'] });
       console.log(`${nomeBase(it)}.md  ${r.status === 0 ? 'convertido' : 'FALHOU a conversão'}`);
     }
-    indexar(idx.get(it.num_registro), nomeBase(it), path.basename(saida));
+    gravarMeta(nomeBase(it), idx.get(it.num_registro), path.basename(saida));
   }
+  reindexar();
   console.log(`\nBiblioteca: ${pasta}`);
   return status;
 }
 
-// INDICE.md da biblioteca: uma linha por acórdão, para quem abre a pasta sem ser agente.
-// "Achado em" liga o acórdão à busca do BUSCAS.md que o trouxe (caso e frentes).
-function indexar({ doc: d, consultas }, base, caso) {
-  const arq = path.join(BIBLIOTECA, 'INDICE.md');
-  if (!fs.existsSync(arq)) {
-    fs.writeFileSync(arq, '# Biblioteca de acórdãos do STJ\n\n'
-      + 'Baixados do SCON pela skill radar-jurisprudencia-stj. Fora do git: o inteiro teor traz '
-      + 'nome de parte. Para citar em peça, o julgado precisa entrar no acervo (ver a SKILL.md).\n\n'
-      + '| Acórdão | Órgão | Julgamento | Publicação | Arquivo | Achado em | Ementa (início) |\n'
-      + '|---|---|---|---|---|---|---|\n');
-  }
-  if (fs.readFileSync(arq, 'utf8').includes(`(${base}.pdf)`)) return;
+// <base>.scon.json: o espelho do SCON de cada acórdão da biblioteca, mais os casos e frentes
+// que o acharam. É de onde saem o INDICE.md e o depósito no acervo.
+function gravarMeta(base, { doc, consultas }, caso) {
+  const arq = path.join(BIBLIOTECA, `${base}.scon.json`);
+  const meta = fs.existsSync(arq) ? JSON.parse(fs.readFileSync(arq, 'utf8')) : { doc, achado_em: {} };
+  meta.doc = doc;
+  meta.achado_em[caso] = [...new Set([...(meta.achado_em[caso] || []), ...consultas])];
+  fs.writeFileSync(arq, JSON.stringify(meta, null, 1));
+}
+
+function metas() {
+  if (!fs.existsSync(BIBLIOTECA)) return [];
+  return fs.readdirSync(BIBLIOTECA).filter((f) => f.endsWith('.scon.json')).map((f) => {
+    const base = f.replace(/\.scon\.json$/, '');
+    const proc = path.join(BIBLIOTECA, `${base}.processo.json`);
+    return { base, ...JSON.parse(fs.readFileSync(path.join(BIBLIOTECA, f), 'utf8')),
+      processo: fs.existsSync(proc) ? JSON.parse(fs.readFileSync(proc, 'utf8')) : null };
+  });
+}
+
+// INDICE.md da biblioteca, regenerado inteiro a cada mudança: uma linha por acórdão, para
+// quem abre a pasta sem ser agente. "Achado em" liga o acórdão às buscas do BUSCAS.md.
+function reindexar() {
   const cel = (s) => String(s || '').replace(/\|/g, '/').replace(/\s+/g, ' ').trim();
-  fs.appendFileSync(arq, `| ${cel(citacao(d))} | ${cel(d.orgao)} | ${cel(d.julgamento)}`
-    + ` | ${cel(d.publicacao)} | [PDF](${base}.pdf) · [texto](${base}.md)`
-    + ` | ${cel(`${caso}: ${consultas.join(', ')}`)} | ${cel((d.ementa || '').slice(0, 160))}… |\n`);
+  const linhas = metas().map(({ base, doc: d, achado_em: a, processo: p }) => {
+    const sit = p?.semaforo ? `${p.semaforo.cor} (${p.lido_em})` : 'não verificado';
+    const achado = Object.entries(a || {}).map(([c, fs_]) => `${c}: ${fs_.join(', ')}`).join('; ');
+    return `| ${cel(citacao(d))} | ${cel(d.orgao)} | ${cel(d.julgamento)} | ${cel(d.publicacao)}`
+      + ` | [PDF](${base}.pdf) · [texto](${base}.md) | ${cel(sit)} | ${cel(achado)}`
+      + ` | ${cel((d.ementa || '').slice(0, 160))}… |`;
+  });
+  fs.writeFileSync(path.join(BIBLIOTECA, 'INDICE.md'), '# Biblioteca de acórdãos do STJ\n\n'
+    + 'Baixados do SCON pela skill radar-jurisprudencia-stj. Fora do git: o inteiro teor traz '
+    + 'nome de parte. Para citar em peça, o julgado precisa entrar no acervo (ver a SKILL.md). '
+    + 'Situação: VERDE = transitou sem recurso posterior; AMARELO = houve recurso ou decisão '
+    + 'depois da publicação, ler antes de citar; CINZA = ainda sem trânsito ou não lido.\n\n'
+    + '| Acórdão | Órgão | Julgamento | Publicação | Arquivo | Situação | Achado em | Ementa (início) |\n'
+    + '|---|---|---|---|---|---|---|---|\n' + linhas.join('\n') + '\n');
+}
+
+// Semáforo de alteração posterior, a partir das fases do acompanhamento processual. Só conta
+// o que veio DEPOIS da publicação do acórdão guardado: o mesmo registro abriga AgInt, EDcl e
+// EREsp sucessivos, e um acolhimento posterior pode mudar o resultado que a peça citaria.
+const RX_POSTERIOR = /(embargos de declara|agravo interno|agravo regimental|embargos de diverg|recurso extraordin|acolhid|provid|reconsider|retrata|anulad|sem efeito|rescis[oó]ria)/i;
+const RX_TRANSITO = /(transitad[oa] em julgado|tr[aâ]nsito em julgado|baixa definitiva)/i;
+const aaaammdd = (s) => (/(\d{2})\/(\d{2})\/(\d{4})/.exec(s || '') || []).slice(1).reverse().join('');
+
+function semaforo(processo, dtPublicacao) {
+  const pub = aaaammdd(dtPublicacao);
+  const depois = processo.fases.filter((f) => aaaammdd(f.data) > pub);
+  const suspeitas = depois.filter((f) => RX_POSTERIOR.test(f.texto));
+  const transito = processo.fases.find((f) => RX_TRANSITO.test(f.texto));
+  if (suspeitas.length) {
+    return { cor: 'AMARELO', motivo: suspeitas.slice(0, 3).map((f) => `${f.data}: ${f.texto}`).join(' | ') };
+  }
+  if (transito) return { cor: 'VERDE', motivo: `${transito.data}: ${transito.texto}` };
+  return { cor: 'CINZA', motivo: 'sem trânsito em julgado nem baixa registrados (prazo em curso?)' };
+}
+
+// Acórdão específico: "REsp 805.919/MG" -> consulta "REsp 805919" (o SCON não acha o número
+// com ponto nem com a UF). A mesma consulta traz o REsp, o AgInt no REsp e os EDcl do
+// processo; fica o que bate com classe, número e UF digitados.
+function acordao(o) {
+  const pedido = String(o.numero || '').trim();
+  const m = /^(.*?)\s*n?[º°.]?\s*([\d.]+)\s*(?:\/\s*([A-Za-z]{2}))?\s*$/.exec(pedido);
+  if (!m || !m[1]) sair('uso: scon.js acordao --numero "REsp 805.919/MG" [--saida tmp/radar-stj/<caso>] [--verificar]');
+  const classe = m[1].trim().replace(/\s+/g, ' ');
+  const numero = m[2].replace(/\D/g, '');
+  const uf = (m[3] || '').toUpperCase();
+  const saida = path.resolve(o.saida || path.join(RAIZ, 'tmp', 'radar-stj', '_acordaos'));
+  fs.mkdirSync(saida, { recursive: true });
+  const arqConsulta = path.join(saida, 'consultas.json');
+  const id = `${classe} ${numero}${uf ? `/${uf}` : ''}`;
+  fs.writeFileSync(arqConsulta, JSON.stringify([{ id, livre: `${classe} ${numero}` }], null, 1));
+  if (buscar({ consultas: arqConsulta, saida }) !== 0) return 1;
+
+  const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const docs = [...indice(saida).values()].map((e) => e.doc);
+  const exatos = docs.filter((d) => {
+    const r = RX_PROC.exec(d.processo || '');
+    return r && norm(r[1]) === norm(`${classe} ${numero}`) && (!uf || r[2] === uf);
+  });
+  if (exatos.length !== 1) {
+    console.log(`\n${exatos.length ? 'Mais de um' : 'Nenhum'} acórdão com classe, número e UF exatos. Encontrados:`);
+    for (const d of docs) console.log(`  ${d.num_registro} | ${citacao(d)} | ${d.orgao || ''} | j. ${d.julgamento || ''}`);
+    console.log('Escolher o registro e rodar: scon.js teor --saida <mesma pasta> --registros <registro>');
+    return exatos.length ? 0 : 1;
+  }
+  const reg = exatos[0].num_registro;
+  const st = teor({ saida, registros: reg });
+  if (o.verificar && st === 0) verificar({ registros: reg });
+  return st;
+}
+
+function verificar(o) {
+  if (!o.registros && !o.todos) sair('uso: scon.js verificar --registros <reg1,reg2> | --todos');
+  const todas = metas();
+  const alvo = o.todos ? todas : todas.filter((m) => registros(o).includes(m.doc.num_registro));
+  const faltam = o.todos ? [] : registros(o).filter((r) => !todas.some((m) => m.doc.num_registro === r));
+  if (faltam.length) sair(`não estão na biblioteca (rode teor antes): ${faltam.join(', ')}`);
+
+  const arqItens = path.join(BIBLIOTECA, '_itens-processo.json');
+  fs.writeFileSync(arqItens, JSON.stringify(alvo.map((m) => ({ nome: m.base, num_registro: m.doc.num_registro })), null, 1));
+  const status = motor(['processo', arqItens, BIBLIOTECA]);
+  fs.rmSync(arqItens, { force: true });
+
+  for (const m of alvo) {
+    const arq = path.join(BIBLIOTECA, `${m.base}.processo.json`);
+    if (!fs.existsSync(arq)) { console.log(`CINZA    ${citacao(m.doc)} — acompanhamento não lido`); continue; }
+    const p = JSON.parse(fs.readFileSync(arq, 'utf8'));
+    p.semaforo = semaforo(p, m.doc.dt_publicacao);
+    fs.writeFileSync(arq, JSON.stringify(p, null, 1));
+    console.log(`${p.semaforo.cor.padEnd(8)} ${citacao(m.doc)} — ${p.semaforo.motivo}`);
+  }
+  reindexar();
+  console.log('\nVERDE não dispensa ler o voto; AMARELO exige ver a decisão posterior antes de citar.');
+  return status;
 }
 
 const [cmd, ...resto] = process.argv.slice(2);
@@ -326,4 +435,7 @@ if (cmd === 'lotes') process.exit(lotes(o));
 if (cmd === 'conferir') process.exit(conferir(o));
 if (cmd === 'ementas') process.exit(ementas(o));
 if (cmd === 'teor') process.exit(teor(o));
-sair('uso: scon.js buscar|cabecalhos|lotes|conferir|ementas|teor ... (ver o cabeçalho deste arquivo)');
+if (cmd === 'verificar') process.exit(verificar(o));
+if (cmd === 'acordao') process.exit(acordao(o));
+if (cmd === 'reindexar') { reindexar(); process.exit(0); }
+sair('uso: scon.js buscar|cabecalhos|lotes|conferir|ementas|teor|verificar ... (ver o cabeçalho deste arquivo)');

@@ -2,8 +2,9 @@
 
 Não chamar direto: usar scripts/scon.js, que acha o Python do adv_env e converte o inteiro teor.
 
-    buscar  <consultas.json> <pasta_saida> [por_pagina]
-    teor    <itens.json> <pasta_saida>
+    buscar    <consultas.json> <pasta_saida> [por_pagina]
+    teor      <itens.json> <pasta_saida>
+    processo  <itens.json> <pasta_saida>
 
 O SCON fica atrás de desafio da Cloudflare; o Scrapling (StealthySession) passa como navegador
 comum. Ritmo deliberadamente baixo: uma requisição a cada PAUSA segundos, numa sessão só.
@@ -156,12 +157,52 @@ def teor(arq, pasta):
     sys.exit(1 if falhas else 0)
 
 
+PROCESSO = ("https://processo.stj.jus.br/processo/pesquisa/?aplicacao=processos.ea"
+            "&tipoPesquisa=tipoPesquisaNumeroRegistro&termo=")
+
+
+def processo(arq, pasta):
+    """Acompanhamento processual pelo número de registro: partes e advogados (aba Detalhes,
+    que alimenta a pseudonimização do depósito) e fases (que acendem o semáforo de alteração
+    posterior). O DataJud não serve aqui: indexa o STJ pelo número CNJ, não pelo registro."""
+    itens = json.load(io.open(arq, encoding="utf-8"))
+    falhas = 0
+    with StealthySession(headless=True, solve_cloudflare=True, network_idle=True) as s:
+        for it in itens:
+            time.sleep(PAUSA)
+            p = s.fetch(PROCESSO + it["num_registro"], timeout=TIMEOUT)
+            detalhes = []
+            for lin in p.css("div.classDivLinhaDetalhes"):
+                rot = lin.css(".classSpanDetalhesLabel")
+                val = lin.css(".classSpanDetalhesTexto")
+                if rot and val:
+                    detalhes.append({"rotulo": limpar(rot[0].get_all_text()).rstrip(":"),
+                                     "valor": limpar(val[0].get_all_text())})
+            fases = []
+            for f in p.css("div.classDivFaseLinha"):
+                pega = lambda c: limpar(f.css(c)[0].get_all_text()) if f.css(c) else ""
+                fases.append({"data": pega(".classSpanFaseData"), "hora": pega(".classSpanFaseHora"),
+                              "texto": pega(".classSpanFaseTexto")})
+            if not detalhes and not fases:
+                falhas += 1
+                print(f"{it['nome']}: FALHOU (acompanhamento sem Detalhes nem Fases)", flush=True)
+                continue
+            io.open(f"{pasta}/{it['nome']}.processo.json", "w", encoding="utf-8").write(json.dumps(
+                {"registro": it["num_registro"], "url": PROCESSO + it["num_registro"],
+                 "lido_em": time.strftime("%Y-%m-%d"), "detalhes": detalhes, "fases": fases},
+                ensure_ascii=False, indent=1))
+            print(f"{it['nome']}: {len(detalhes)} detalhes, {len(fases)} fases", flush=True)
+    sys.exit(1 if falhas else 0)
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "buscar":
         buscar(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 50)
     elif cmd == "teor":
         teor(sys.argv[2], sys.argv[3])
+    elif cmd == "processo":
+        processo(sys.argv[2], sys.argv[3])
     else:
         print(__doc__)
         sys.exit(2)

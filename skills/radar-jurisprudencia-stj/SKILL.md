@@ -1,6 +1,6 @@
 ---
 name: radar-jurisprudencia-stj
-description: Pesquisa jurisprudência do STJ direto no SCON (scon.stj.jus.br), a partir de um tema, de uma tese ou de um julgado-semente, montando as consultas com os operadores oficiais do STJ, triando as ementas pelo sentido e trazendo o inteiro teor dos finalistas. Usar quando a titular pedir "julgado do STJ", "o que o STJ decide sobre X", precedente para sustentar recurso, apelação, contrarrazões ou EDcl, ou quando a peça precisar de STJ que o bundle do tema não tem. Traz favoráveis e contrários, porque o contrário diz de quem a peça precisa se distinguir. Para decisões recentes de outros tribunais, o caminho é o radar-jurisprudencia (DJEN).
+description: Pesquisa jurisprudência do STJ direto no SCON (scon.stj.jus.br), a partir de um tema, de uma tese ou de um julgado-semente, montando as consultas com os operadores oficiais do STJ, triando as ementas pelo sentido e trazendo o inteiro teor dos finalistas. Usar quando a titular pedir "julgado do STJ", "o que o STJ decide sobre X", precedente para sustentar recurso, apelação, contrarrazões ou EDcl, ou quando a peça precisar de STJ que o bundle do tema não tem. Traz favoráveis e contrários, porque o contrário diz de quem a peça precisa se distinguir. Usar também quando a titular pedir o inteiro teor de um acórdão específico do STJ ("traga o REsp 805.919/MG", "baixe o acórdão do AgInt no AREsp X"). Para decisões recentes de outros tribunais, o caminho é o radar-jurisprudencia (DJEN).
 ---
 
 # Radar de jurisprudência do STJ (SCON)
@@ -15,6 +15,25 @@ o contrário entra no dossiê como o argumento que o outro lado vai usar.
 | Fonte | DJEN (texto da intimação) | SCON (espelho e inteiro teor oficiais) |
 | Alcance | todos os tribunais, recente | só STJ, de 1989 até a última publicação |
 | Prova | trecho da publicação | PDF do acórdão, lido no voto |
+
+## Atalho: acórdão específico
+
+Quando a titular já sabe qual acórdão quer, nada de frentes nem triagem:
+
+```bash
+node skills/radar-jurisprudencia-stj/scripts/scon.js acordao --numero "REsp 805.919/MG" --verificar
+```
+
+- **A citação entra como se escreve.** O script monta a consulta como o SCON exige,
+  `REsp 805919`: sem ponto no número e sem UF, porque o SCON não acha o número com ponto.
+- **A mesma consulta traz o REsp, o AgRg, o AgInt e os EDcl daquele processo.** Fica o que
+  bate com classe, número e UF digitados. Se nenhum bater exatamente, ou mais de um, o
+  script lista os encontrados com o registro, para escolher e rodar `teor`.
+- **Baixa para a biblioteca e registra a busca.** `--verificar` acende o semáforo.
+- **Para um recurso interno, digitar a classe inteira:** `"AgInt no AREsp 1.907.838/SP"`.
+
+Entregar à titular o caminho do PDF na biblioteca (`jurisprudencia-stj/<registro>_<classe>.pdf`),
+a ementa (`scon.js ementas`) e a situação. Para citar em peça, seguir a etapa 8.
 
 ## 1. Entender o caso antes de buscar
 
@@ -198,6 +217,27 @@ No voto, confirmar três coisas antes de o julgado subir para o dossiê:
 
 Finalista que cair na leitura sai, e o próximo da fila sobe.
 
+### Alteração posterior (semáforo)
+
+Antes do dossiê, conferir no acompanhamento processual do STJ o que aconteceu **depois da
+publicação** de cada finalista. O mesmo registro abriga AgInt, EDcl e EREsp sucessivos, e
+um acolhimento posterior pode mudar o resultado:
+
+```bash
+node skills/radar-jurisprudencia-stj/scripts/scon.js verificar --registros 202302406926,202503141132
+```
+
+- **VERDE:** transitou ou baixou sem recurso nem decisão posterior. Não dispensa ler o voto.
+- **AMARELO:** houve EDcl, AgInt, EREsp, RE, acolhimento ou provimento depois da
+  publicação. Ler a decisão posterior antes de citar. Num caso real, pegou EDcl pendentes
+  justamente contra o julgado mais útil da apelação.
+- **CINZA:** ainda sem trânsito (prazo em curso) ou acompanhamento não lido.
+
+Grava `<base>.processo.json` na biblioteca (partes, advogados, número CNJ, fases) e a
+coluna "Situação" do `INDICE.md`. O DataJud não serve aqui: indexa o STJ pelo número CNJ,
+não pelo registro. No contrário, o AMARELO também é argumento: entendimento ainda sob
+recurso.
+
 ## 7. Dossiê
 
 Gravar como subseção da seção **8. Radar de jurisprudência** da `clientes/<caso>/ANALISE.md`
@@ -219,6 +259,7 @@ Gravar como subseção da seção **8. Radar de jurisprudência** da `clientes/<
 - **Trecho:** > "<literal>" — voz: STJ | TJ<x> transcrito no voto
 - **Cuidado:** <limite do precedente, se houver>
 - **Inteiro teor:** `jurisprudencia-stj/<registro>_<classe>.pdf`
+- **Situação:** <VERDE | AMARELO | CINZA> em <data> — <motivo do semáforo>
 
 ## Contrários e distinção
 ### <classe e número/UF> (...)
@@ -228,17 +269,40 @@ Gravar como subseção da seção **8. Radar de jurisprudência** da `clientes/<
 
 ## 8. Para o julgado chegar à peça
 
-O `lint-citacoes` **bloqueia precedente de tribunal superior ausente do acervo**. O PDF em
-`tmp/` não basta: o julgado precisa ser depositado no bundle do tema
-(`<bundles>/direito/<tema>/`):
+O `lint-citacoes` **bloqueia precedente de tribunal superior ausente do acervo**. O PDF da
+biblioteca não basta: o julgado precisa estar no bundle do tema. Depois do `verificar` (que
+traz a lista oficial de partes e advogados):
 
-- `raw/<slug>.md`: conversão do inteiro teor, **pseudonimizada** (regra dura 6: saem partes
-  pessoas físicas e advogados; ficam ministros e número do processo).
-- `jurisprudencia/<slug>.md`: página com `status: em_teste`, no formato das que já existem
-  no tema (por exemplo, `direito/cobranca-honorarios/jurisprudencia/resp-1504969-sp-*.md`).
-- Rodar `<python> <bundles>/lint-bundle.py --quiet` e conferir `git status` do acervo.
+```bash
+node skills/radar-jurisprudencia-stj/scripts/depositar.js --registro 202302406926 --bundle direito/cobranca-honorarios [--tese "enunciado conferido no voto"]
+```
 
-Até ser promovida a `vigente`, a peça que cita a página declara `cita_em_teste: sim`.
+Grava, em `<bundles>/direito/<tema>/`:
+
+- `raw/<slug>.md`: inteiro teor **pseudonimizado** (regra dura 6). Saem parte pessoa
+  física, advogado e sociedade de advogados (o nome dela é nome de advogado), CPF, e-mail,
+  telefone e CEP. Ficam ministro, pessoa jurídica parte e número do processo. A troca não
+  distingue acento nem quebra de linha ("CLAUDIO" do acompanhamento pega o "CLÁUDIO" do PDF).
+- `raw/<slug>.md.estrutura.json`: sidecar de voz do `segmentar-acordao.py`, que o
+  `lint-citacoes` usa para não tomar ementa transcrita por razão de decidir.
+- `jurisprudencia/<slug>.md`: página `status: em_teste`, Espelho do Acórdão completo
+  (`natureza`, `fonte_da_tese`, `numero_unico`, `situacao_processual`). `tese:` só entra
+  se vier de `--tese`: o script não inventa enunciado.
+- A linha da página no `jurisprudencia/index.md` (sem ela, o `lint-bundle` acusa E3).
+
+O relatório mostra cada troca e os **sobrenomes que ainda aparecem no texto**. Num caso
+real, pegou uma sociedade de advogados que escapara pela barra de "S/S". Conferir o relatório
+e o `raw/` antes de seguir. Recusa sobrescrever sem `--forcar`, e mostra o `git status` do
+acervo (o commit lá é da titular). Depois, `<python> <bundles>/lint-bundle.py --quiet`.
+
+Até a página ser promovida a `vigente` (checklist no fim dela), a peça que a cita declara
+`cita_em_teste: sim`. Formato da citação na peça, que o lint reconhece:
+
+```markdown
+> "trecho literal"
+>
+> (STJ, REsp 2.084.975/MT, Quarta Turma, Rel. Min. João Otávio de Noronha, j. 16/03/2026, DJEN 19/03/2026)
+```
 
 ## Limites
 
