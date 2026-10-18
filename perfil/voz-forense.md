@@ -1,9 +1,9 @@
 ---
 titulo: Perfil da voz forense do escritório
 status: rascunho
-versao: 0.2.0
+versao: 0.3.0
 criado: 2026-09-08
-atualizado: 2026-10-15
+atualizado: 2026-10-18
 revisar: titular valida ou corrige cada traço antes de promover a `vigente`
 ---
 
@@ -151,6 +151,43 @@ distingue é a função, não a contagem. Exemplos fictícios.
   notificação válida". Não é manchete ("O banco viu e não fez nada") nem rótulo ("Do mérito").
   Frase finita continua possível quando a precisão jurídica exigir. Os títulos de capítulo da
   inicial seguem `definicoes.md` §5.
+
+Os quatro seguintes vieram da skill genérica `humanizer` (blader, v3.1.0, 18/10/2026),
+traduzidos para o gênero. Medidos nas 63 peças do escritório, quase não aparecem (de 0 a 4
+peças cada): por isso são de leitura, não de lint. Ficam aqui porque, quando aparecem, mudam
+como a peça é lida.
+
+- **8.11 Objeção que ninguém fez.** "Não se diga que…", "Nem se alegue…", "Poder-se-ia
+  sustentar…" rebatem tese que a contestação, a sentença ou o recurso não levantaram. É resto
+  de rascunho e abre flanco que a parte contrária não abriu. Rebate-se o que está nos autos; o
+  resto se omite (heurística refutar-ou-omitir).
+  > *Modelo:* "Nem se alegue que a notificação seria dispensável." *Escritório:* cortar, se a
+  > ré não o alegou.
+- **8.12 Autoridade sem fonte.** "Jurisprudência pacífica", "doutrina majoritária",
+  "tribunais pátrios", "entendimento consolidado" sem o precedente ou a obra na mesma frase.
+  Se há julgado, ele entra identificado (§4); se não há, a frase sai. Nunca se preenche a
+  lacuna com precedente de memória (AGENTS.md, regra dura 3).
+- **8.13 Contraste partido em duas frases.** "Não se trata de atraso. Trata-se de
+  inadimplemento." é a figura de 8.3 com um ponto no meio, e o `lint-ia` não a vê porque conta
+  dentro da frase. Mesma correção: afirmar direto com a prova.
+- **8.14 Gerúndio de arremate.** ", evidenciando que…", ", demonstrando a má-fé…",
+  ", reforçando o direito…" penduram uma conclusão no fim de um fato simples. Se o fato prova,
+  a oração própria diz o que ele prova ("o extrato mostra que…"); se não prova, o gerúndio sai.
+
+- **8.15 Pedido acessório que ensina o adversário** (decisão da titular, 18/10/2026). Pedido
+  condicional ou subsidiário sobre verba acessória (honorários, juros, termo inicial, correção)
+  é uma frase, neutra, sem adjetivo e sem fundamentação própria: o adjetivo e a fundamentação
+  apontam à parte contrária um erro que ela pode explorar em recurso adesivo. A regra de fundo
+  está em `direito/pecas/sucumbencia/heuristicas/honorarios-na-apelacao-do-vencido-pedir-ou-calar.md`.
+  > *Modelo:* "Os honorários, fixados em valor irrisório, devem ser majorados." *Escritório:*
+  > "Em caso de provimento, pede-se a redistribuição da sucumbência e a fixação dos honorários
+  > nos termos do art. 85, § 2º, do CPC, sobre o proveito econômico obtido."
+
+Dois testes valem para todos os padrões acima. **Cada frase tem de trazer algo que o leitor
+ainda não tinha**: abertura de capítulo que só repete o título-tese, ou fecho que só repete o
+parágrafo, falha nesse teste. E **escreve-se para quem já leu os autos**: em embargos e
+contrarrazões o juízo conhece o caso, e recontá-lo é o que mais infla a peça (playbook
+`direito/pecas/embargos-declaracao`, "Extensão").
 
 ## 9. Como a narrativa da inicial se arma (lições de 15/10/2026)
 

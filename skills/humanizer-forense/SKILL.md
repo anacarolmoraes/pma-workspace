@@ -1,6 +1,6 @@
 ---
 name: humanizer-forense
-version: 1.3.0
+version: 1.4.0
 description: |
   Remove sinais de escrita de IA de peças processuais em português jurídico brasileiro,
   SEM tocar na estrutura AI-first invisível (BLUF, títulos-conclusão, transcrições).
@@ -122,6 +122,12 @@ Violação não se "explica": desfaz-se a alteração ou se leva à titular. Exi
 | Enumeração seca no fecho do parágrafo | por leitura | Fecho com verbo e consequência |
 | Molde uniforme (afirmação, prova, frase de efeito em série; checklist de um parágrafo por critério) | aviso existente do `ritmo.js` (tamanhos) + leitura | Variar ordem e tamanho conforme o peso do argumento; fundir critérios |
 | Subtítulo-manchete ("O banco viu e não fez nada") | por leitura (`voz-forense.md` §8.10) | Construção nominal que resume a conclusão ("Da responsabilidade do banco pela validação de operação fora do perfil") |
+| Objeção que ninguém fez ("Não se diga que", "Nem se alegue", "Poder-se-ia") | por leitura (§8.11) | Rebater só o que está nos autos; o resto se omite (refutar-ou-omitir) |
+| Autoridade sem fonte ("jurisprudência pacífica", "doutrina majoritária", "tribunais pátrios") | por leitura (§8.12) | Precedente identificado na mesma frase, ou a frase sai. Nunca preencher de memória (regra dura 3) |
+| Contraste partido em duas frases ("Não se trata de X. Trata-se de Y.") | por leitura (§8.13; o `lint-ia` só conta dentro da frase) | Afirmar Y com a prova |
+| Gerúndio de arremate (", evidenciando que…", ", demonstrando…") | por leitura (§8.14) | Oração própria que diz o que o fato prova, ou cortar |
+| BLUF ou fecho que só repete o título-tese ou o parágrafo | por leitura | O BLUF enuncia a conclusão **e** traz a razão, o documento ou o dispositivo; o fecho que repete sai. Não é licença para tirar a conclusão do início (invariante 6) |
+| Recontar o caso a quem já leu os autos (EDcl, contrarrazões, AgInt) | por leitura | Partir do ponto impugnado; o histórico entra só onde muda a decisão (playbook `direito/pecas/embargos-declaracao`, "Extensão") |
 
 Os limites acima com número são os do `lint-ia.js` (portão). Frequência estilística que o lint não conta (ritmo, aberturas, conectivos) é aviso do `ritmo.js`, não reprovação: indício para a passada humana, não prova de prosa ruim. Não se acrescenta palavra proibida à tabela para "pegar mais": o retorno é baixo e o custo é empobrecer o vocabulário jurídico.
 
@@ -143,13 +149,15 @@ Os limites acima com número são os do `lint-ia.js` (portão). Frequência esti
 
 2. **Decidir.** Há sinal se o lint reprovou, se o `ritmo.js` apontou sinal, ou se a leitura da peça contra `perfil/voz-forense.md` acusa prosa de modelo. Sem sinal: registrar `humanizer_alterou: nao` e encerrar aqui. Com sinal: seguir.
 
+   **Peso do sinal na leitura** (método da skill genérica `humanizer`, 18/10/2026). Um único caso basta para editar quando o padrão é forte: rótulo meta-textual, quiasmo, contraste montado, objeção que ninguém fez, autoridade sem fonte, frase de efeito que repete o parágrafo. Padrão fraco sozinho não justifica passada (travessão isolado, uma frase curta, um conectivo, um gerúndio): só conta com outros sinais no mesmo trecho. Passada sem motivo é a que mais arrisca o mérito.
+
 3. **Snapshot.** `node scripts/checar-invariantes.js --snapshot caminho/peca.md`. Sem isso o passo 5 não tem com o que comparar.
 
 4. **Reescrever só a prosa própria**, seguindo a tabela e o perfil de voz; conferir cada invariante enquanto edita. **Calibração de voz, proporcional** (substitui a fronteira fixa de seis capítulos): peça curta ou rotineira, `perfil/voz-forense.md` basta; peça longa (> 6 capítulos), recurso ou peça estratégica, o perfil **e** uma peça humana próxima (razões, embargos, contrarrazões do próprio caso escritos por advogado, ou tema vizinho do escritório), da qual se imita o ritmo e **nunca** se copia fato, trecho ou número.
 
 5. **Conferir invariantes.** `node scripts/checar-invariantes.js caminho/peca.md`. Violação (exit 1) desfaz a alteração correspondente; não se justifica nem se contorna. Depois, `--limpar`.
 
-6. **Passada final anti-IA:** perguntar "o que neste texto ainda parece gerado por IA?" e corrigir o que sobrar; repetir o passo 5 se editou.
+6. **Passada final anti-IA:** perguntar "o que neste texto ainda parece gerado por IA?" e procurar de novo, nominalmente, os padrões que mais sobrevivem à reescrita: contraste (inclusive partido em duas frases), frase de efeito, tríade e travessão. Conferir também se cada frase mantida traz algo que o leitor ainda não tinha. Corrigir o que sobrar; repetir o passo 5 se editou.
 
 7. **Revalidar.** Toda alteração exige o `legal-consistency-validator` de novo (Estágio 3 do orchestrator): humanização depois da validação sem nova checagem é porta de entrada de erro. O orchestrator grava então os campos `humanizer_*` no `.validacao.md`.
 
@@ -159,5 +167,5 @@ Os limites acima com número são os do `lint-ia.js` (portão). Frequência esti
 
 - Não valida conteúdo jurídico (legal-consistency-validator) nem estrutura (checklists dos playbooks). O `checar-invariantes.js` confere que a humanização não mudou o mérito, não que o mérito está certo.
 - Não aplicar a transcrições, contratos, atas ou traduções: só a prosa argumentativa própria.
-- Texto não-forense (artigos, LinkedIn, e-mails): usar a skill `humanizer` genérica.
+- Texto não-forense (e-mail, mensagem a cliente, texto avulso): usar a skill genérica `anthropic-skills:humanizer`; conteúdo de marketing vai para o repositório `pma-marketing`, que tem os lints LGPD/OAB. Da genérica não se importam a regra de travessão zero, a voz ativa, nem o corte de ressalvas: na peça, ressalva é modalidade (invariante 7).
 - O `lint-ia.js` é portão (`protect-gates`): correção de detector (falso positivo, divergência entre esta tabela e a regex) entra por patch em `planos/` e sessão de manutenção, não por edição direta.
