@@ -57,6 +57,24 @@
         "competencia": { "type": "string", "description": "CÍVEL (default), do Juizado Especial Cível…" }
       }
     },
-    "advogadas": { "type": "array", "items": { "type": "string" }, "description": "quem subscreve; mais de uma muda 'sua advogada' para 'suas advogadas' (assinatura vem de perfil/advogados.json)" }
+    "advogadas": { "type": "array", "items": { "type": "string" }, "description": "quem subscreve; mais de uma muda 'sua advogada' para 'suas advogadas' (assinatura vem de perfil/advogados.json)" },
+    "docs_pessoais": { "type": "string", "description": "ex.: 'Doc. 2' — quando presente, o preâmbulo diz 'conforme procuração anexa (Doc. 1) e documentos pessoais (Doc. 2)'" },
+    "terceiros": {
+      "type": "array",
+      "description": "quem não é parte mas é chamado ao processo, ex.: terceiro intimado a exibir (art. 401 do CPC). Não entra no 'em face de'; a citação é redigida no capítulo de provas",
+      "items": {
+        "type": "object",
+        "required": ["nome", "papel"],
+        "properties": {
+          "nome": { "type": "string" },
+          "papel": { "type": "string", "description": "ex.: terceiro chamado a exibir (art. 401)" },
+          "cnpj": { "type": "string" },
+          "cpf": { "type": "string" },
+          "endereco": { "type": "string" },
+          "objeto": { "type": "string", "description": "o que se pede dele" }
+        },
+        "additionalProperties": true
+      }
+    }
   }
 }

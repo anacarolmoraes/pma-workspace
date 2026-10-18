@@ -56,6 +56,35 @@ function lerPrazos(texto) {
     .sort((a, b) => a.data.localeCompare(b.data));
 }
 
+// Seção 7 (Documentos) da ANALISE.md: tabela com uma coluna "Estado" (presente / pendente /
+// dispensado). Documento pendente bloqueia o protocolo da inicial (retrofit Welson, 15/10/2026:
+// o painel não mostrava o Doc. 2 faltando).
+function lerDocumentos(texto) {
+  const sec = String(texto).split(/\r?\n(?=## )/).find((s) => /^## 7\.?\s/.test(s));
+  if (!sec) return null;
+  const linhas = sec.split(/\r?\n/).filter((l) => /^\|/.test(l));
+  if (linhas.length < 2) return { presentes: 0, pendentes: [], aDecidir: [], dispensados: 0 };
+  const cel = (l) => l.replace(/^\||\|\s*$/g, '').split('|').map((s) => s.trim());
+  const cab = cel(linhas[0]).map((s) => s.toLowerCase());
+  const iEstado = cab.findIndex((s) => s.startsWith('estado'));
+  const iDesc = cab.findIndex((s) => s.startsWith('descri'));
+  // Pendente COM número de Doc. é citado na peça: bloqueia o protocolo. Sem número é prova que
+  // o intake sugeriu (Parte B da matriz): fica "a decidir" — juntar, dispensar ou deixar para depois.
+  const out = { presentes: 0, pendentes: [], aDecidir: [], dispensados: 0 };
+  if (iEstado < 0) return out;
+  for (const l of linhas.slice(1)) {
+    if (/^\|[\s:|-]+\|$/.test(l.trim())) continue;
+    const c = cel(l);
+    const est = (c[iEstado] || '').replace(/\*/g, '').toLowerCase();
+    const temNumero = /^\d/.test(c[0] || '');
+    const desc = (c[iDesc] || '').replace(/\*/g, '').slice(0, 70);
+    if (/^pendente/.test(est)) (temNumero ? out.pendentes : out.aDecidir).push(temNumero ? `Doc. ${c[0]}: ${desc}` : desc);
+    else if (/^presente/.test(est)) out.presentes++;
+    else if (/^dispensad|^fora/.test(est)) out.dispensados++;
+  }
+  return out;
+}
+
 function pecas(dirCaso) {
   const out = [];
   const varrer = (dir, prof) => {
@@ -97,6 +126,7 @@ function lerCaso(slug) {
     c.bundle = meta.bundle || '';
     c.processos = listaFrontmatter(texto, 'processos').flatMap((s) => s.split(',').map((x) => x.trim()).filter(Boolean));
     c.prazos = lerPrazos(texto);
+    c.documentos = lerDocumentos(texto);
   }
   c.proximo = c.prazos.find((p) => p.dias >= 0) || null;
   c.vencidos = c.prazos.filter((p) => p.dias < 0).length;
@@ -119,7 +149,9 @@ function painelResumo(casos) {
   console.log(`${'caso'.padEnd(w)}  ${'próximo prazo'.padEnd(44)}  peças  estado`);
   for (const c of ord) {
     const pend = c.pecas.filter((p) => !/^compilada/.test(p.estado)).length;
-    const est = !c.analise ? 'sem ANALISE.md' : pend ? `${pend} peça(s) sem .docx atual` : 'ok';
+    const docPend = c.documentos ? c.documentos.pendentes.length : 0;
+    const est = !c.analise ? 'sem ANALISE.md'
+      : [pend ? `${pend} peça(s) sem .docx atual` : '', docPend ? `${docPend} doc(s) citado(s) pendente(s)` : ''].filter(Boolean).join('; ') || 'ok';
     console.log(`${c.caso.padEnd(w)}  ${etiqueta(c.proximo).padEnd(44)}  ${String(c.pecas.length).padStart(5)}  ${est}`);
   }
   const semAnalise = ord.filter((c) => !c.analise).length;
@@ -140,6 +172,13 @@ function painelCaso(c) {
   console.log('\n  Peças:');
   if (!c.pecas.length) console.log('    (nenhum .md com pipeline:)');
   for (const p of c.pecas) console.log(`    ${p.arquivo}: ${p.estado}${p.validada ? '' : ' · validação ausente ou velha'}`);
+  if (c.documentos) {
+    const d = c.documentos;
+    console.log(`\n  Documentos (seção 7): ${d.presentes} presente(s), ${d.pendentes.length} citado(s) e pendente(s), ${d.aDecidir.length} a decidir, ${d.dispensados} dispensado(s)/fora`);
+    for (const p of d.pendentes) console.log(`    ⛔ ${p}`);
+    if (d.pendentes.length && !c.processos.length) console.log('    → a peça cita documento que não está na pasta: NÃO protocolar antes de juntá-lo.');
+    if (d.aDecidir.length) console.log(`    ? a decidir (prova sugerida pelo intake, sem número de Doc.): ${d.aDecidir.join(' · ')}`);
+  }
 }
 
 function main() {

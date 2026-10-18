@@ -70,6 +70,16 @@ fs.writeFileSync(path.join(tmp, 'incompleto.json'), JSON.stringify({ autor: { no
 r = run([QUAL, path.join(tmp, 'incompleto.json'), '--checar']);
 caso('--checar lista faltas e sai 1', r.status === 1 && /uniao_estavel/.test(r.stderr));
 
+// Retrofit de 15/10/2026: "[[a conferir]]" passava como campo preenchido; "com sede na Núcleo…".
+const base = JSON.parse(fs.readFileSync(casoJson, 'utf8'));
+fs.writeFileSync(path.join(tmp, 'conferir.json'), JSON.stringify({ ...base, reus: [{ ...base.reus[0], endereco: '[[a conferir: sede]]' }] }));
+r = run([QUAL, path.join(tmp, 'conferir.json'), '--checar']);
+caso('--checar reprova campo "[[a conferir]]"', r.status === 1 && /reus\[0\]\.endereco marcado/.test(r.stderr));
+fs.writeFileSync(path.join(tmp, 'prep.json'), JSON.stringify({ ...base, docs_pessoais: 'Doc. 2', reus: [{ ...base.reus[0], endereco: 'Núcleo Cidade de Deus, s/nº, Osasco/SP' }, { nome: 'Z S.A.', cnpj: '1', endereco: 'SAUN Quadra 5, Brasília/DF' }] }));
+r = run([QUAL, path.join(tmp, 'prep.json')]);
+caso('preposição pelo logradouro: no Núcleo, no SAUN, na Rua', /com sede no Núcleo/.test(r.stdout) && /com sede no SAUN/.test(r.stdout) && /domiciliada na Rua/.test(r.stdout));
+caso('docs_pessoais entra no preâmbulo', /procuração anexa \(Doc\. 1\) e documentos pessoais \(Doc\. 2\)/.test(r.stdout));
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(`\n${erros ? `${erros} falha(s)` : 'todos os casos corretos'}.`);
 process.exit(erros ? 1 : 0);

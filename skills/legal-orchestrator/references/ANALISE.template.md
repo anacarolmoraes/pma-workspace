@@ -53,7 +53,9 @@ Qualificação das partes (art. 319, II, CPC), juízo e ação. O preâmbulo da 
     { "nome": "", "cnpj": "", "natureza": "", "endereco": "", "email": "" }
   ],
   "juizo": { "comarca": "", "uf_extenso": "", "vara": "__ª", "competencia": "CÍVEL" },
-  "advogadas": []
+  "advogadas": [],
+  "docs_pessoais": "Doc. 2",
+  "terceiros": []
 }
 ```
 
