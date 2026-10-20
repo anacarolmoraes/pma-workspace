@@ -36,7 +36,7 @@ ROTULOS = {
     "Processo": "processo", "Relator": "relator", "Relatora": "relator", "Relator(a)": "relator",
     "Órgão Julgador": "orgao", "Data do Julgamento": "julgamento",
     "Data da Publicação/Fonte": "publicacao", "Data da Publicação": "publicacao",
-    "Ementa": "ementa", "Acórdão": "acordao", "Decisão": "decisao",
+    "Ementa": "ementa", "Acórdão": "acordao", "Acórdãos Similares": "similares", "Decisão": "decisao",
     "Notas": "notas", "Informações Complementares à Ementa": "info_compl",
     "Referência Legislativa": "ref_leg", "Jurisprudência Citada": "jurisp_citada",
 }
@@ -91,6 +91,24 @@ def enviar_form(c, por_pagina, inicio=1):
 RX_TOTAL = re.compile(r"(\d[\d.]*)\s+(?:acórdãos?|decis(?:ão|ões) monocráticas?)", re.I)
 RX_TEOR = re.compile(r"GetInteiroTeorDoAcordao\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
 RX_MONO = re.compile(r"monocraticas/decisoes/\?num_registro=(\d+)&(?:amp;)?dt_publicacao=([\d/]+)")
+# Bloco "Acórdãos Similares": um <pre> por acórdão ("REsp 2209868 SP 2025/0146481-2 Decisão:16/06/2026
+# DJEN DATA:24/06/2026") seguido do link de inteiro teor DELE, não do principal.
+RX_SIMILAR = re.compile(r"<pre>(.*?)</pre>.*?" + RX_TEOR.pattern, re.S)
+RX_SIMILAR_TXT = re.compile(
+    r"^(.+?\d+)\s+([A-Z]{2})\s+(\d{4}/\d+-\d)\s+Decisão:\s*([\d/]+)\s+(\S+)\s+DATA:\s*([\d/]+)")
+
+
+def similares_de(html):
+    """Acórdãos similares, cada um com o próprio registro e link. `processo` no formato do campo
+    "Processo" ("REsp 2209868 / SP ..."), para citação e nome de arquivo saírem iguais."""
+    lista = []
+    for m in RX_SIMILAR.finditer(html):
+        t = RX_SIMILAR_TXT.match(limpar(re.sub(r"<[^>]+>", " ", m.group(1))))
+        if t:
+            lista.append({"processo": f"{t.group(1)} / {t.group(2)} {t.group(3)}", "julgamento": t.group(4),
+                          "publicacao": f"{t.group(5)} {t.group(6)}", "num_registro": m.group(2),
+                          "dt_publicacao": m.group(3), "tipo": "acordao"})
+    return lista
 
 
 def extrair(page):
@@ -98,16 +116,22 @@ def extrair(page):
     docs = []
     for d in page.css("div.documento"):
         reg = {}
+        html = d.html_content
         for t in d.css(".docTitulo"):
             campo = rotulo_de(t.get_all_text())
             irmao = t.xpath("following-sibling::*[1]")
-            if campo and irmao:
+            if campo == "similares" and irmao:
+                reg["similares"] = similares_de(irmao[0].html_content)
+                # O link do similar não é o do principal: sem tirar o bloco, principal sem inteiro
+                # teor herdava o registro do primeiro similar (REsp 2.263.178 → 2.209.868, 20/10/2026).
+                html = html.replace(irmao[0].html_content, "")
+            elif campo and irmao:
                 reg[campo] = limpar(irmao[0].get_all_text())
-        m = RX_TEOR.search(d.html_content)
+        m = RX_TEOR.search(html)
         if m:
             reg["num_registro"], reg["dt_publicacao"], reg["tipo"] = m.group(1), m.group(2), "acordao"
         else:
-            m = RX_MONO.search(d.html_content)
+            m = RX_MONO.search(html)
             if m:
                 reg["num_registro"], reg["dt_publicacao"], reg["tipo"] = m.group(1), m.group(2), "monocratica"
                 reg.setdefault("ementa", reg.get("decisao", "")[:2600])

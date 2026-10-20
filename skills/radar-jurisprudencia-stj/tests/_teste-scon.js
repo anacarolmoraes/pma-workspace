@@ -112,5 +112,21 @@ const ok = (cond, nome, extra = '') => { console.log(`${cond ? 'ok  ' : 'FALHA'}
   fs.rmSync(tmp, { recursive: true, force: true });
 }
 
+// ── Acórdão pedido que só veio como similar (REsp 2.209.868/SP, 20/10/2026) ──
+{
+  const principal = { processo: 'REsp 2263178 / CE RECURSO ESPECIAL 2025/0466905-2', relator: 'Ministro HUMBERTO MARTINS (1130)',
+    orgao: 'T3 - TERCEIRA TURMA', similares: [{ processo: 'REsp 2209868 / SP 2025/0146481-2', julgamento: '16/06/2026',
+      publicacao: 'DJEN 24/06/2026', num_registro: '202501464812', dt_publicacao: '24/06/2026', tipo: 'acordao' }] };
+  const s = scon.similaresExatos([principal, principal], 'REsp', '2209868', 'SP');
+  ok(s.length === 1 && s[0].num_registro === '202501464812' && s[0].orgao === 'T3 - TERCEIRA TURMA' && s[0].similar_de === 'REsp 2263178/CE',
+    'Similar: acha o pedido, herda relator e órgão, sem duplicar', JSON.stringify(s));
+  ok(scon.similaresExatos([principal], 'REsp', '2209868', 'MG').length === 0, 'Similar: UF diferente não casa');
+  ok(scon.similaresExatos([principal], 'REsp', '220986', '').length === 0, 'Similar: número parcial não casa');
+  ok(scon.nomeBase(s[0]) === '202501464812_REsp2209868_SP', 'Similar: nome de arquivo do próprio similar', scon.nomeBase(s[0]));
+  const md = '# RECURSO ESPECIAL Nº 2209868 - SP\n\n# EMENTA\n\nDIREITO  DO CONSUMIDOR.\nRECURSO ESPECIAL.\n\n# ACÓRDÃO\n\nVistos';
+  ok(scon.ementaDoTeor(md) === 'DIREITO DO CONSUMIDOR. RECURSO ESPECIAL.', 'Ementa tirada do inteiro teor', scon.ementaDoTeor(md));
+  ok(scon.ementaDoTeor('sem seção') === '', 'Ementa: sem seção, vazio');
+}
+
 console.log(falhas ? `\n${falhas} falha(s)` : '\ntudo ok');
 process.exit(falhas ? 1 : 0);

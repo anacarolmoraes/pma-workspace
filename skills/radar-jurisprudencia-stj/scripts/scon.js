@@ -385,6 +385,8 @@ function teor(o) {
     }
   }
   for (const it of itens) {
+    const md = path.join(it.pasta, `${it.nome}.md`);
+    if (!it.doc.ementa && fs.existsSync(md)) it.doc.ementa = ementaDoTeor(fs.readFileSync(md, 'utf8'));
     if (fs.existsSync(it.pasta)) gravarMeta(it.nome, idx.get(it.num_registro), o.caso || path.basename(saida));
   }
   reindexar();
@@ -528,6 +530,28 @@ function parseNumero(pedido) {
   return { classe: m[1].trim().replace(/\s+/g, ' '), numero: m[2].replace(/\D/g, ''), uf: (m[3] || '').toUpperCase() };
 }
 
+// Similares do pedido, com relator e órgão do principal (o SCON só lista como similar o
+// acórdão do mesmo relator e do mesmo órgão). Ementa não vem: o `teor` a tira do inteiro teor.
+function similaresExatos(docs, classe, numero, uf) {
+  const norm = (s) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const vistos = new Map();
+  for (const d of docs) {
+    for (const s of d.similares || []) {
+      const r = RX_PROC.exec(s.processo || '');
+      if (!r || norm(r[1]) !== norm(`${classe} ${numero}`) || (uf && r[2] !== uf) || vistos.has(s.num_registro)) continue;
+      vistos.set(s.num_registro, { ...s, relator: d.relator, orgao: d.orgao, similar_de: citacao(d) });
+    }
+  }
+  return [...vistos.values()];
+}
+
+// Ementa do inteiro teor convertido (seção "EMENTA" até "ACÓRDÃO"), para documento que veio
+// sem espelho próprio.
+function ementaDoTeor(md) {
+  const m = /^#\s*EMENTA\s*$([\s\S]*?)^#\s*AC[ÓO]RD[ÃA]O\s*$/m.exec(String(md || ''));
+  return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+}
+
 // A busca vai pelos campos `processo` e `classe` da pesquisa avançada, não pela pesquisa livre:
 // a livre lê "Jurisprudência Citada" e devolve também quem cita o acórdão — para precedente
 // muito citado, a página de 50 mais recentes nem traz o pedido. Se os campos não acharem
@@ -554,6 +578,19 @@ function acordao(o) {
     fs.writeFileSync(arqConsulta, JSON.stringify([{ id, livre: `${classe} ${numero}` }], null, 1));
     if (buscar({ consultas: arqConsulta, saida }) !== 0) return 1;
     exatos = exatosEm();
+  }
+  // O pedido pode vir só no bloco "Acórdãos Similares" de outro documento (REsp 2.209.868/SP,
+  // 20/10/2026): vira documento próprio no resultados.json, para o `teor` achá-lo pelo registro.
+  if (!exatos.length) {
+    const arqRes = path.join(saida, 'resultados.json');
+    const res = JSON.parse(fs.readFileSync(arqRes, 'utf8'));
+    const achados = similaresExatos(res.flatMap((q) => q.docs), classe, numero, uf);
+    if (achados.length) {
+      console.log(`Achado como acórdão similar de ${achados.map((s) => s.similar_de).join(', ')}.`);
+      res.push({ id: `${id} (similar)`, total: achados.length, docs: achados });
+      fs.writeFileSync(arqRes, JSON.stringify(res, null, 1));
+      exatos = exatosEm();
+    }
   }
   if (exatos.length !== 1) {
     const docs = [...indice(saida).values()].map((e) => e.doc);
@@ -615,7 +652,7 @@ function citados(o) {
   return 0;
 }
 
-module.exports = { cabecalho, semaforo, parseNumero, extrairCitados, citacao, nomeArquivo, nomeBase, compactar, assinatura, lerMarcas };
+module.exports = { cabecalho, semaforo, parseNumero, extrairCitados, citacao, nomeArquivo, nomeBase, compactar, assinatura, lerMarcas, similaresExatos, ementaDoTeor };
 
 if (require.main === module) {
   const [cmd, ...resto] = process.argv.slice(2);
